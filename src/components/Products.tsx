@@ -25,6 +25,13 @@ const products = [
     image: "https://horrible-blue-zxweihvc7r.edgeone.app/IMG_20260123_170127186.jpg",
     whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Matte*%20-%20R%24%2017.99",
   },
+  {
+    name: "Cera Teia",
+    price: "R$ 17.99",
+    image: "",
+    emoji: "🕸️",
+    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Teia*%20-%20R%24%2017.99",
+  },
 ];
 
 const Products = () => {
@@ -44,13 +51,17 @@ const Products = () => {
               key={product.name}
               className="bg-card rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-all group"
             >
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
+              <div className="aspect-square overflow-hidden bg-secondary flex items-center justify-center">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-7xl">{"emoji" in product ? (product as any).emoji : "📦"}</span>
+                )}
               </div>
               <div className="p-4">
                 <span className="text-xs font-semibold text-success uppercase tracking-wider">
