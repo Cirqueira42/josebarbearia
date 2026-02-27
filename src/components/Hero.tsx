@@ -26,18 +26,18 @@ const Hero = () => {
         </p>
 
         <a
-          href="/agendar"
+          href="https://josebarbearia.app.br/agendar"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-semibold hover:brightness-110 transition-all glow-primary"
         >
           <Calendar className="w-5 h-5" />
           Agendar Horário Online
         </a>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
-          <a href="/admin-login" className="text-muted-foreground text-sm hover:text-primary transition-colors">
-            🔒 Área Administrativa
-          </a>
-        </div>
+        <p className="text-muted-foreground text-sm mt-4">
+          Acesse: josebarbearia.app.br/agendar
+        </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-muted-foreground text-sm">
           <a
@@ -57,6 +57,12 @@ const Hero = () => {
           >
             <Instagram className="w-4 h-4" />
             @josebarbeariaa
+          </a>
+        </div>
+
+        <div className="mt-6">
+          <a href="/admin-login" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+            🔒 Área Administrativa
           </a>
         </div>
       </div>
