@@ -34,6 +34,9 @@ const timeSlots = [
   "18:00", "18:30", "19:00",
 ];
 
+const BARBER_PHONE = "5516997369740";
+const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
+
 const Agendar = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
@@ -94,12 +97,29 @@ const Agendar = () => {
 
   const getAvailableTimes = () => {
     if (!selectedDate) return [];
-    return timeSlots.filter((t) => !isTimeBlocked(selectedDate, t));
+    
+    const now = new Date();
+    // Brazil timezone offset (UTC-3)
+    const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const todayStr = brazilNow.toISOString().split("T")[0];
+    
+    return timeSlots.filter((t) => {
+      if (isTimeBlocked(selectedDate, t)) return false;
+      // If selected date is today, hide past times
+      if (selectedDate === todayStr) {
+        const [h, m] = t.split(":").map(Number);
+        const slotMinutes = h * 60 + m;
+        const nowMinutes = brazilNow.getHours() * 60 + brazilNow.getMinutes();
+        if (slotMinutes <= nowMinutes) return false;
+      }
+      return true;
+    });
   };
 
   const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    const now = new Date();
+    const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    return brazilNow.toISOString().split("T")[0];
   };
 
   const formatPhone = (value: string) => {
@@ -131,6 +151,14 @@ const Agendar = () => {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       setSuccess(true);
+      
+      // Send WhatsApp notification to barber
+      const dateFormatted = new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR");
+      const payLabel = paymentMethod ? `\nPagamento: ${paymentMethod}` : "";
+      const msg = encodeURIComponent(
+        `📅 Novo Agendamento!\n\nCliente: ${customerName}\nTelefone: ${customerPhone}\n\nServiço: ${selectedService.name}\nValor: R$ ${selectedService.price.toFixed(2)}\nData: ${dateFormatted}\nHora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
+      );
+      window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
     }
     setSubmitting(false);
   };
@@ -181,7 +209,6 @@ const Agendar = () => {
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* Step 1: Choose service */}
         {!selectedService ? (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">Escolha o serviço</h2>
