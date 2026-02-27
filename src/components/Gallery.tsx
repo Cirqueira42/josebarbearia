@@ -1,11 +1,8 @@
-import trabalhoReal1 from "@/assets/trabalho-real-1.jpg";
-
 const images = [
   { src: "https://dull-gray-4q5gqzly1a.edgeone.app/Screenshot_20260129-130048.Chrome.jpg", alt: "Interior da barbearia" },
   { src: "https://quintessential-teal-urcrjl7agg.edgeone.app/Screenshot_20260129-130055.Chrome.jpg", alt: "Fachada da barbearia" },
   { src: "https://scattered-chocolate-dua0vnwwnm.edgeone.app/Screenshot_20260129-130043.Chrome.jpg", alt: "Área de espera" },
   { src: "https://private-pink-wgdurvqpwk.edgeone.app/Screenshot_20260129-130040.Chrome.jpg", alt: "Estação de corte" },
-  { src: trabalhoReal1, alt: "Corte degradê com design - trabalho real" },
 ];
 
 const Gallery = () => {
