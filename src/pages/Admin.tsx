@@ -23,6 +23,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import BlockedSlots from "@/components/admin/BlockedSlots";
 
 type Appointment = Tables<"appointments">;
 
@@ -101,13 +102,23 @@ const Admin = () => {
     } else {
       toast({ title: "Sucesso", description: `Agendamento ${statusLabels[status].label.toLowerCase()}.` });
 
-      // Abrir WhatsApp com notificação ao confirmar
-      if (status === "confirmed" && appointment) {
+      if (appointment) {
         const dateFormatted = new Date(appointment.appointment_date + "T12:00:00").toLocaleDateString("pt-BR");
-        const msg = encodeURIComponent(
-          `📅 Agendamento Confirmado!\n\nCliente: ${appointment.customer_name}\nTelefone: ${appointment.customer_phone}\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\nHora: ${appointment.appointment_time}\n\nProfissional: JOSE GILMARIO`
-        );
-        window.open(`https://wa.me/5516997369740?text=${msg}`, "_blank");
+
+        if (status === "confirmed") {
+          const msg = encodeURIComponent(
+            `📅 Agendamento Confirmado!\n\nCliente: ${appointment.customer_name}\nTelefone: ${appointment.customer_phone}\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\nHora: ${appointment.appointment_time}\n\nProfissional: JOSE GILMARIO`
+          );
+          window.open(`https://wa.me/5516997369740?text=${msg}`, "_blank");
+        }
+
+        if (status === "completed") {
+          const phone = appointment.customer_phone.replace(/\D/g, "");
+          const msg = encodeURIComponent(
+            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\n\nVolte sempre! Agende novamente pelo nosso site. 👊`
+          );
+          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+        }
       }
     }
   };
@@ -197,6 +208,11 @@ const Admin = () => {
               <p className="text-xs text-muted-foreground">{statusLabels[s].label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Blocked Slots */}
+        <div className="mb-6">
+          <BlockedSlots />
         </div>
 
         {/* Appointments list */}
