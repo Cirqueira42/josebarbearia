@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { Scissors, Calendar, MapPin, Instagram } from "lucide-react";
 import heroImage from "@/assets/hero-barbershop.jpg";
-import trabalhoReal1 from "@/assets/trabalho-real-1.jpg";
-
 const bgImages = [
   heroImage,
   "https://dull-gray-4q5gqzly1a.edgeone.app/Screenshot_20260129-130048.Chrome.jpg",
   "https://quintessential-teal-urcrjl7agg.edgeone.app/Screenshot_20260129-130055.Chrome.jpg",
   "https://scattered-chocolate-dua0vnwwnm.edgeone.app/Screenshot_20260129-130043.Chrome.jpg",
   "https://private-pink-wgdurvqpwk.edgeone.app/Screenshot_20260129-130040.Chrome.jpg",
-  trabalhoReal1,
 ];
 
 const Hero = () => {
@@ -35,7 +32,7 @@ const Hero = () => {
           }}
         />
       ))}
-      <div className="absolute inset-0 bg-background/85" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/50 to-background/80" />
 
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
