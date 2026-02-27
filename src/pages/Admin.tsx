@@ -90,6 +90,7 @@ const Admin = () => {
   };
 
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
+    const appointment = appointments.find((a) => a.id === id);
     const { error } = await supabase
       .from("appointments")
       .update({ status })
@@ -99,6 +100,15 @@ const Admin = () => {
       toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: `Agendamento ${statusLabels[status].label.toLowerCase()}.` });
+
+      // Abrir WhatsApp com notificação ao confirmar
+      if (status === "confirmed" && appointment) {
+        const dateFormatted = new Date(appointment.appointment_date + "T12:00:00").toLocaleDateString("pt-BR");
+        const msg = encodeURIComponent(
+          `📅 Agendamento Confirmado!\n\nCliente: ${appointment.customer_name}\nTelefone: ${appointment.customer_phone}\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\nHora: ${appointment.appointment_time}\n\nProfissional: JOSE GILMARIO`
+        );
+        window.open(`https://wa.me/5516997369740?text=${msg}`, "_blank");
+      }
     }
   };
 
