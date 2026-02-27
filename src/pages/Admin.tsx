@@ -21,6 +21,8 @@ import {
   Trophy,
   Search,
   CalendarDays,
+  Share2,
+  Copy,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
@@ -156,10 +158,24 @@ const Admin = () => {
               PAINEL ADMIN – JOSÉ BARBEARIA
             </h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const url = `${window.location.origin}/agendar`;
+                navigator.clipboard.writeText(url);
+                toast({ title: "Link copiado!", description: url });
+              }}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Compartilhar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 
