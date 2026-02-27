@@ -23,11 +23,16 @@ import {
   CalendarDays,
   Share2,
   Copy,
+  Settings,
+  ExternalLink,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 
 type Appointment = Tables<"appointments">;
+
+const BARBER_PHONE = "5516997369740";
+const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: "Pendente", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
@@ -106,18 +111,27 @@ const Admin = () => {
 
       if (appointment) {
         const dateFormatted = new Date(appointment.appointment_date + "T12:00:00").toLocaleDateString("pt-BR");
+        const phone = appointment.customer_phone.replace(/\D/g, "");
 
         if (status === "confirmed") {
+          // Send confirmation to CLIENT
           const msg = encodeURIComponent(
-            `📅 Agendamento Confirmado!\n\nCliente: ${appointment.customer_name}\nTelefone: ${appointment.customer_phone}\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\nHora: ${appointment.appointment_time}\n\nProfissional: JOSE GILMARIO`
+            `✅ Agendamento Confirmado!\n\nOlá ${appointment.customer_name}! 😊\n\nSeu agendamento na José Barbearia foi confirmado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted}\n🕐 Hora: ${appointment.appointment_time}\n\n📍 Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n\nTe esperamos! 👊`
           );
-          window.open(`https://wa.me/5516997369740?text=${msg}`, "_blank");
+          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+        }
+
+        if (status === "cancelled") {
+          // Send cancellation to CLIENT
+          const msg = encodeURIComponent(
+            `❌ Agendamento Cancelado\n\nOlá ${appointment.customer_name},\n\nInfelizmente seu agendamento foi cancelado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted}\n🕐 Hora: ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\nJosé Barbearia 💈`
+          );
+          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
         }
 
         if (status === "completed") {
-          const phone = appointment.customer_phone.replace(/\D/g, "");
           const msg = encodeURIComponent(
-            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\n\nVolte sempre! Agende novamente pelo nosso site. 👊`
+            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\n\nVolte sempre! Agende novamente pelo nosso site:\n${BOOKING_URL}\n\n👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
         }
@@ -155,21 +169,28 @@ const Admin = () => {
           <div className="flex items-center gap-3">
             <Scissors className="w-6 h-6 text-primary" />
             <h1 className="text-xl font-bold font-display text-gradient">
-              PAINEL ADMIN – JOSÉ BARBEARIA
+              PAINEL ADMIN
             </h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                const url = `${window.location.origin}/agendar`;
-                navigator.clipboard.writeText(url);
-                toast({ title: "Link copiado!", description: url });
+                navigator.clipboard.writeText(BOOKING_URL);
+                toast({ title: "Link copiado!", description: BOOKING_URL });
               }}
             >
               <Share2 className="w-4 h-4 mr-2" />
               Compartilhar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(BOOKING_URL, "_blank")}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Ver Site
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
