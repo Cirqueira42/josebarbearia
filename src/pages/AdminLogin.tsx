@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Scissors, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const ADMIN_EMAIL = "admin@josebarbearia.com";
+
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,21 +20,20 @@ const AdminLogin = () => {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: ADMIN_EMAIL,
       password,
     });
 
     if (error) {
       toast({
         title: "Erro no login",
-        description: "Email ou senha incorretos.",
+        description: "Senha incorreta.",
         variant: "destructive",
       });
       setLoading(false);
       return;
     }
 
-    // Check if user has admin role
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
@@ -43,7 +43,7 @@ const AdminLogin = () => {
     if (!roles || roles.length === 0) {
       toast({
         title: "Acesso negado",
-        description: "Você não tem permissão de administrador.",
+        description: "Sem permissão de administrador.",
         variant: "destructive",
       });
       await supabase.auth.signOut();
@@ -73,25 +73,15 @@ const AdminLogin = () => {
           className="bg-card border border-border rounded-lg p-6 space-y-4"
         >
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@josebarbearia.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">Senha de Acesso</Label>
             <Input
               id="password"
               type="password"
-              placeholder="••••••"
+              placeholder="Digite a senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoFocus
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
