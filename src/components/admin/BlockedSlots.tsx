@@ -14,16 +14,34 @@ type BlockedSlot = {
   created_at: string;
 };
 
-const HORARIOS = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-  "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-];
+const HORARIOS = (() => {
+  const slots: string[] = [];
+  for (let h = 8; h < 12; h++) {
+    for (let m = 0; m < 60; m += 10) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  for (let h = 13; h < 19; h++) {
+    for (let m = 0; m < 60; m += 10) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  slots.push("19:00");
+  return slots;
+})();
+
+const getMinDate = () => {
+  const now = new Date();
+  const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  return brazilNow.toISOString().split("T")[0];
+};
+
+const DAYS_PT = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 const BlockedSlots = () => {
   const [slots, setSlots] = useState<BlockedSlot[]>([]);
   const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("all"); // "all" = dia inteiro
+  const [newTime, setNewTime] = useState("all");
   const [reason, setReason] = useState("");
   const { toast } = useToast();
 
@@ -37,9 +55,11 @@ const BlockedSlots = () => {
   }, []);
 
   const fetchSlots = async () => {
+    const today = getMinDate();
     const { data } = await supabase
       .from("blocked_slots")
       .select("*")
+      .gte("blocked_date", today)
       .order("blocked_date", { ascending: true });
     if (data) setSlots(data);
   };
@@ -47,6 +67,15 @@ const BlockedSlots = () => {
   const addBlock = async () => {
     if (!newDate) {
       toast({ title: "Selecione uma data", variant: "destructive" });
+      return;
+    }
+    if (newDate < getMinDate()) {
+      toast({ title: "Data passada", description: "Selecione uma data futura.", variant: "destructive" });
+      return;
+    }
+    const d = new Date(newDate + "T12:00:00");
+    if (d.getDay() === 0) {
+      toast({ title: "Domingo", description: "Domingos já são fechados automaticamente.", variant: "destructive" });
       return;
     }
     const { error } = await supabase.from("blocked_slots").insert({
@@ -76,10 +105,10 @@ const BlockedSlots = () => {
         <h2 className="text-lg font-bold text-foreground">Bloquear Dias / Horários</h2>
       </div>
 
-      {/* Add block form */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <Input
           type="date"
+          min={getMinDate()}
           value={newDate}
           onChange={(e) => setNewDate(e.target.value)}
           className="w-44"
@@ -106,34 +135,37 @@ const BlockedSlots = () => {
         </Button>
       </div>
 
-      {/* List */}
       {slots.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum bloqueio cadastrado.</p>
+        <p className="text-sm text-muted-foreground">Nenhum bloqueio futuro cadastrado.</p>
       ) : (
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {slots.map((s) => (
-            <div key={s.id} className="flex items-center justify-between gap-2 bg-background border border-border rounded-md px-3 py-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/30">
-                  {new Date(s.blocked_date + "T12:00:00").toLocaleDateString("pt-BR")}
-                </Badge>
-                {s.blocked_time ? (
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/30">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {s.blocked_time}
-                  </Badge>
-                ) : (
+          {slots.map((s) => {
+            const d = new Date(s.blocked_date + "T12:00:00");
+            const dayName = DAYS_PT[d.getDay()];
+            return (
+              <div key={s.id} className="flex items-center justify-between gap-2 bg-background border border-border rounded-md px-3 py-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/30">
-                    Dia Inteiro
+                    {d.toLocaleDateString("pt-BR")} ({dayName})
                   </Badge>
-                )}
-                {s.reason && <span className="text-xs text-muted-foreground">{s.reason}</span>}
+                  {s.blocked_time ? (
+                    <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/30">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {s.blocked_time}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/30">
+                      Dia Inteiro
+                    </Badge>
+                  )}
+                  {s.reason && <span className="text-xs text-muted-foreground">{s.reason}</span>}
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => removeBlock(s.id)} className="text-destructive hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => removeBlock(s.id)} className="text-destructive hover:text-destructive">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

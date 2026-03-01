@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Scissors, ArrowLeft, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Check } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Service = {
   id: string;
@@ -20,6 +21,7 @@ type Service = {
   description: string | null;
   price: number;
   icon: string | null;
+  duration_minutes: number;
 };
 
 type BlockedSlot = {
@@ -27,20 +29,50 @@ type BlockedSlot = {
   blocked_time: string | null;
 };
 
-const timeSlots = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-  "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-  "18:00", "18:30", "19:00",
-];
+type BookedSlot = {
+  appointment_time: string;
+  service_name: string;
+  duration_minutes: number;
+};
 
 const BARBER_PHONE = "5516997369740";
 const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
 
+const DAYS_PT = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
+const generateTimeSlots = () => {
+  const slots: string[] = [];
+  // Morning: 8:00 - 11:50, Afternoon: 13:00 - 19:00
+  for (let h = 8; h < 12; h++) {
+    for (let m = 0; m < 60; m += 10) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  for (let h = 13; h < 19; h++) {
+    for (let m = 0; m < 60; m += 10) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  // 19:00
+  slots.push("19:00");
+  return slots;
+};
+
+const ALL_TIME_SLOTS = generateTimeSlots();
+
+const timeToMinutes = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+};
+
+const getBrazilNow = () => {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+};
+
 const Agendar = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -52,6 +84,20 @@ const Agendar = () => {
   const [success, setSuccess] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Load saved customer data from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("jose_customer");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.name) setCustomerName(data.name);
+        if (data.phone) setCustomerPhone(data.phone);
+        if (data.email) setCustomerEmail(data.email);
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     fetchServices();
@@ -64,9 +110,18 @@ const Agendar = () => {
     }
   }, [selectedDate]);
 
+  // Auto-select service from URL param
+  useEffect(() => {
+    const serviceId = searchParams.get("service");
+    if (serviceId && services.length > 0) {
+      const s = services.find((srv) => srv.id === serviceId);
+      if (s) setSelectedService(s);
+    }
+  }, [searchParams, services]);
+
   const fetchServices = async () => {
     const { data } = await supabase.from("services").select("*").order("name");
-    if (data) setServices(data);
+    if (data) setServices(data as Service[]);
   };
 
   const fetchBlockedSlots = async () => {
@@ -77,48 +132,76 @@ const Agendar = () => {
   const fetchBookedSlots = async (date: string) => {
     const { data } = await supabase
       .from("appointments")
-      .select("appointment_time")
+      .select("appointment_time, service_name")
       .eq("appointment_date", date)
       .in("status", ["pending", "confirmed"]);
-    if (data) setBookedSlots(data.map((a) => a.appointment_time));
+
+    if (data) {
+      // Map booked slots with duration from services
+      const mapped = data.map((a) => {
+        const svc = services.find((s) => s.name === a.service_name);
+        return {
+          appointment_time: a.appointment_time,
+          service_name: a.service_name,
+          duration_minutes: svc?.duration_minutes || 30,
+        };
+      });
+      setBookedSlots(mapped);
+    }
   };
 
   const isDateBlocked = (date: string) => {
     return blockedSlots.some((s) => s.blocked_date === date && s.blocked_time === null);
   };
 
-  const isTimeBlocked = (date: string, time: string) => {
-    return (
-      blockedSlots.some(
-        (s) => s.blocked_date === date && (s.blocked_time === time || s.blocked_time === null)
-      ) || bookedSlots.includes(time)
-    );
+  const isSunday = (date: string) => {
+    const d = new Date(date + "T12:00:00");
+    return d.getDay() === 0;
   };
 
+  const isTimeAvailable = useCallback((date: string, time: string) => {
+    // Blocked by admin
+    if (blockedSlots.some((s) => s.blocked_date === date && (s.blocked_time === time || s.blocked_time === null))) {
+      return false;
+    }
+
+    const slotMin = timeToMinutes(time);
+    const serviceDuration = selectedService?.duration_minutes || 30;
+
+    // Check if this slot conflicts with any booked appointment
+    for (const booked of bookedSlots) {
+      const bookedStart = timeToMinutes(booked.appointment_time);
+      const bookedEnd = bookedStart + booked.duration_minutes + 10; // +10 buffer
+      const newEnd = slotMin + serviceDuration;
+
+      // Overlap check: new slot's range overlaps with booked range
+      if (slotMin < bookedEnd && newEnd > bookedStart) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [blockedSlots, bookedSlots, selectedService]);
+
   const getAvailableTimes = () => {
-    if (!selectedDate) return [];
-    
-    const now = new Date();
-    // Brazil timezone offset (UTC-3)
-    const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    if (!selectedDate || !selectedService) return [];
+
+    const brazilNow = getBrazilNow();
     const todayStr = brazilNow.toISOString().split("T")[0];
-    
-    return timeSlots.filter((t) => {
-      if (isTimeBlocked(selectedDate, t)) return false;
-      // If selected date is today, hide past times
+
+    return ALL_TIME_SLOTS.filter((t) => {
+      if (!isTimeAvailable(selectedDate, t)) return false;
+      // If today, hide past times
       if (selectedDate === todayStr) {
-        const [h, m] = t.split(":").map(Number);
-        const slotMinutes = h * 60 + m;
         const nowMinutes = brazilNow.getHours() * 60 + brazilNow.getMinutes();
-        if (slotMinutes <= nowMinutes) return false;
+        if (timeToMinutes(t) <= nowMinutes) return false;
       }
       return true;
     });
   };
 
   const getMinDate = () => {
-    const now = new Date();
-    const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const brazilNow = getBrazilNow();
     return brazilNow.toISOString().split("T")[0];
   };
 
@@ -129,12 +212,30 @@ const Agendar = () => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
+  const getDayOfWeek = (dateStr: string) => {
+    const d = new Date(dateStr + "T12:00:00");
+    return DAYS_PT[d.getDay()];
+  };
+
+  const sendTelegram = async (message: string) => {
+    try {
+      await supabase.functions.invoke("send-telegram", { body: { message } });
+    } catch {}
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService || !customerName || !customerPhone || !selectedDate || !selectedTime) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
+
+    // Save customer data to localStorage
+    localStorage.setItem("jose_customer", JSON.stringify({
+      name: customerName,
+      phone: customerPhone,
+      email: customerEmail,
+    }));
 
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
@@ -151,22 +252,30 @@ const Agendar = () => {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       setSuccess(true);
-      
-      // Send WhatsApp notification to barber
+
       const dateFormatted = new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR");
+      const dayName = getDayOfWeek(selectedDate);
       const payLabel = paymentMethod ? `\nPagamento: ${paymentMethod}` : "";
+
+      // Send WhatsApp to barber
       const msg = encodeURIComponent(
-        `📅 Novo Agendamento!\n\nCliente: ${customerName}\nTelefone: ${customerPhone}\n\nServiço: ${selectedService.name}\nValor: R$ ${selectedService.price.toFixed(2)}\nData: ${dateFormatted}\nHora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
+        `📅 Novo Agendamento!\n\nCliente: ${customerName}\nTelefone: ${customerPhone}\n\nServiço: ${selectedService.name}\nValor: R$ ${selectedService.price.toFixed(2)}\nData: ${dateFormatted} (${dayName})\nHora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
       );
       window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
+
+      // Send Telegram notification
+      sendTelegram(
+        `📅 <b>Novo Agendamento!</b>\n\n👤 Cliente: ${customerName}\n📞 Telefone: ${customerPhone}\n\n💈 Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
+      );
     }
     setSubmitting(false);
   };
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+        <PhotoCarousel overlay="heavy" />
+        <div className="relative z-10 bg-card/90 backdrop-blur border border-border rounded-2xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-primary" />
           </div>
@@ -174,10 +283,10 @@ const Agendar = () => {
             Agendamento Confirmado!
           </h2>
           <p className="text-muted-foreground mb-2">
-            {selectedService?.name} - {selectedService && `R$ ${selectedService.price.toFixed(2)}`}
+            {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
           </p>
           <p className="text-primary font-medium mb-6">
-            {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} às {selectedTime}
+            {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
           </p>
           <p className="text-muted-foreground text-sm mb-6">
             Aguarde a confirmação do barbeiro. Você receberá uma mensagem no WhatsApp.
@@ -191,10 +300,17 @@ const Agendar = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary px-4 py-6">
+    <div className="min-h-screen bg-background relative">
+      {/* Carousel background on service selection */}
+      {!selectedService && (
+        <div className="absolute inset-0 overflow-hidden">
+          <PhotoCarousel overlay="heavy" />
+        </div>
+      )}
+
+      <header className="relative z-10 bg-primary/90 backdrop-blur px-4 py-6">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="text-primary-foreground">
+          <button onClick={() => selectedService ? setSelectedService(null) : navigate("/")} className="text-primary-foreground">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
@@ -202,13 +318,15 @@ const Agendar = () => {
               {selectedService ? `Agendar ${selectedService.name}` : "Agendar Horário"}
             </h1>
             {selectedService && (
-              <p className="text-primary-foreground/80 text-sm">{selectedService.description}</p>
+              <p className="text-primary-foreground/80 text-sm">
+                {selectedService.description} • {selectedService.duration_minutes} min
+              </p>
             )}
           </div>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="relative z-10 max-w-lg mx-auto px-4 py-6">
         {!selectedService ? (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-foreground mb-4">Escolha o serviço</h2>
@@ -216,129 +334,141 @@ const Agendar = () => {
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-all flex items-center gap-4"
+                className="w-full bg-card/90 backdrop-blur border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-all flex items-center gap-4"
               >
                 <span className="text-3xl">{s.icon}</span>
                 <div className="flex-1">
                   <h3 className="font-bold text-foreground">{s.name}</h3>
                   <p className="text-muted-foreground text-sm">{s.description}</p>
+                  <p className="text-muted-foreground text-xs mt-1">⏱ {s.duration_minutes} min</p>
                 </div>
                 <span className="text-primary font-bold">R$ {s.price.toFixed(2)}</span>
               </button>
             ))}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <button
-              type="button"
-              onClick={() => setSelectedService(null)}
-              className="text-sm text-primary hover:underline mb-2"
-            >
-              ← Trocar serviço
-            </button>
-
-            <div>
-              <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
-              <Input
-                placeholder="(00) 00000-0000"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(formatPhone(e.target.value))}
-                required
-              />
+          <div className="relative">
+            {/* Carousel background for form */}
+            <div className="absolute inset-0 -mx-4 -my-6 overflow-hidden rounded-lg">
+              <PhotoCarousel overlay="heavy" />
             </div>
 
-            <div>
-              <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
-              <Input
-                placeholder="Seu nome"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2 mb-2">
-                ✉️ Email <span className="text-muted-foreground text-xs">(opcional)</span>
-              </Label>
-              <Input
-                type="email"
-                placeholder="seu@email.com"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2 mb-2">📅 Data</Label>
-              <Input
-                type="date"
-                min={getMinDate()}
-                value={selectedDate}
-                onChange={(e) => {
-                  const date = e.target.value;
-                  if (isDateBlocked(date)) {
-                    toast({ title: "Data indisponível", description: "Este dia está bloqueado.", variant: "destructive" });
-                    return;
-                  }
-                  setSelectedDate(date);
-                  setSelectedTime("");
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2 mb-2">🕐 Horário</Label>
-              <Select
-                value={selectedTime}
-                onValueChange={setSelectedTime}
-                disabled={!selectedDate}
+            <form onSubmit={handleSubmit} className="relative z-10 space-y-5 bg-card/80 backdrop-blur rounded-xl p-5 border border-border">
+              <button
+                type="button"
+                onClick={() => setSelectedService(null)}
+                className="text-sm text-primary hover:underline mb-2"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={selectedDate ? "Selecione o horário" : "Selecione uma data primeiro"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAvailableTimes().length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      Nenhum horário disponível
-                    </SelectItem>
-                  ) : (
-                    getAvailableTimes().map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                ← Trocar serviço
+              </button>
+
+              <div>
+                <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
+                <Input
+                  placeholder="(00) 00000-0000"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(formatPhone(e.target.value))}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
+                <Input
+                  placeholder="Seu nome"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 mb-2">
+                  ✉️ Email <span className="text-muted-foreground text-xs">(opcional)</span>
+                </Label>
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 mb-2">📅 Data</Label>
+                <Input
+                  type="date"
+                  min={getMinDate()}
+                  value={selectedDate}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (isSunday(date)) {
+                      toast({ title: "Domingo fechado!", description: "Não atendemos aos domingos.", variant: "destructive" });
+                      return;
+                    }
+                    if (isDateBlocked(date)) {
+                      toast({ title: "Data indisponível", description: "Este dia está bloqueado.", variant: "destructive" });
+                      return;
+                    }
+                    setSelectedDate(date);
+                    setSelectedTime("");
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 mb-2">🕐 Horário</Label>
+                <Select
+                  value={selectedTime}
+                  onValueChange={setSelectedTime}
+                  disabled={!selectedDate}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={selectedDate ? "Selecione o horário" : "Selecione uma data primeiro"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableTimes().length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        Nenhum horário disponível
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                    ) : (
+                      getAvailableTimes().map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label className="flex items-center gap-2 mb-2">
-                💳 Forma de Pagamento <span className="text-muted-foreground text-xs">(opcional)</span>
-              </Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a forma de pagamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label className="flex items-center gap-2 mb-2">
+                  💳 Forma de Pagamento <span className="text-muted-foreground text-xs">(opcional)</span>
+                </Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                    <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-6 text-lg font-bold"
-            >
-              {submitting ? "Agendando..." : "Confirmar Agendamento"}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-6 text-lg font-bold"
+              >
+                {submitting ? "Agendando..." : "Confirmar Agendamento"}
+              </Button>
+            </form>
+          </div>
         )}
       </div>
     </div>
