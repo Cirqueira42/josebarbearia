@@ -22,23 +22,35 @@ import {
   Search,
   CalendarDays,
   Share2,
-  Copy,
-  Settings,
   ExternalLink,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
+import AdminSettings from "@/components/admin/AdminSettings";
 
 type Appointment = Tables<"appointments">;
 
 const BARBER_PHONE = "5516997369740";
 const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
 
+const DAYS_PT = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: "Pendente", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
   confirmed: { label: "Confirmado", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   cancelled: { label: "Cancelado", color: "bg-red-500/20 text-red-400 border-red-500/30" },
   completed: { label: "Concluído", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+};
+
+const getDayOfWeek = (dateStr: string) => {
+  const d = new Date(dateStr + "T12:00:00");
+  return DAYS_PT[d.getDay()];
+};
+
+const sendTelegram = async (message: string) => {
+  try {
+    await supabase.functions.invoke("send-telegram", { body: { message } });
+  } catch {}
 };
 
 const Admin = () => {
@@ -111,29 +123,40 @@ const Admin = () => {
 
       if (appointment) {
         const dateFormatted = new Date(appointment.appointment_date + "T12:00:00").toLocaleDateString("pt-BR");
+        const dayName = getDayOfWeek(appointment.appointment_date);
         const phone = appointment.customer_phone.replace(/\D/g, "");
 
         if (status === "confirmed") {
-          // Send confirmation to CLIENT
           const msg = encodeURIComponent(
-            `✅ Agendamento Confirmado!\n\nOlá ${appointment.customer_name}! 😊\n\nSeu agendamento na José Barbearia foi confirmado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted}\n🕐 Hora: ${appointment.appointment_time}\n\n📍 Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n\nTe esperamos! 👊`
+            `✅ Agendamento Confirmado!\n\nOlá ${appointment.customer_name}! 😊\n\nSeu agendamento na José Barbearia foi confirmado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${appointment.appointment_time}\n\n📍 Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n\nTe esperamos! 👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+
+          sendTelegram(
+            `✅ <b>Agendamento Confirmado</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})\n🕐 ${appointment.appointment_time}`
+          );
         }
 
         if (status === "cancelled") {
-          // Send cancellation to CLIENT
           const msg = encodeURIComponent(
-            `❌ Agendamento Cancelado\n\nOlá ${appointment.customer_name},\n\nInfelizmente seu agendamento foi cancelado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted}\n🕐 Hora: ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\nJosé Barbearia 💈`
+            `❌ Agendamento Cancelado\n\nOlá ${appointment.customer_name},\n\nInfelizmente seu agendamento foi cancelado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\nJosé Barbearia 💈`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+
+          sendTelegram(
+            `❌ <b>Agendamento Cancelado</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})\n🕐 ${appointment.appointment_time}`
+          );
         }
 
         if (status === "completed") {
           const msg = encodeURIComponent(
-            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted}\n\nVolte sempre! Agende novamente pelo nosso site:\n${BOOKING_URL}\n\n👊`
+            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted} (${dayName})\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+
+          sendTelegram(
+            `✅ <b>Serviço Concluído</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})`
+          );
         }
       }
     }
@@ -163,14 +186,11 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Scissors className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold font-display text-gradient">
-              PAINEL ADMIN
-            </h1>
+            <h1 className="text-xl font-bold font-display text-gradient">PAINEL ADMIN</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -184,11 +204,7 @@ const Admin = () => {
               <Share2 className="w-4 h-4 mr-2" />
               Compartilhar
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(BOOKING_URL, "_blank")}
-            >
+            <Button variant="outline" size="sm" onClick={() => window.open(BOOKING_URL, "_blank")}>
               <ExternalLink className="w-4 h-4 mr-2" />
               Ver Site
             </Button>
@@ -200,8 +216,8 @@ const Admin = () => {
         </div>
       </header>
 
-      {/* Filters */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -247,9 +263,10 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Blocked Slots */}
-        <div className="mb-6">
+        {/* Admin sections */}
+        <div className="grid gap-6 mb-6">
           <BlockedSlots />
+          <AdminSettings />
         </div>
 
         {/* Appointments list */}
@@ -260,10 +277,7 @@ const Admin = () => {
         ) : (
           <div className="grid gap-4">
             {filtered.map((a) => (
-              <div
-                key={a.id}
-                className="bg-card border border-border rounded-lg p-4 sm:p-6"
-              >
+              <div key={a.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -275,7 +289,7 @@ const Admin = () => {
                     <p className="text-sm text-muted-foreground">📞 {a.customer_phone}</p>
                     <p className="text-sm text-muted-foreground">💈 {a.service_name}</p>
                     <p className="text-sm text-primary font-medium">
-                      📅 {new Date(a.appointment_date + "T12:00:00").toLocaleDateString("pt-BR")} às {a.appointment_time}
+                      📅 {new Date(a.appointment_date + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(a.appointment_date)}) às {a.appointment_time}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">

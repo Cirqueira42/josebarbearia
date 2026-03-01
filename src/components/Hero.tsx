@@ -1,38 +1,10 @@
-import { useState, useEffect } from "react";
 import { Scissors, Calendar, MapPin, Instagram } from "lucide-react";
-import heroImage from "@/assets/hero-barbershop.jpg";
-const bgImages = [
-  heroImage,
-  "https://dull-gray-4q5gqzly1a.edgeone.app/Screenshot_20260129-130048.Chrome.jpg",
-  "https://quintessential-teal-urcrjl7agg.edgeone.app/Screenshot_20260129-130055.Chrome.jpg",
-  "https://scattered-chocolate-dua0vnwwnm.edgeone.app/Screenshot_20260129-130043.Chrome.jpg",
-  "https://private-pink-wgdurvqpwk.edgeone.app/Screenshot_20260129-130040.Chrome.jpg",
-];
+import PhotoCarousel from "@/components/PhotoCarousel";
 
 const Hero = () => {
-  const [currentBg, setCurrentBg] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBg((prev) => (prev + 1) % bgImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Rotating background images */}
-      {bgImages.map((img, i) => (
-        <div
-          key={i}
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-          style={{
-            backgroundImage: `url(${img})`,
-            opacity: i === currentBg ? 1 : 0,
-          }}
-        />
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/50 to-background/80" />
+      <PhotoCarousel overlay="light" />
 
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
