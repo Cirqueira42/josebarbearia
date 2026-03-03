@@ -329,12 +329,12 @@ const Agendar = () => {
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6">
         {!selectedService ? (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4">Escolha o serviço</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4 bg-background/70 backdrop-blur inline-block px-3 py-1 rounded-lg">Escolha o serviço</h2>
             {services.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className="w-full bg-card/90 backdrop-blur border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-all flex items-center gap-4"
+                className="w-full bg-card/90 backdrop-blur-md border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-all flex items-center gap-4 shadow-lg"
               >
                 <span className="text-3xl">{s.icon}</span>
                 <div className="flex-1">

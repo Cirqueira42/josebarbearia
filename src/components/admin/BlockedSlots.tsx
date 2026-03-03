@@ -113,16 +113,39 @@ const BlockedSlots = () => {
           onChange={(e) => setNewDate(e.target.value)}
           className="w-44"
         />
-        <select
-          value={newTime}
-          onChange={(e) => setNewTime(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
-        >
-          <option value="all">Dia Inteiro</option>
-          {HORARIOS.map((h) => (
-            <option key={h} value={h}>{h}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="blockType"
+              checked={newTime === "all"}
+              onChange={() => setNewTime("all")}
+              className="accent-primary"
+            />
+            <span className="text-sm text-foreground whitespace-nowrap">Dia Inteiro</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="blockType"
+              checked={newTime !== "all"}
+              onChange={() => setNewTime("08:00")}
+              className="accent-primary"
+            />
+            <span className="text-sm text-foreground whitespace-nowrap">Horário específico</span>
+          </label>
+        </div>
+        {newTime !== "all" && (
+          <select
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+          >
+            {HORARIOS.map((h) => (
+              <option key={h} value={h}>{h}</option>
+            ))}
+          </select>
+        )}
         <Input
           placeholder="Motivo (opcional)"
           value={reason}

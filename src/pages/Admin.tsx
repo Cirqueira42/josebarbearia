@@ -27,6 +27,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 import AdminSettings from "@/components/admin/AdminSettings";
+import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
 
@@ -185,8 +186,11 @@ const Admin = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border px-4 py-4">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="fixed inset-0 z-0">
+        <PhotoCarousel overlay="heavy" />
+      </div>
+      <header className="relative z-10 border-b border-border px-4 py-4 bg-background/80 backdrop-blur">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Scissors className="w-6 h-6 text-primary" />
@@ -216,7 +220,7 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
@@ -254,7 +258,7 @@ const Admin = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {(["pending", "confirmed", "cancelled", "completed"] as const).map((s) => (
-            <div key={s} className="bg-card border border-border rounded-lg p-4 text-center">
+            <div key={s} className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-foreground">
                 {appointments.filter((a) => a.status === s).length}
               </p>
@@ -277,7 +281,7 @@ const Admin = () => {
         ) : (
           <div className="grid gap-4">
             {filtered.map((a) => (
-              <div key={a.id} className="bg-card border border-border rounded-lg p-4 sm:p-6">
+              <div key={a.id} className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
