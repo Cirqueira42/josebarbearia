@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import heroImage from "@/assets/hero-barbershop.jpg";
-
 const bgImages = [
-  heroImage,
   "https://dull-gray-4q5gqzly1a.edgeone.app/Screenshot_20260129-130048.Chrome.jpg",
   "https://quintessential-teal-urcrjl7agg.edgeone.app/Screenshot_20260129-130055.Chrome.jpg",
   "https://scattered-chocolate-dua0vnwwnm.edgeone.app/Screenshot_20260129-130043.Chrome.jpg",
@@ -23,10 +20,10 @@ const PhotoCarousel = ({ overlay = "light" }: { overlay?: "light" | "medium" | "
 
   const overlayClass =
     overlay === "light"
-      ? "bg-gradient-to-b from-background/40 via-background/30 to-background/60"
+      ? "bg-gradient-to-b from-background/20 via-transparent to-background/40"
       : overlay === "medium"
-      ? "bg-gradient-to-b from-background/60 via-background/50 to-background/70"
-      : "bg-gradient-to-b from-background/70 via-background/60 to-background/80";
+      ? "bg-gradient-to-b from-background/30 via-background/10 to-background/40"
+      : "bg-gradient-to-b from-background/40 via-background/20 to-background/50";
 
   return (
     <>
