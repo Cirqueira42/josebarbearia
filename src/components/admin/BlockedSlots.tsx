@@ -41,7 +41,9 @@ const DAYS_PT = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "S
 const BlockedSlots = () => {
   const [slots, setSlots] = useState<BlockedSlot[]>([]);
   const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("all");
+  const [blockType, setBlockType] = useState<"all" | "range">("all");
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("19:00");
   const [reason, setReason] = useState("");
   const { toast } = useToast();
 
@@ -78,18 +80,41 @@ const BlockedSlots = () => {
       toast({ title: "Domingo", description: "Domingos já são fechados automaticamente.", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("blocked_slots").insert({
-      blocked_date: newDate,
-      blocked_time: newTime === "all" ? null : newTime,
-      reason: reason || null,
-    });
-    if (error) {
-      toast({ title: "Erro", description: "Não foi possível bloquear.", variant: "destructive" });
+    if (blockType === "all") {
+      const { error } = await supabase.from("blocked_slots").insert({
+        blocked_date: newDate,
+        blocked_time: null,
+        reason: reason || null,
+      });
+      if (error) {
+        toast({ title: "Erro", description: "Não foi possível bloquear.", variant: "destructive" });
+      } else {
+        toast({ title: "Bloqueado!", description: "Dia inteiro bloqueado." });
+        setNewDate("");
+        setReason("");
+      }
     } else {
-      toast({ title: "Bloqueado!", description: newTime === "all" ? "Dia inteiro bloqueado." : `Horário ${newTime} bloqueado.` });
-      setNewDate("");
-      setNewTime("all");
-      setReason("");
+      // Insert individual slots for the range
+      const startIdx = HORARIOS.indexOf(startTime);
+      const endIdx = HORARIOS.indexOf(endTime);
+      if (startIdx === -1 || endIdx === -1 || startIdx > endIdx) {
+        toast({ title: "Horário inválido", description: "O horário de início deve ser antes do término.", variant: "destructive" });
+        return;
+      }
+      const slotsToBlock = HORARIOS.slice(startIdx, endIdx + 1);
+      const inserts = slotsToBlock.map((t) => ({
+        blocked_date: newDate,
+        blocked_time: t,
+        reason: reason || null,
+      }));
+      const { error } = await supabase.from("blocked_slots").insert(inserts);
+      if (error) {
+        toast({ title: "Erro", description: "Não foi possível bloquear.", variant: "destructive" });
+      } else {
+        toast({ title: "Bloqueado!", description: `Horários de ${startTime} até ${endTime} bloqueados.` });
+        setNewDate("");
+        setReason("");
+      }
     }
   };
 
@@ -118,8 +143,8 @@ const BlockedSlots = () => {
             <input
               type="radio"
               name="blockType"
-              checked={newTime === "all"}
-              onChange={() => setNewTime("all")}
+              checked={blockType === "all"}
+              onChange={() => setBlockType("all")}
               className="accent-primary"
             />
             <span className="text-sm text-foreground whitespace-nowrap">Dia Inteiro</span>
@@ -128,23 +153,35 @@ const BlockedSlots = () => {
             <input
               type="radio"
               name="blockType"
-              checked={newTime !== "all"}
-              onChange={() => setNewTime("08:00")}
+              checked={blockType === "range"}
+              onChange={() => setBlockType("range")}
               className="accent-primary"
             />
             <span className="text-sm text-foreground whitespace-nowrap">Horário específico</span>
           </label>
         </div>
-        {newTime !== "all" && (
-          <select
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
-          >
-            {HORARIOS.map((h) => (
-              <option key={h} value={h}>{h}</option>
-            ))}
-          </select>
+        {blockType === "range" && (
+          <div className="flex items-center gap-2">
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            >
+              {HORARIOS.map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
+            <span className="text-sm text-muted-foreground">até</span>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            >
+              {HORARIOS.map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
+          </div>
         )}
         <Input
           placeholder="Motivo (opcional)"

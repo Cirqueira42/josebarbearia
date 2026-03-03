@@ -15,6 +15,28 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
+import serviceCorte from "@/assets/service-corte.jpg";
+import serviceBarba from "@/assets/service-barba.jpg";
+import serviceCorteBarba from "@/assets/service-corte-barba.jpg";
+import serviceSobrancelha from "@/assets/service-sobrancelha.jpg";
+import serviceInfantil from "@/assets/service-infantil.jpg";
+
+const SERVICE_IMAGES: Record<string, string> = {
+  "corte": serviceCorte,
+  "barba": serviceBarba,
+  "corte + barba": serviceCorteBarba,
+  "sobrancelha": serviceSobrancelha,
+  "corte infantil": serviceInfantil,
+};
+
+const getServiceImage = (name: string) => {
+  const key = name.toLowerCase();
+  for (const [k, v] of Object.entries(SERVICE_IMAGES)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  return serviceCorte; // fallback
+};
+
 type Service = {
   id: string;
   name: string;
@@ -329,20 +351,24 @@ const Agendar = () => {
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6">
         {!selectedService ? (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4 bg-background/70 backdrop-blur inline-block px-3 py-1 rounded-lg">Escolha o serviço</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4 bg-background/60 backdrop-blur-sm inline-block px-3 py-1 rounded-lg">Escolha o serviço</h2>
             {services.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className="w-full bg-card/90 backdrop-blur-md border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-all flex items-center gap-4 shadow-lg"
+                className="w-full relative overflow-hidden rounded-lg text-left hover:ring-2 hover:ring-primary/50 transition-all shadow-lg group h-32"
               >
-                <span className="text-3xl">{s.icon}</span>
-                <div className="flex-1">
-                  <h3 className="font-bold text-foreground">{s.name}</h3>
-                  <p className="text-muted-foreground text-sm">{s.description}</p>
-                  <p className="text-muted-foreground text-xs mt-1">⏱ {s.duration_minutes} min</p>
+                <img src={getServiceImage(s.name)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
+                <div className="relative z-10 flex items-center gap-4 p-4 h-full">
+                  <span className="text-3xl">{s.icon}</span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-foreground text-lg drop-shadow-lg">{s.name}</h3>
+                    <p className="text-foreground/80 text-sm drop-shadow">{s.description}</p>
+                    <p className="text-foreground/60 text-xs mt-1">⏱ {s.duration_minutes} min</p>
+                  </div>
+                  <span className="text-primary font-bold text-lg drop-shadow-lg">R$ {s.price.toFixed(2)}</span>
                 </div>
-                <span className="text-primary font-bold">R$ {s.price.toFixed(2)}</span>
               </button>
             ))}
           </div>
