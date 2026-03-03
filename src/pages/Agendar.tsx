@@ -379,7 +379,7 @@ const Agendar = () => {
               <PhotoCarousel overlay="heavy" />
             </div>
 
-            <form onSubmit={handleSubmit} className="relative z-10 space-y-5 bg-card/80 backdrop-blur rounded-xl p-5 border border-border">
+            <form onSubmit={handleSubmit} className="relative z-10 space-y-5 bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-border/50">
               <button
                 type="button"
                 onClick={() => setSelectedService(null)}

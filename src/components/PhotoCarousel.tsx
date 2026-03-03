@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import logoBarbearia from "@/assets/logo-barbearia.png";
+
 const bgImages = [
+  logoBarbearia,
   "https://dull-gray-4q5gqzly1a.edgeone.app/Screenshot_20260129-130048.Chrome.jpg",
   "https://quintessential-teal-urcrjl7agg.edgeone.app/Screenshot_20260129-130055.Chrome.jpg",
   "https://scattered-chocolate-dua0vnwwnm.edgeone.app/Screenshot_20260129-130043.Chrome.jpg",
-  "https://private-pink-wgdurvqpwk.edgeone.app/Screenshot_20260129-130040.Chrome.jpg",
 ];
 
 export { bgImages };
@@ -20,10 +22,10 @@ const PhotoCarousel = ({ overlay = "light" }: { overlay?: "light" | "medium" | "
 
   const overlayClass =
     overlay === "light"
-      ? "bg-gradient-to-b from-background/20 via-transparent to-background/40"
+      ? "bg-gradient-to-b from-background/10 via-transparent to-background/20"
       : overlay === "medium"
-      ? "bg-gradient-to-b from-background/30 via-background/10 to-background/40"
-      : "bg-gradient-to-b from-background/40 via-background/20 to-background/50";
+      ? "bg-gradient-to-b from-background/20 via-transparent to-background/20"
+      : "bg-gradient-to-b from-background/30 via-background/5 to-background/30";
 
   return (
     <>
