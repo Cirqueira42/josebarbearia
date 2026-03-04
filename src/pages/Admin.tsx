@@ -27,6 +27,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 import AdminSettings from "@/components/admin/AdminSettings";
+import CashRegister from "@/components/admin/CashRegister";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -269,6 +270,7 @@ const Admin = () => {
 
         {/* Admin sections */}
         <div className="grid gap-6 mb-6">
+          <CashRegister />
           <BlockedSlots />
           <AdminSettings />
         </div>
