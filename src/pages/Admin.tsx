@@ -143,40 +143,40 @@ const Admin = () => {
       toast({ title: "Sucesso", description: `Agendamento ${statusLabels[status].label.toLowerCase()}.` });
 
       if (appointment) {
-        const dateFormatted = new Date(appointment.appointment_date + "T12:00:00").toLocaleDateString("pt-BR");
-        const dayName = getDayOfWeek(appointment.appointment_date);
+        const fullDate = formatFullDate(appointment.appointment_date);
         const phone = appointment.customer_phone.replace(/\D/g, "");
+        const bookingCode = generateBookingCode();
 
         if (status === "confirmed") {
           const msg = encodeURIComponent(
-            `✅ Agendamento Confirmado!\n\nOlá ${appointment.customer_name}! 😊\n\nSeu agendamento na José Barbearia foi confirmado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${appointment.appointment_time}\n\n📍 Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n\nTe esperamos! 👊`
+            `Olá, ${appointment.customer_name} o seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n\n*Quando:* ${fullDate} às ${appointment.appointment_time}\n\n*Profissional:* JOSE GILMARIO\n\n*Código:* ${bookingCode}\n\n📍*Endereço:* ${ADDRESS}\n\n📍*Link Google Maps:* ${GOOGLE_MAPS_LINK}`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
           sendTelegram(
-            `✅ <b>Agendamento Confirmado</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})\n🕐 ${appointment.appointment_time}`
+            `✅ <b>AGENDAMENTO CONFIRMADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}\n🔑 Código: ${bookingCode}\n\n💬 <a href="https://wa.me/55${phone}">Conversar no WhatsApp</a>`
           );
         }
 
         if (status === "cancelled") {
           const msg = encodeURIComponent(
-            `❌ Agendamento Cancelado\n\nOlá ${appointment.customer_name},\n\nInfelizmente seu agendamento foi cancelado:\n\n💈 Serviço: ${appointment.service_name}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\nJosé Barbearia 💈`
+            `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
           sendTelegram(
-            `❌ <b>Agendamento Cancelado</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})\n🕐 ${appointment.appointment_time}`
+            `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
           );
         }
 
         if (status === "completed") {
           const msg = encodeURIComponent(
-            `✅ Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na José Barbearia! 💈\n\nServiço: ${appointment.service_name}\nData: ${dateFormatted} (${dayName})\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
+            `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
           sendTelegram(
-            `✅ <b>Serviço Concluído</b>\n\n👤 ${appointment.customer_name}\n💈 ${appointment.service_name}\n📅 ${dateFormatted} (${dayName})`
+            `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}`
           );
         }
       }
