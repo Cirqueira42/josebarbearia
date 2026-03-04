@@ -12,12 +12,14 @@ const Hero = () => {
           <Scissors className="w-10 h-10 text-primary" />
         </div>
 
+        <p className="text-sm uppercase tracking-widest text-muted-foreground mb-4">Conheça Nossa Barbearia</p>
+
         <h1 className="text-5xl md:text-7xl font-bold font-display text-gradient mb-6">
           José Barbearia
         </h1>
 
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-          Agende seu horário e venha viver a melhor experiência em barbearia
+          Barba, cabelo e bigode é coisa séria!
         </p>
 
         <a
