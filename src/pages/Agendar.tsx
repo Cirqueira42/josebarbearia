@@ -59,8 +59,27 @@ type BookedSlot = {
 
 const BARBER_PHONE = "5516997369740";
 const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
+const GOOGLE_MAPS_LINK = "https://maps.app.goo.gl/JVahTmuAYLfAiyx57";
+const ADDRESS = "Av. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106";
 
 const DAYS_PT = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+const MONTHS_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+const formatFullDate = (dateStr: string) => {
+  const d = new Date(dateStr + "T12:00:00");
+  const dayName = DAYS_PT[d.getDay()];
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = MONTHS_PT[d.getMonth()];
+  const year = d.getFullYear();
+  return `${dayName}, ${day} de ${month} de ${year}`;
+};
+
+const generateBookingCode = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+};
 
 const generateTimeSlots = () => {
   const slots: string[] = [];
@@ -275,19 +294,23 @@ const Agendar = () => {
     } else {
       setSuccess(true);
 
-      const dateFormatted = new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR");
-      const dayName = getDayOfWeek(selectedDate);
-      const payLabel = paymentMethod ? `\nPagamento: ${paymentMethod}` : "";
+      const fullDate = formatFullDate(selectedDate);
+      const bookingCode = generateBookingCode();
+      const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
+
+      // Count appointments for numbering
+      const { count } = await supabase.from("appointments").select("*", { count: "exact", head: true });
+      const appointmentNum = count || 0;
 
       // Send WhatsApp to barber
       const msg = encodeURIComponent(
-        `📅 Novo Agendamento!\n\nCliente: ${customerName}\nTelefone: ${customerPhone}\n\nServiço: ${selectedService.name}\nValor: R$ ${selectedService.price.toFixed(2)}\nData: ${dateFormatted} (${dayName})\nHora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
+        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
 
       // Send Telegram notification
       sendTelegram(
-        `📅 <b>Novo Agendamento!</b>\n\n👤 Cliente: ${customerName}\n📞 Telefone: ${customerPhone}\n\n💈 Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n📅 Data: ${dateFormatted} (${dayName})\n🕐 Hora: ${selectedTime}${payLabel}\n\n⚡ Acesse o painel para confirmar.`
+        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
       );
     }
     setSubmitting(false);
