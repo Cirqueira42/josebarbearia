@@ -59,8 +59,27 @@ type BookedSlot = {
 
 const BARBER_PHONE = "5516997369740";
 const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
+const GOOGLE_MAPS_LINK = "https://maps.app.goo.gl/JVahTmuAYLfAiyx57";
+const ADDRESS = "Av. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106";
 
 const DAYS_PT = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+const MONTHS_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+const formatFullDate = (dateStr: string) => {
+  const d = new Date(dateStr + "T12:00:00");
+  const dayName = DAYS_PT[d.getDay()];
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = MONTHS_PT[d.getMonth()];
+  const year = d.getFullYear();
+  return `${dayName}, ${day} de ${month} de ${year}`;
+};
+
+const generateBookingCode = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+};
 
 const generateTimeSlots = () => {
   const slots: string[] = [];
