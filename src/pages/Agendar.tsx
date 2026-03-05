@@ -415,6 +415,29 @@ const Agendar = () => {
                 ← Trocar serviço
               </button>
 
+              {/* Barber selection - only show when more than 1 barber */}
+              {barbers.length > 1 && (
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">💈 Barbeiro</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {barbers.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedBarber(b)}
+                        className={`p-3 rounded-lg border text-center font-medium text-sm transition-all ${
+                          selectedBarber?.id === b.id
+                            ? "border-primary bg-primary/20 text-primary"
+                            : "border-border bg-background/50 text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        ✂️ {b.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
                 <Input
