@@ -127,18 +127,6 @@ const Agendar = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Load saved customer data from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("jose_customer");
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.name) setCustomerName(data.name);
-        if (data.phone) setCustomerPhone(data.phone);
-        if (data.email) setCustomerEmail(data.email);
-      } catch {}
-    }
-  }, []);
 
   useEffect(() => {
     fetchServices();
@@ -270,13 +258,6 @@ const Agendar = () => {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
-
-    // Save customer data to localStorage
-    localStorage.setItem("jose_customer", JSON.stringify({
-      name: customerName,
-      phone: customerPhone,
-      email: customerEmail,
-    }));
 
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
