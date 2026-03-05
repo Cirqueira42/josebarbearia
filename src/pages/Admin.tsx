@@ -209,6 +209,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <AdminNotification />
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
       </div>
