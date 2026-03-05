@@ -46,6 +46,12 @@ type Service = {
   duration_minutes: number;
 };
 
+type Barber = {
+  id: string;
+  name: string;
+  enabled: boolean;
+};
+
 type BlockedSlot = {
   blocked_date: string;
   blocked_time: string | null;
@@ -112,9 +118,11 @@ const getBrazilNow = () => {
 
 const Agendar = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [barbers, setBarbers] = useState<Barber[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
   const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -131,6 +139,7 @@ const Agendar = () => {
   useEffect(() => {
     fetchServices();
     fetchBlockedSlots();
+    fetchBarbers();
   }, []);
 
   useEffect(() => {
@@ -156,6 +165,11 @@ const Agendar = () => {
   const fetchBlockedSlots = async () => {
     const { data } = await supabase.from("blocked_slots").select("blocked_date, blocked_time");
     if (data) setBlockedSlots(data);
+  };
+
+  const fetchBarbers = async () => {
+    const { data } = await supabase.from("barbers").select("id, name, enabled").eq("enabled", true).order("created_at");
+    if (data) setBarbers(data);
   };
 
   const fetchBookedSlots = async (date: string) => {
@@ -258,6 +272,12 @@ const Agendar = () => {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
+    if (barbers.length > 1 && !selectedBarber) {
+      toast({ title: "Selecione um barbeiro", variant: "destructive" });
+      return;
+    }
+
+    const barber = selectedBarber || barbers[0];
 
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
@@ -268,6 +288,8 @@ const Agendar = () => {
       service_name: selectedService.name,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
+      barber_id: barber?.id || null,
+      barber_name: barber?.name || "José Gilmário",
     });
 
     if (error) {
@@ -284,14 +306,15 @@ const Agendar = () => {
       const appointmentNum = count || 0;
 
       // Send WhatsApp to barber
+      const barberNameMsg = barber?.name || "José Gilmário";
       const msg = encodeURIComponent(
-        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
+        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
 
       // Send Telegram notification
       sendTelegram(
-        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
+        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
       );
     }
     setSubmitting(false);
@@ -391,6 +414,29 @@ const Agendar = () => {
               >
                 ← Trocar serviço
               </button>
+
+              {/* Barber selection - only show when more than 1 barber */}
+              {barbers.length > 1 && (
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">💈 Barbeiro</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {barbers.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedBarber(b)}
+                        className={`p-3 rounded-lg border text-center font-medium text-sm transition-all ${
+                          selectedBarber?.id === b.id
+                            ? "border-primary bg-primary/20 text-primary"
+                            : "border-border bg-background/50 text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        ✂️ {b.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>

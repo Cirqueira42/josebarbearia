@@ -28,6 +28,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 import AdminSettings from "@/components/admin/AdminSettings";
 import CashRegister from "@/components/admin/CashRegister";
+import BarberManagement from "@/components/admin/BarberManagement";
+import AdminNotification from "@/components/admin/AdminNotification";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -207,6 +209,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <AdminNotification />
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
       </div>
@@ -290,6 +293,7 @@ const Admin = () => {
         {/* Admin sections */}
         <div className="grid gap-6 mb-6">
           <CashRegister />
+          <BarberManagement />
           <BlockedSlots />
           <AdminSettings />
         </div>

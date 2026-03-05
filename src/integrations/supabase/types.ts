@@ -18,11 +18,14 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          barber_id: string | null
+          barber_name: string | null
           created_at: string
           customer_email: string | null
           customer_name: string
           customer_phone: string
           id: string
+          seen_by_admin: boolean
           service_id: string | null
           service_name: string
           status: Database["public"]["Enums"]["appointment_status"]
@@ -30,11 +33,14 @@ export type Database = {
         Insert: {
           appointment_date: string
           appointment_time: string
+          barber_id?: string | null
+          barber_name?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name: string
           customer_phone: string
           id?: string
+          seen_by_admin?: boolean
           service_id?: string | null
           service_name: string
           status?: Database["public"]["Enums"]["appointment_status"]
@@ -42,16 +48,26 @@ export type Database = {
         Update: {
           appointment_date?: string
           appointment_time?: string
+          barber_id?: string | null
+          barber_name?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string
           id?: string
+          seen_by_admin?: boolean
           service_id?: string | null
           service_name?: string
           status?: Database["public"]["Enums"]["appointment_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_service_id_fkey"
             columns: ["service_id"]
@@ -60,6 +76,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      barbers: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       blocked_slots: {
         Row: {
