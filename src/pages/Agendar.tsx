@@ -167,6 +167,11 @@ const Agendar = () => {
     if (data) setBlockedSlots(data);
   };
 
+  const fetchBarbers = async () => {
+    const { data } = await supabase.from("barbers").select("id, name, enabled").eq("enabled", true).order("created_at");
+    if (data) setBarbers(data);
+  };
+
   const fetchBookedSlots = async (date: string) => {
     const { data } = await supabase
       .from("appointments")
