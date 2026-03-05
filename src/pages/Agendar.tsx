@@ -306,14 +306,15 @@ const Agendar = () => {
       const appointmentNum = count || 0;
 
       // Send WhatsApp to barber
+      const barberNameMsg = barber?.name || "José Gilmário";
       const msg = encodeURIComponent(
-        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
+        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
 
       // Send Telegram notification
       sendTelegram(
-        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: José Gilmário${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
+        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
       );
     }
     setSubmitting(false);
