@@ -259,13 +259,6 @@ const Agendar = () => {
       return;
     }
 
-    // Save customer data to localStorage
-    localStorage.setItem("jose_customer", JSON.stringify({
-      name: customerName,
-      phone: customerPhone,
-      email: customerEmail,
-    }));
-
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
       customer_name: customerName,
