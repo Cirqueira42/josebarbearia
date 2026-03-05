@@ -46,6 +46,12 @@ type Service = {
   duration_minutes: number;
 };
 
+type Barber = {
+  id: string;
+  name: string;
+  enabled: boolean;
+};
+
 type BlockedSlot = {
   blocked_date: string;
   blocked_time: string | null;
