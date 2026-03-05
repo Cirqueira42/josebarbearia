@@ -272,6 +272,12 @@ const Agendar = () => {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
+    if (barbers.length > 1 && !selectedBarber) {
+      toast({ title: "Selecione um barbeiro", variant: "destructive" });
+      return;
+    }
+
+    const barber = selectedBarber || barbers[0];
 
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
@@ -282,6 +288,8 @@ const Agendar = () => {
       service_name: selectedService.name,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
+      barber_id: barber?.id || null,
+      barber_name: barber?.name || "José Gilmário",
     });
 
     if (error) {
