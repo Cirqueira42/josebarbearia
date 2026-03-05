@@ -139,6 +139,7 @@ const Agendar = () => {
   useEffect(() => {
     fetchServices();
     fetchBlockedSlots();
+    fetchBarbers();
   }, []);
 
   useEffect(() => {
