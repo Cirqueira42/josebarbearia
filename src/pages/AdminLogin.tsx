@@ -94,7 +94,6 @@ const AdminLogin = () => {
               required
             />
           </div>
-          </div>
           <Button type="submit" className="w-full" disabled={loading}>
             <LogIn className="w-4 h-4 mr-2" />
             {loading ? "Entrando..." : "Entrar"}
