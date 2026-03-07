@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Scissors, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_EMAIL = "admin@josebarbearia.com";
-
 const AdminLogin = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
