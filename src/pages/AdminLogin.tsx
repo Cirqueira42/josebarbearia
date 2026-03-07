@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Scissors, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_EMAIL = "admin@josebarbearia.com";
-
 const AdminLogin = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ const AdminLogin = () => {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: ADMIN_EMAIL,
+      email,
       password,
     });
 
@@ -73,6 +72,18 @@ const AdminLogin = () => {
           className="bg-card border border-border rounded-lg p-6 space-y-4"
         >
           <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password">Senha de Acesso</Label>
             <Input
               id="password"
@@ -81,7 +92,6 @@ const AdminLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoFocus
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
