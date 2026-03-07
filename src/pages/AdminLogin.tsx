@@ -72,6 +72,18 @@ const AdminLogin = () => {
           className="bg-card border border-border rounded-lg p-6 space-y-4"
         >
           <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password">Senha de Acesso</Label>
             <Input
               id="password"
@@ -80,8 +92,8 @@ const AdminLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoFocus
             />
+          </div>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             <LogIn className="w-4 h-4 mr-2" />
