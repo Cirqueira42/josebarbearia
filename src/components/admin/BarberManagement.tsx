@@ -12,7 +12,7 @@ type Barber = {
   enabled: boolean;
 };
 
-const SITE_URL = "https://barber-hub-finder.lovable.app";
+const SITE_URL = "https://josebarbearia.lovable.app";
 
 const BarberManagement = () => {
   const [barbers, setBarbers] = useState<Barber[]>([]);

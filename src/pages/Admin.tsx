@@ -35,7 +35,7 @@ import PhotoCarousel from "@/components/PhotoCarousel";
 type Appointment = Tables<"appointments">;
 
 const BARBER_PHONE = "5516997369740";
-const BOOKING_URL = "https://barber-hub-finder.lovable.app/agendar";
+const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
 const GOOGLE_MAPS_LINK = "https://maps.app.goo.gl/JVahTmuAYLfAiyx57";
 const ADDRESS = "Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP";
 
