@@ -19,7 +19,7 @@ const AdminLogin = () => {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: ADMIN_EMAIL,
+      email,
       password,
     });
 
