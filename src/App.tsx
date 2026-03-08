@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import Agendar from "./pages/Agendar";
 import BarberView from "./pages/BarberView";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/agendar" element={<Agendar />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/barbeiro/:id" element={<BarberView />} />
           <Route path="*" element={<NotFound />} />
