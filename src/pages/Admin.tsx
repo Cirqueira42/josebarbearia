@@ -101,37 +101,6 @@ const Admin = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-    const channel = supabase
-      .channel("appointments-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "appointments" },
-        () => fetchAppointments()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/admin-login");
-      return;
-    }
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .eq("role", "admin");
-
-    if (!roles || roles.length === 0) {
-      await supabase.auth.signOut();
-      navigate("/admin-login");
-    }
-  };
 
   const fetchAppointments = async () => {
     const { data, error } = await supabase
