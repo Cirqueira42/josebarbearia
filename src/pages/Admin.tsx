@@ -86,9 +86,21 @@ const Admin = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
     fetchAppointments();
 
+    const channel = supabase
+      .channel("appointments-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => fetchAppointments()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
     const channel = supabase
       .channel("appointments-realtime")
       .on(
