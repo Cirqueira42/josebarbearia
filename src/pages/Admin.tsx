@@ -30,6 +30,8 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import CashRegister from "@/components/admin/CashRegister";
 import BarberManagement from "@/components/admin/BarberManagement";
 import AdminNotification from "@/components/admin/AdminNotification";
+import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
+import ReportsHistory from "@/components/admin/ReportsHistory";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
