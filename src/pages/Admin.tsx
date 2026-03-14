@@ -30,6 +30,8 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import CashRegister from "@/components/admin/CashRegister";
 import BarberManagement from "@/components/admin/BarberManagement";
 import AdminNotification from "@/components/admin/AdminNotification";
+import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
+import ReportsHistory from "@/components/admin/ReportsHistory";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -113,6 +115,38 @@ const Admin = () => {
     setLoading(false);
   };
 
+  const updateLoyalty = async (customerPhone: string, customerName: string) => {
+    const phone = customerPhone.replace(/\D/g, "");
+    // Check if loyalty record exists
+    const { data: existing } = await supabase
+      .from("loyalty")
+      .select("*")
+      .eq("customer_phone", phone)
+      .maybeSingle();
+
+    if (existing) {
+      const newTotal = (existing as any).total_services + 1;
+      const newEarned = Math.floor(newTotal / 10);
+      await supabase
+        .from("loyalty")
+        .update({
+          total_services: newTotal,
+          free_services_earned: newEarned,
+          customer_name: customerName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("customer_phone", phone);
+    } else {
+      await supabase.from("loyalty").insert({
+        customer_phone: phone,
+        customer_name: customerName,
+        total_services: 1,
+        free_services_earned: 0,
+        free_services_redeemed: 0,
+      });
+    }
+  };
+
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
     const appointment = appointments.find((a) => a.id === id);
     const { error } = await supabase
@@ -134,7 +168,7 @@ const Admin = () => {
           const msg = encodeURIComponent(
             `Olá, ${appointment.customer_name} o seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n\n*Quando:* ${fullDate} às ${appointment.appointment_time}\n\n*Profissional:* JOSE GILMARIO\n\n*Código:* ${bookingCode}\n\n📍*Endereço:* ${ADDRESS}\n\n📍*Link Google Maps:* ${GOOGLE_MAPS_LINK}`
           );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`, "_blank");
 
           sendTelegram(
             `✅ <b>AGENDAMENTO CONFIRMADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}\n🔑 Código: ${bookingCode}\n\n💬 <a href="https://wa.me/55${phone}">Conversar no WhatsApp</a>`
@@ -145,7 +179,7 @@ const Admin = () => {
           const msg = encodeURIComponent(
             `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`
           );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`, "_blank");
 
           sendTelegram(
             `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
@@ -153,10 +187,13 @@ const Admin = () => {
         }
 
         if (status === "completed") {
+          // Update loyalty program
+          await updateLoyalty(appointment.customer_phone, appointment.customer_name);
+
           const msg = encodeURIComponent(
             `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`, "_blank");
 
           sendTelegram(
             `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}`
@@ -274,6 +311,8 @@ const Admin = () => {
         {/* Admin sections */}
         <div className="grid gap-6 mb-6">
           <CashRegister />
+          <LoyaltyProgram />
+          <ReportsHistory />
           <BarberManagement />
           <BlockedSlots />
           <AdminSettings />

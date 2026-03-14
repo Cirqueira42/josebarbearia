@@ -17,6 +17,7 @@ export type Database = {
       appointments: {
         Row: {
           appointment_date: string
+          appointment_number: number | null
           appointment_time: string
           barber_id: string | null
           barber_name: string | null
@@ -25,6 +26,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id: string
+          reminder_sent: boolean
           seen_by_admin: boolean
           service_id: string | null
           service_name: string
@@ -32,6 +34,7 @@ export type Database = {
         }
         Insert: {
           appointment_date: string
+          appointment_number?: number | null
           appointment_time: string
           barber_id?: string | null
           barber_name?: string | null
@@ -40,6 +43,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id?: string
+          reminder_sent?: boolean
           seen_by_admin?: boolean
           service_id?: string | null
           service_name: string
@@ -47,6 +51,7 @@ export type Database = {
         }
         Update: {
           appointment_date?: string
+          appointment_number?: number | null
           appointment_time?: string
           barber_id?: string | null
           barber_name?: string | null
@@ -55,6 +60,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           id?: string
+          reminder_sent?: boolean
           seen_by_admin?: boolean
           service_id?: string | null
           service_name?: string
@@ -119,6 +125,39 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
+        }
+        Relationships: []
+      }
+      loyalty: {
+        Row: {
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          free_services_earned: number
+          free_services_redeemed: number
+          id: string
+          total_services: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          free_services_earned?: number
+          free_services_redeemed?: number
+          id?: string
+          total_services?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          free_services_earned?: number
+          free_services_redeemed?: number
+          id?: string
+          total_services?: number
+          updated_at?: string
         }
         Relationships: []
       }

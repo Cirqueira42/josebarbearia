@@ -310,7 +310,7 @@ const Agendar = () => {
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
-      window.open(`https://wa.me/${BARBER_PHONE}?text=${msg}`, "_blank");
+      window.open(`https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`, "_blank");
 
       // Send Telegram notification
       sendTelegram(
