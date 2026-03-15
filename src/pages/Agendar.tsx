@@ -80,13 +80,6 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-const generateBookingCode = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return code;
-};
-
 const generateTimeSlots = () => {
   const slots: string[] = [];
   // Morning: 8:00 - 11:50, Afternoon: 13:00 - 19:00
@@ -279,6 +272,14 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
+    // Pré-abre janela no clique do usuário para evitar bloqueio de popup em mobile
+    let whatsappWindow: Window | null = null;
+    try {
+      whatsappWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+    } catch {
+      whatsappWindow = null;
+    }
+
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
       customer_name: customerName,
@@ -293,29 +294,29 @@ const Agendar = () => {
     });
 
     if (error) {
+      if (whatsappWindow && !whatsappWindow.closed) whatsappWindow.close();
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       const fullDate = formatFullDate(selectedDate);
-      const bookingCode = generateBookingCode();
+      
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
 
       // Count appointments for numbering
       const { count } = await supabase.from("appointments").select("*", { count: "exact", head: true });
       const appointmentNum = count || 0;
 
-      // Send WhatsApp to barber using programmatic link click (avoids popup blocker)
       const barberNameMsg = barber?.name || "José Gilmário";
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`;
-      const link = document.createElement("a");
-      link.href = whatsappUrl;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      // Se popup bloqueado, faz fallback para abrir no mesmo separador
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
 
       setSuccess(true);
 
