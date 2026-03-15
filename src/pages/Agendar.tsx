@@ -278,6 +278,7 @@ const Agendar = () => {
     }
 
     const barber = selectedBarber || barbers[0];
+    const whatsappWindow = window.open("", "_blank");
 
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
