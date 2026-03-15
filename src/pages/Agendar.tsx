@@ -80,13 +80,6 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-const generateBookingCode = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return code;
-};
-
 const generateTimeSlots = () => {
   const slots: string[] = [];
   // Morning: 8:00 - 11:50, Afternoon: 13:00 - 19:00
