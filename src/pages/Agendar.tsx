@@ -294,6 +294,9 @@ const Agendar = () => {
     });
 
     if (error) {
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.close();
+      }
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       setSuccess(true);
@@ -311,7 +314,12 @@ const Agendar = () => {
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
-      window.open(`https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`, "_blank");
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`;
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.open(whatsappUrl, "_blank");
+      }
 
       // Send Telegram notification
       sendTelegram(
