@@ -305,7 +305,7 @@ const Agendar = () => {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       const fullDate = formatFullDate(selectedDate);
-      const bookingCode = generateBookingCode();
+      
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
 
       // Count appointments for numbering
