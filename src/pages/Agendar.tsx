@@ -128,6 +128,25 @@ const Agendar = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  const lookupCustomer = useCallback(async (phone: string) => {
+    // Search in past appointments for this phone number
+    const { data } = await supabase
+      .from("appointments")
+      .select("customer_name, customer_email")
+      .eq("customer_phone", phone)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      if (data[0].customer_name && !customerName) {
+        setCustomerName(data[0].customer_name);
+      }
+      if (data[0].customer_email && !customerEmail) {
+        setCustomerEmail(data[0].customer_email);
+      }
+      toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${data[0].customer_name}!` });
+    }
+  }, [customerName, customerEmail, toast]);
 
   useEffect(() => {
     fetchServices();
