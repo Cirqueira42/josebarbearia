@@ -124,6 +124,7 @@ const Agendar = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -321,8 +322,10 @@ const Agendar = () => {
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
+      const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
 
       setSuccess(true);
+      setWhatsAppRedirectUrl(redirectUrl);
 
       // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
       const clientPhone = customerPhone.replace(/\D/g, "");
@@ -333,11 +336,6 @@ const Agendar = () => {
       sendTelegram(
         `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
       );
-
-      // Redirect to WhatsApp after short delay so user sees success screen
-      setTimeout(() => {
-        window.location.href = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
-      }, 2000);
     }
     setSubmitting(false);
   };
@@ -364,9 +362,21 @@ const Agendar = () => {
               💈 O barbeiro <strong>José</strong> vai te enviar a confirmação via WhatsApp em breve!
             </p>
           </div>
-          <Button onClick={() => navigate("/")} className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold">
-            Voltar ao Início
-          </Button>
+          <div className="space-y-3">
+            {whatsAppRedirectUrl && (
+              <Button
+                asChild
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold"
+              >
+                <a href={whatsAppRedirectUrl} target="_blank" rel="noreferrer">
+                  Abrir mensagem no WhatsApp
+                </a>
+              </Button>
+            )}
+            <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
+              Voltar ao Início
+            </Button>
+          </div>
         </div>
       </div>
     );
