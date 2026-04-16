@@ -291,14 +291,6 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
-    // Pré-abre janela no clique do usuário para evitar bloqueio de popup em mobile
-    let whatsappWindow: Window | null = null;
-    try {
-      whatsappWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
-    } catch {
-      whatsappWindow = null;
-    }
-
     setSubmitting(true);
     const { error } = await supabase.from("appointments").insert({
       customer_name: customerName,
@@ -313,7 +305,6 @@ const Agendar = () => {
     });
 
     if (error) {
-      if (whatsappWindow && !whatsappWindow.closed) whatsappWindow.close();
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       const fullDate = formatFullDate(selectedDate);
@@ -325,29 +316,28 @@ const Agendar = () => {
       const appointmentNum = count || 0;
 
       const barberNameMsg = barber?.name || "José Gilmário";
+      
+      // Send WhatsApp to barber (no popup, direct redirect)
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`;
-
-      // Se popup bloqueado, faz fallback para abrir no mesmo separador
-      if (whatsappWindow && !whatsappWindow.closed) {
-        whatsappWindow.location.href = whatsappUrl;
-      } else {
-        window.location.href = whatsappUrl;
-      }
 
       setSuccess(true);
 
-      // Send Telegram notification with WhatsApp confirmation button
-      const confirmMsg = encodeURIComponent(
-        `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* R$ ${selectedService.price.toFixed(2)}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`
-      );
-      const whatsConfirmLink = `https://api.whatsapp.com/send?phone=55${customerPhone.replace(/\D/g, "")}&text=${confirmMsg}`;
+      // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
+      const clientPhone = customerPhone.replace(/\D/g, "");
+      const confirmText = `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* R$ ${selectedService.price.toFixed(2)}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
+      const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
 
+      // Send Telegram notification
       sendTelegram(
         `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
       );
+
+      // Redirect to WhatsApp after short delay so user sees success screen
+      setTimeout(() => {
+        window.location.href = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
+      }, 2000);
     }
     setSubmitting(false);
   };
