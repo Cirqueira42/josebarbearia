@@ -320,9 +320,14 @@ const Agendar = () => {
 
       setSuccess(true);
 
-      // Send Telegram notification
+      // Send Telegram notification with WhatsApp confirmation button
+      const confirmMsg = encodeURIComponent(
+        `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* R$ ${selectedService.price.toFixed(2)}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`
+      );
+      const whatsConfirmLink = `https://api.whatsapp.com/send?phone=55${customerPhone.replace(/\D/g, "")}&text=${confirmMsg}`;
+
       sendTelegram(
-        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n💬 <a href="https://wa.me/55${customerPhone.replace(/\D/g, "")}">Conversar no WhatsApp</a>`
+        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
       );
     }
     setSubmitting(false);
@@ -330,25 +335,27 @@ const Agendar = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
-        <PhotoCarousel overlay="heavy" />
-        <div className="relative z-10 bg-card/90 backdrop-blur border border-border rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-primary" />
+    <div className="min-h-screen bg-green-600 flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-green-500 to-green-700" />
+        <div className="relative z-10 bg-white/95 backdrop-blur border border-green-300 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <Check className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold font-display text-foreground mb-2">
+          <h2 className="text-2xl font-bold font-display text-green-700 mb-2">
             Agendamento Confirmado!
           </h2>
-          <p className="text-muted-foreground mb-2">
+          <p className="text-gray-700 font-medium mb-1">
             {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
           </p>
-          <p className="text-primary font-medium mb-6">
+          <p className="text-green-600 font-bold text-lg mb-4">
             {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
           </p>
-          <p className="text-muted-foreground text-sm mb-6">
-            Aguarde a confirmação do barbeiro. Você receberá uma mensagem no WhatsApp.
-          </p>
-          <Button onClick={() => navigate("/")} className="w-full">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+            <p className="text-green-800 font-medium text-sm">
+              💈 O barbeiro <strong>José</strong> vai te enviar a confirmação via WhatsApp em breve!
+            </p>
+          </div>
+          <Button onClick={() => navigate("/")} className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold">
             Voltar ao Início
           </Button>
         </div>
