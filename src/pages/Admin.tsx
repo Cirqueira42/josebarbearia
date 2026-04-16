@@ -179,7 +179,7 @@ const Admin = () => {
           const msg = encodeURIComponent(
             `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`
           );
-          window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`, "_blank");
+          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
           sendTelegram(
             `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
@@ -193,7 +193,7 @@ const Admin = () => {
           const msg = encodeURIComponent(
             `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
-          window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`, "_blank");
+          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
           sendTelegram(
             `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}`
