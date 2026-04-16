@@ -458,7 +458,14 @@ const Agendar = () => {
                 <Input
                   placeholder="(00) 00000-0000"
                   value={customerPhone}
-                  onChange={(e) => setCustomerPhone(formatPhone(e.target.value))}
+                  onChange={(e) => {
+                    const formatted = formatPhone(e.target.value);
+                    setCustomerPhone(formatted);
+                    const digits = formatted.replace(/\D/g, "");
+                    if (digits.length >= 10) {
+                      lookupCustomer(digits);
+                    }
+                  }}
                   required
                 />
               </div>
