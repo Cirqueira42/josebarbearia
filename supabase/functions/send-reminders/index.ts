@@ -68,7 +68,10 @@ Deno.serve(async (req) => {
 
       // Send Telegram reminder to admin
       if (botToken && chatId) {
-        const telegramMsg = `⏰ <b>LEMBRETE - 45 MIN</b>\n\n👤 ${appt.customer_name}\n📱 ${appt.customer_phone}\n✂️ ${appt.service_name}\n📅 ${dayName}, ${day} de ${month}\n🕐 ${appt.appointment_time}\n💈 ${appt.barber_name || 'José Gilmário'}\n\n💬 <a href="https://wa.me/55${appt.customer_phone.replace(/\D/g, '')}">Lembrar cliente no WhatsApp</a>`;
+        const clientPhone = appt.customer_phone.replace(/\D/g, '');
+        const reminderText = `Olá, ${appt.customer_name}! 👋\n\nLembrete do seu agendamento na *José Barbearia*:\n\n*Serviço:* ${appt.service_name.toUpperCase()}\n*Quando:* ${dayName}, ${day} de ${month} às ${appt.appointment_time}\n*Profissional:* ${(appt.barber_name || 'José Gilmário').toUpperCase()}\n\nFalta cerca de 45 minutos! Te esperamos! 💈`;
+        const whatsLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(reminderText)}`;
+        const telegramMsg = `⏰ <b>LEMBRETE - 45 MIN</b>\n\n👤 ${appt.customer_name}\n📱 ${appt.customer_phone}\n✂️ ${appt.service_name}\n📅 ${dayName}, ${day} de ${month}\n🕐 ${appt.appointment_time}\n💈 ${appt.barber_name || 'José Gilmário'}\n\n💬 <a href="${whatsLink}">LEMBRAR CLIENTE NO WHATSAPP</a>`;
 
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',

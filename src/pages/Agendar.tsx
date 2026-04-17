@@ -368,12 +368,23 @@ const Agendar = () => {
           <div className="space-y-3">
             {whatsAppRedirectUrl && (
               <Button
-                asChild
+                onClick={() => {
+                  // Try native deep link first (no blank tab on mobile),
+                  // fall back to wa.me web link if WhatsApp is not installed.
+                  const fallback = whatsAppRedirectUrl;
+                  const fallbackTimer = window.setTimeout(() => {
+                    window.location.href = fallback;
+                  }, 800);
+                  const onHide = () => {
+                    window.clearTimeout(fallbackTimer);
+                    document.removeEventListener("visibilitychange", onHide);
+                  };
+                  document.addEventListener("visibilitychange", onHide);
+                  window.location.href = whatsAppDeepLink || fallback;
+                }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold"
               >
-                <a href={whatsAppRedirectUrl} target="_blank" rel="noreferrer">
-                  Abrir mensagem no WhatsApp
-                </a>
+                Abrir mensagem no WhatsApp
               </Button>
             )}
             <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
