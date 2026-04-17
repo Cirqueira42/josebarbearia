@@ -126,6 +126,8 @@ const Agendar = () => {
   const [success, setSuccess] = useState(false);
   const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
   const [whatsAppDeepLink, setWhatsAppDeepLink] = useState("");
+  const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
+  const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -294,7 +296,7 @@ const Agendar = () => {
     const barber = selectedBarber || barbers[0];
 
     setSubmitting(true);
-    const { error } = await supabase.from("appointments").insert({
+    const { data: inserted, error } = await supabase.from("appointments").insert({
       customer_name: customerName,
       customer_phone: customerPhone.replace(/\D/g, ""),
       customer_email: customerEmail || null,
@@ -304,7 +306,7 @@ const Agendar = () => {
       appointment_time: selectedTime,
       barber_id: barber?.id || null,
       barber_name: barber?.name || "José Gilmário",
-    });
+    }).select("appointment_number, barber_name").single();
 
     if (error) {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
@@ -313,11 +315,12 @@ const Agendar = () => {
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
 
-      // Count appointments for numbering
-      const { count } = await supabase.from("appointments").select("*", { count: "exact", head: true });
-      const appointmentNum = count || 0;
+      // Use the real sequential number returned by the database
+      const appointmentNum = inserted?.appointment_number ?? 0;
+      const barberNameMsg = inserted?.barber_name || barber?.name || "José Gilmário";
 
-      const barberNameMsg = barber?.name || "José Gilmário";
+      setConfirmedNumber(appointmentNum);
+      setConfirmedBarber(barberNameMsg);
       
       // Send WhatsApp to barber (no popup, direct redirect)
       const msg = encodeURIComponent(
@@ -354,15 +357,25 @@ const Agendar = () => {
           <h2 className="text-2xl font-bold font-display text-green-700 mb-2">
             Agendamento Confirmado!
           </h2>
+          {confirmedNumber !== null && (
+            <div className="inline-block bg-green-600 text-white text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
+              Agendamento #{confirmedNumber}
+            </div>
+          )}
           <p className="text-gray-700 font-medium mb-1">
             {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
           </p>
           <p className="text-green-600 font-bold text-lg mb-4">
             {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
           </p>
+          {confirmedBarber && (
+            <p className="text-gray-700 text-sm mb-4">
+              💈 Profissional: <strong className="text-green-700">{confirmedBarber}</strong>
+            </p>
+          )}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
             <p className="text-green-800 font-medium text-sm">
-              💈 O barbeiro <strong>José</strong> vai te enviar a confirmação via WhatsApp em breve!
+              💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
             </p>
           </div>
           <div className="space-y-3">
