@@ -125,6 +125,7 @@ const Agendar = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
+  const [whatsAppDeepLink, setWhatsAppDeepLink] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -323,9 +324,11 @@ const Agendar = () => {
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
+      const deepLink = `whatsapp://send?phone=${BARBER_PHONE}&text=${msg}`;
 
       setSuccess(true);
       setWhatsAppRedirectUrl(redirectUrl);
+      setWhatsAppDeepLink(deepLink);
 
       // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
       const clientPhone = customerPhone.replace(/\D/g, "");
