@@ -126,6 +126,8 @@ const Agendar = () => {
   const [success, setSuccess] = useState(false);
   const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
   const [whatsAppDeepLink, setWhatsAppDeepLink] = useState("");
+  const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
+  const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -294,7 +296,7 @@ const Agendar = () => {
     const barber = selectedBarber || barbers[0];
 
     setSubmitting(true);
-    const { error } = await supabase.from("appointments").insert({
+    const { data: inserted, error } = await supabase.from("appointments").insert({
       customer_name: customerName,
       customer_phone: customerPhone.replace(/\D/g, ""),
       customer_email: customerEmail || null,
@@ -304,7 +306,7 @@ const Agendar = () => {
       appointment_time: selectedTime,
       barber_id: barber?.id || null,
       barber_name: barber?.name || "José Gilmário",
-    });
+    }).select("appointment_number, barber_name").single();
 
     if (error) {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
@@ -313,11 +315,12 @@ const Agendar = () => {
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
 
-      // Count appointments for numbering
-      const { count } = await supabase.from("appointments").select("*", { count: "exact", head: true });
-      const appointmentNum = count || 0;
+      // Use the real sequential number returned by the database
+      const appointmentNum = inserted?.appointment_number ?? 0;
+      const barberNameMsg = inserted?.barber_name || barber?.name || "José Gilmário";
 
-      const barberNameMsg = barber?.name || "José Gilmário";
+      setConfirmedNumber(appointmentNum);
+      setConfirmedBarber(barberNameMsg);
       
       // Send WhatsApp to barber (no popup, direct redirect)
       const msg = encodeURIComponent(
