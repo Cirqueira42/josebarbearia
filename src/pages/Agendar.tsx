@@ -357,15 +357,25 @@ const Agendar = () => {
           <h2 className="text-2xl font-bold font-display text-green-700 mb-2">
             Agendamento Confirmado!
           </h2>
+          {confirmedNumber !== null && (
+            <div className="inline-block bg-green-600 text-white text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
+              Agendamento #{confirmedNumber}
+            </div>
+          )}
           <p className="text-gray-700 font-medium mb-1">
             {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
           </p>
           <p className="text-green-600 font-bold text-lg mb-4">
             {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
           </p>
+          {confirmedBarber && (
+            <p className="text-gray-700 text-sm mb-4">
+              💈 Profissional: <strong className="text-green-700">{confirmedBarber}</strong>
+            </p>
+          )}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
             <p className="text-green-800 font-medium text-sm">
-              💈 O barbeiro <strong>José</strong> vai te enviar a confirmação via WhatsApp em breve!
+              💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
             </p>
           </div>
           <div className="space-y-3">
