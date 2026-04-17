@@ -125,6 +125,7 @@ const Agendar = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
+  const [whatsAppDeepLink, setWhatsAppDeepLink] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -323,9 +324,11 @@ const Agendar = () => {
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
       const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
+      const deepLink = `whatsapp://send?phone=${BARBER_PHONE}&text=${msg}`;
 
       setSuccess(true);
       setWhatsAppRedirectUrl(redirectUrl);
+      setWhatsAppDeepLink(deepLink);
 
       // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
       const clientPhone = customerPhone.replace(/\D/g, "");
@@ -365,12 +368,23 @@ const Agendar = () => {
           <div className="space-y-3">
             {whatsAppRedirectUrl && (
               <Button
-                asChild
+                onClick={() => {
+                  // Try native deep link first (no blank tab on mobile),
+                  // fall back to wa.me web link if WhatsApp is not installed.
+                  const fallback = whatsAppRedirectUrl;
+                  const fallbackTimer = window.setTimeout(() => {
+                    window.location.href = fallback;
+                  }, 800);
+                  const onHide = () => {
+                    window.clearTimeout(fallbackTimer);
+                    document.removeEventListener("visibilitychange", onHide);
+                  };
+                  document.addEventListener("visibilitychange", onHide);
+                  window.location.href = whatsAppDeepLink || fallback;
+                }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold"
               >
-                <a href={whatsAppRedirectUrl} target="_blank" rel="noreferrer">
-                  Abrir mensagem no WhatsApp
-                </a>
+                Abrir mensagem no WhatsApp
               </Button>
             )}
             <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
