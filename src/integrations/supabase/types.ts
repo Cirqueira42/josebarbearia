@@ -214,12 +214,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_booked_slots: {
+        Args: { _date: string }
+        Returns: {
+          appointment_time: string
+          barber_id: string
+          service_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      lookup_customer_by_phone: {
+        Args: { _phone: string }
+        Returns: {
+          customer_email: string
+          customer_name: string
+        }[]
       }
     }
     Enums: {
