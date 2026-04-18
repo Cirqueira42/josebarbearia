@@ -134,13 +134,8 @@ const Agendar = () => {
   const [searchParams] = useSearchParams();
 
   const lookupCustomer = useCallback(async (phone: string) => {
-    // Search in past appointments for this phone number
-    const { data } = await supabase
-      .from("appointments")
-      .select("customer_name, customer_email")
-      .eq("customer_phone", phone)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    // Use secure RPC that returns only the customer matching this exact phone
+    const { data } = await supabase.rpc("lookup_customer_by_phone", { _phone: phone });
 
     if (data && data.length > 0) {
       if (data[0].customer_name && !customerName) {
