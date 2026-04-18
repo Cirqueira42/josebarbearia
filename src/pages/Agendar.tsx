@@ -149,7 +149,6 @@ const Agendar = () => {
       toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${data[0].customer_name}!` });
     }
   }, [customerName, customerEmail, lastLookedUpPhone, toast]);
-  }, [customerName, customerEmail, lastLookedUpPhone, toast]);
 
   useEffect(() => {
     fetchServices();
