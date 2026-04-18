@@ -134,13 +134,8 @@ const Agendar = () => {
   const [searchParams] = useSearchParams();
 
   const lookupCustomer = useCallback(async (phone: string) => {
-    // Search in past appointments for this phone number
-    const { data } = await supabase
-      .from("appointments")
-      .select("customer_name, customer_email")
-      .eq("customer_phone", phone)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    // Use secure RPC that returns only the customer matching this exact phone
+    const { data } = await supabase.rpc("lookup_customer_by_phone", { _phone: phone });
 
     if (data && data.length > 0) {
       if (data[0].customer_name && !customerName) {
@@ -190,15 +185,11 @@ const Agendar = () => {
   };
 
   const fetchBookedSlots = async (date: string) => {
-    const { data } = await supabase
-      .from("appointments")
-      .select("appointment_time, service_name")
-      .eq("appointment_date", date)
-      .in("status", ["pending", "confirmed"]);
+    // Use secure RPC that returns only time/service info (no customer PII)
+    const { data } = await supabase.rpc("get_booked_slots", { _date: date });
 
     if (data) {
-      // Map booked slots with duration from services
-      const mapped = data.map((a) => {
+      const mapped = data.map((a: any) => {
         const svc = services.find((s) => s.name === a.service_name);
         return {
           appointment_time: a.appointment_time,
