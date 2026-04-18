@@ -383,9 +383,6 @@ const Agendar = () => {
                 </a>
               </Button>
             )}
-                Abrir mensagem no WhatsApp
-              </Button>
-            )}
             <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
               Voltar ao Início
             </Button>
