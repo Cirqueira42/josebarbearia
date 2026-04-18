@@ -126,7 +126,7 @@ const Agendar = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [whatsAppRedirectUrl, setWhatsAppRedirectUrl] = useState("");
-  const [whatsAppDeepLink, setWhatsAppDeepLink] = useState("");
+  const [lastLookedUpPhone, setLastLookedUpPhone] = useState("");
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const { toast } = useToast();
@@ -134,8 +134,10 @@ const Agendar = () => {
   const [searchParams] = useSearchParams();
 
   const lookupCustomer = useCallback(async (phone: string) => {
-    // Use secure RPC that returns only the customer matching this exact phone
+    if (!phone || phone.length < 10 || phone === lastLookedUpPhone) return;
+
     const { data } = await supabase.rpc("lookup_customer_by_phone", { _phone: phone });
+    setLastLookedUpPhone(phone);
 
     if (data && data.length > 0) {
       if (data[0].customer_name && !customerName) {
@@ -146,7 +148,7 @@ const Agendar = () => {
       }
       toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${data[0].customer_name}!` });
     }
-  }, [customerName, customerEmail, toast]);
+  }, [customerName, customerEmail, lastLookedUpPhone, toast]);
 
   useEffect(() => {
     fetchServices();
@@ -315,14 +317,12 @@ const Agendar = () => {
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
       );
-      const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
-      const deepLink = `whatsapp://send?phone=${BARBER_PHONE}&text=${msg}`;
+      const redirectUrl = `https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`;
 
       flushSync(() => {
         setConfirmedNumber(appointmentNum);
         setConfirmedBarber(barberNameMsg);
         setWhatsAppRedirectUrl(redirectUrl);
-        setWhatsAppDeepLink(deepLink);
         setSuccess(true);
       });
 
@@ -375,23 +375,12 @@ const Agendar = () => {
           <div className="space-y-3">
             {whatsAppRedirectUrl && (
               <Button
-                onClick={() => {
-                  // Try native deep link first (no blank tab on mobile),
-                  // fall back to wa.me web link if WhatsApp is not installed.
-                  const fallback = whatsAppRedirectUrl;
-                  const fallbackTimer = window.setTimeout(() => {
-                    window.location.href = fallback;
-                  }, 800);
-                  const onHide = () => {
-                    window.clearTimeout(fallbackTimer);
-                    document.removeEventListener("visibilitychange", onHide);
-                  };
-                  document.addEventListener("visibilitychange", onHide);
-                  window.location.href = whatsAppDeepLink || fallback;
-                }}
+                asChild
                 className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-lg font-bold"
               >
-                Abrir mensagem no WhatsApp
+                <a href={whatsAppRedirectUrl} target="_blank" rel="noopener noreferrer">
+                  Abrir mensagem no WhatsApp
+                </a>
               </Button>
             )}
             <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
@@ -500,8 +489,13 @@ const Agendar = () => {
                   value={customerPhone}
                   onChange={(e) => {
                     const formatted = formatPhone(e.target.value);
-                    setCustomerPhone(formatted);
                     const digits = formatted.replace(/\D/g, "");
+                    setCustomerPhone(formatted);
+
+                    if (digits.length < 10) {
+                      setLastLookedUpPhone("");
+                    }
+
                     if (digits.length >= 10) {
                       lookupCustomer(digits);
                     }
