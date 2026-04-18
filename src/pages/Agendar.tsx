@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,9 +320,6 @@ const Agendar = () => {
       const appointmentNum = inserted?.appointment_number ?? 0;
       const barberNameMsg = inserted?.barber_name || barber?.name || "José Gilmário";
 
-      setConfirmedNumber(appointmentNum);
-      setConfirmedBarber(barberNameMsg);
-      
       // Send WhatsApp to barber (no popup, direct redirect)
       const msg = encodeURIComponent(
         `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
@@ -329,9 +327,13 @@ const Agendar = () => {
       const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${msg}`;
       const deepLink = `whatsapp://send?phone=${BARBER_PHONE}&text=${msg}`;
 
-      setSuccess(true);
-      setWhatsAppRedirectUrl(redirectUrl);
-      setWhatsAppDeepLink(deepLink);
+      flushSync(() => {
+        setConfirmedNumber(appointmentNum);
+        setConfirmedBarber(barberNameMsg);
+        setWhatsAppRedirectUrl(redirectUrl);
+        setWhatsAppDeepLink(deepLink);
+        setSuccess(true);
+      });
 
       // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
       const clientPhone = customerPhone.replace(/\D/g, "");
@@ -339,42 +341,43 @@ const Agendar = () => {
       const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
 
       // Send Telegram notification
-      sendTelegram(
-        `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
-      );
+      window.setTimeout(() => {
+        sendTelegram(
+          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
+        );
+      }, 0);
     }
     setSubmitting(false);
   };
 
   if (success) {
     return (
-    <div className="min-h-screen bg-green-600 flex items-center justify-center px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-green-500 to-green-700" />
-        <div className="relative z-10 bg-white/95 backdrop-blur border border-green-300 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
-            <Check className="w-10 h-10 text-white" />
+      <div className="min-h-screen bg-success flex items-center justify-center px-4 py-6">
+        <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+          <div className="w-20 h-20 bg-success rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <Check className="w-10 h-10 text-success-foreground" />
           </div>
-          <h2 className="text-2xl font-bold font-display text-green-700 mb-2">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-2">
             Agendamento Confirmado!
           </h2>
           {confirmedNumber !== null && (
-            <div className="inline-block bg-green-600 text-white text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
+            <div className="inline-block bg-success text-success-foreground text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
               Agendamento #{confirmedNumber}
             </div>
           )}
-          <p className="text-gray-700 font-medium mb-1">
+          <p className="text-foreground font-medium mb-1">
             {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
           </p>
-          <p className="text-green-600 font-bold text-lg mb-4">
+          <p className="text-success font-bold text-lg mb-4">
             {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
           </p>
           {confirmedBarber && (
-            <p className="text-gray-700 text-sm mb-4">
-              💈 Profissional: <strong className="text-green-700">{confirmedBarber}</strong>
+            <p className="text-foreground text-sm mb-4">
+              💈 Profissional: <strong className="text-success">{confirmedBarber}</strong>
             </p>
           )}
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-            <p className="text-green-800 font-medium text-sm">
+          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-6">
+            <p className="text-foreground font-medium text-sm">
               💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
             </p>
           </div>
@@ -395,7 +398,7 @@ const Agendar = () => {
                   document.addEventListener("visibilitychange", onHide);
                   window.location.href = whatsAppDeepLink || fallback;
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-bold"
+                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-lg font-bold"
               >
                 Abrir mensagem no WhatsApp
               </Button>
