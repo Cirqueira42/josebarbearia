@@ -1,7 +1,27 @@
-import { Scissors, Calendar, MapPin, Instagram } from "lucide-react";
+import { Scissors, Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { toast } from "sonner";
 
 const Hero = () => {
+  const { canInstall, isInstalled, isIOS, promptInstall } = useInstallPrompt();
+
+  const handleInstall = async () => {
+    if (canInstall) {
+      await promptInstall();
+      return;
+    }
+    if (isIOS) {
+      toast.info("Para instalar no iPhone: toque em Compartilhar e depois em 'Adicionar à Tela de Início'.", {
+        duration: 6000,
+      });
+      return;
+    }
+    toast.info("Abra este site no Chrome e use o menu (⋮) → 'Instalar app' ou 'Adicionar à tela inicial'.", {
+      duration: 6000,
+    });
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <PhotoCarousel overlay="light" />
@@ -22,13 +42,26 @@ const Hero = () => {
           Barba, cabelo e bigode é coisa séria!
         </p>
 
-        <a
-          href="/agendar"
-          className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-semibold hover:brightness-110 transition-all glow-primary"
-        >
-          <Calendar className="w-5 h-5" />
-          Agendar Horário Online
-        </a>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href="/agendar"
+            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-semibold hover:brightness-110 transition-all glow-primary"
+          >
+            <Calendar className="w-5 h-5" />
+            Agendar Horário Online
+          </a>
+
+          {!isInstalled && (
+            <button
+              onClick={handleInstall}
+              className="inline-flex items-center gap-3 bg-card/60 backdrop-blur border border-primary/40 text-foreground px-6 py-4 rounded-lg text-base font-semibold hover:bg-primary/10 hover:border-primary transition-all"
+              aria-label="Baixar aplicativo"
+            >
+              {isIOS ? <Share className="w-5 h-5 text-primary" /> : <Download className="w-5 h-5 text-primary" />}
+              Baixar App
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-muted-foreground text-sm">
           <a
