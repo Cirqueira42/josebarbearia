@@ -54,10 +54,10 @@ const Hero = () => {
           {!isInstalled && (
             <button
               onClick={handleInstall}
-              className="inline-flex items-center gap-3 bg-card/60 backdrop-blur border border-primary/40 text-foreground px-6 py-4 rounded-lg text-base font-semibold hover:bg-primary/10 hover:border-primary transition-all"
+              className="inline-flex items-center gap-3 bg-primary/15 backdrop-blur border-2 border-primary text-primary px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary hover:text-primary-foreground transition-all glow-primary"
               aria-label="Baixar aplicativo"
             >
-              {isIOS ? <Share className="w-5 h-5 text-primary" /> : <Download className="w-5 h-5 text-primary" />}
+              {isIOS ? <Share className="w-5 h-5" /> : <Download className="w-5 h-5" />}
               Baixar App
             </button>
           )}

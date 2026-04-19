@@ -5,20 +5,33 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const isInIframe = () => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+};
+
 export const useInstallPrompt = () => {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
+    // Inside the Lovable preview iframe the install detection is unreliable —
+    // never mark as "installed" so the user always sees the button.
     const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      // @ts-ignore iOS Safari
-      window.navigator.standalone === true;
+      !isInIframe() &&
+      (window.matchMedia("(display-mode: standalone)").matches ||
+        // @ts-ignore iOS Safari
+        window.navigator.standalone === true);
     setIsInstalled(standalone);
 
     const ua = window.navigator.userAgent.toLowerCase();
     setIsIOS(/iphone|ipad|ipod/.test(ua) && !/crios|fxios/.test(ua));
+    setIsAndroid(/android/.test(ua));
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -50,6 +63,7 @@ export const useInstallPrompt = () => {
     canInstall: !!deferred,
     isInstalled,
     isIOS,
+    isAndroid,
     promptInstall,
   };
 };
