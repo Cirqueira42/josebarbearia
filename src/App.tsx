@@ -10,14 +10,21 @@ import AdminLogin from "./pages/AdminLogin";
 import Agendar from "./pages/Agendar";
 import BarberView from "./pages/BarberView";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import { useAppUpdater } from "./hooks/useAppUpdater";
 
 const queryClient = new QueryClient();
+
+const AppUpdater = () => {
+  useAppUpdater();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AppUpdater />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />

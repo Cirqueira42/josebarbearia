@@ -33,17 +33,16 @@ const fetchHtmlHash = async (): Promise<string | null> => {
   }
 };
 
-const forceReload = () => {
-  // Limpa caches antes de recarregar para garantir versão nova
-  if ("caches" in window) {
-    caches.keys().then((keys) => {
-      Promise.all(keys.map((k) => caches.delete(k))).finally(() => {
-        window.location.reload();
-      });
-    });
-  } else {
-    window.location.reload();
+const forceReload = async () => {
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {
+    // ignore
   }
+  window.location.reload();
 };
 
 export const useAppUpdater = () => {
