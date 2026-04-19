@@ -4,11 +4,25 @@ import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { toast } from "sonner";
 
 const Hero = () => {
-  const { canInstall, isInstalled, isIOS, promptInstall } = useInstallPrompt();
+  const { canInstall, isInstalled, isIOS, isAndroid, promptInstall } = useInstallPrompt();
+
+  const openInChrome = () => {
+    const host = window.location.host;
+    const path = window.location.pathname + window.location.search;
+    // Intent URL: força abrir no Chrome no Android
+    const intentUrl = `intent://${host}${path}#Intent;scheme=https;package=com.android.chrome;end`;
+    window.location.href = intentUrl;
+  };
 
   const handleInstall = async () => {
     if (canInstall) {
       await promptInstall();
+      return;
+    }
+    if (isAndroid) {
+      // Sem prompt nativo (provavelmente fora do Chrome) → abre direto no Chrome
+      toast.info("Abrindo no Chrome... toque em 'Instalar app' no menu (⋮).", { duration: 5000 });
+      openInChrome();
       return;
     }
     if (isIOS) {
@@ -17,9 +31,7 @@ const Hero = () => {
       });
       return;
     }
-    toast.info("Abra este site no Chrome e use o menu (⋮) → 'Instalar app' ou 'Adicionar à tela inicial'.", {
-      duration: 6000,
-    });
+    toast.info("Abra este site no Chrome e use o menu (⋮) → 'Instalar app'.", { duration: 6000 });
   };
 
   return (
