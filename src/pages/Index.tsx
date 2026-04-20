@@ -1,4 +1,5 @@
 import Hero from "@/components/Hero";
+import HighlightCarousel from "@/components/HighlightCarousel";
 import Products from "@/components/Products";
 import Services from "@/components/Services";
 import Gallery from "@/components/Gallery";
@@ -10,6 +11,7 @@ const Index = () => {
   return (
     <main className="min-h-screen bg-background">
       <Hero />
+      <HighlightCarousel />
       <Products />
       <Services />
       <Gallery />
