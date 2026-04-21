@@ -33,6 +33,8 @@ import AdminNotification from "@/components/admin/AdminNotification";
 import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
 import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
+import GalleryManagement from "@/components/admin/GalleryManagement";
+import ReviewsManagement from "@/components/admin/ReviewsManagement";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
