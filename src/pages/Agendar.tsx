@@ -136,19 +136,16 @@ const Agendar = () => {
   const lookupCustomer = useCallback(async (phone: string) => {
     if (!phone || phone.length < 10 || phone === lastLookedUpPhone) return;
 
-    const { data } = await supabase.rpc("lookup_customer_by_phone", { _phone: phone });
     setLastLookedUpPhone(phone);
+    const { data } = await supabase.rpc("lookup_customer_by_phone", { _phone: phone });
 
     if (data && data.length > 0) {
-      if (data[0].customer_name && !customerName) {
-        setCustomerName(data[0].customer_name);
-      }
-      if (data[0].customer_email && !customerEmail) {
-        setCustomerEmail(data[0].customer_email);
-      }
-      toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${data[0].customer_name}!` });
+      const found = data[0];
+      if (found.customer_name) setCustomerName(found.customer_name);
+      if (found.customer_email) setCustomerEmail(found.customer_email);
+      toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${found.customer_name}!` });
     }
-  }, [customerName, customerEmail, lastLookedUpPhone, toast]);
+  }, [lastLookedUpPhone, toast]);
 
   useEffect(() => {
     fetchServices();
