@@ -33,6 +33,8 @@ import AdminNotification from "@/components/admin/AdminNotification";
 import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
 import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
+import GalleryManagement from "@/components/admin/GalleryManagement";
+import ReviewsManagement from "@/components/admin/ReviewsManagement";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -267,6 +269,12 @@ const Admin = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
+
+        {/* Avaliações + Galeria */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ReviewsManagement />
+          <GalleryManagement />
+        </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
