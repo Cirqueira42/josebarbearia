@@ -270,6 +270,12 @@ const Admin = () => {
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
+        {/* Avaliações + Galeria */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ReviewsManagement />
+          <GalleryManagement />
+        </div>
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
