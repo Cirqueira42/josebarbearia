@@ -32,6 +32,7 @@ import BarberManagement from "@/components/admin/BarberManagement";
 import AdminNotification from "@/components/admin/AdminNotification";
 import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
 import ReportsHistory from "@/components/admin/ReportsHistory";
+import UsageMonitor from "@/components/admin/UsageMonitor";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
