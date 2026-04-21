@@ -128,6 +128,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
       loyalty: {
         Row: {
           created_at: string
@@ -160,6 +184,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          appointment_id: string | null
+          approved: boolean
+          comment: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          rating: number
+        }
+        Insert: {
+          appointment_id?: string | null
+          approved?: boolean
+          comment?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          rating: number
+        }
+        Update: {
+          appointment_id?: string | null
+          approved?: boolean
+          comment?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
