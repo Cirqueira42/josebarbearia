@@ -34,7 +34,7 @@ import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
 import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
 import GalleryManagement from "@/components/admin/GalleryManagement";
-import ReviewsManagement from "@/components/admin/ReviewsManagement";
+import DataCleanup from "@/components/admin/DataCleanup";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -270,9 +270,9 @@ const Admin = () => {
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
-        {/* Avaliações + Galeria */}
+        {/* Limpeza + Galeria */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ReviewsManagement />
+          <DataCleanup />
           <GalleryManagement />
         </div>
 
