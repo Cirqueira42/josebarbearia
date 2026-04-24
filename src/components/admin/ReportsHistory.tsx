@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 
 type Appointment = {
   id: string;
@@ -61,21 +62,17 @@ const ReportsHistory = () => {
     return svc?.price ?? 0;
   };
 
-  const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
+  const todayStr = getBrazilTodayStr();
 
   const filteredAppointments = useMemo(() => {
     let startDate = "";
     if (filterPeriod === "today") startDate = todayStr;
     else if (filterPeriod === "week") {
-      const d = new Date(now);
-      const day = d.getDay();
-      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-      startDate = d.toISOString().split("T")[0];
+      startDate = getBrazilWeekStartStr();
     } else if (filterPeriod === "month") {
-      startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      startDate = getBrazilMonthStartStr();
     } else if (filterPeriod === "year") {
-      startDate = `${now.getFullYear()}-01-01`;
+      startDate = `${todayStr.slice(0, 4)}-01-01`;
     }
 
     return appointments.filter((a) => {

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Scissors, DollarSign, Calendar, TrendingUp } from "lucide-react";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 
 type Appointment = {
   id: string;
@@ -36,7 +37,7 @@ const DAYS_PT = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Qu
 
 const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const getSaoPauloNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+// Removido: usando utilitários de @/lib/brazilTime que evitam bugs de fuso.
 
 const BarberView = () => {
   const { id } = useParams<{ id: string }>();
@@ -73,14 +74,9 @@ const BarberView = () => {
   };
 
   const stats = useMemo(() => {
-    const now = getSaoPauloNow();
-    const todayStr = now.toISOString().split("T")[0];
-    const dayOfWeek = now.getDay();
-    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - mondayOffset);
-    const weekStartStr = monday.toISOString().split("T")[0];
-    const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    const todayStr = getBrazilTodayStr();
+    const weekStartStr = getBrazilWeekStartStr();
+    const monthStartStr = getBrazilMonthStartStr();
 
     let daily = 0, dailyCount = 0, weekly = 0, weeklyCount = 0, monthly = 0, monthlyCount = 0;
 

@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Check } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
 
 import serviceCorte from "@/assets/service-corte.jpg";
 import serviceBarba from "@/assets/service-barba.jpg";
@@ -106,9 +107,7 @@ const timeToMinutes = (t: string) => {
   return h * 60 + m;
 };
 
-const getBrazilNow = () => {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-};
+// Removido: substituído por utilitários em @/lib/brazilTime para evitar bugs de fuso.
 
 const Agendar = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -236,24 +235,20 @@ const Agendar = () => {
   const getAvailableTimes = () => {
     if (!selectedDate || !selectedService) return [];
 
-    const brazilNow = getBrazilNow();
-    const todayStr = brazilNow.toISOString().split("T")[0];
+    const todayStr = getBrazilTodayStr();
 
     return ALL_TIME_SLOTS.filter((t) => {
       if (!isTimeAvailable(selectedDate, t)) return false;
       // If today, hide past times
       if (selectedDate === todayStr) {
-        const nowMinutes = brazilNow.getHours() * 60 + brazilNow.getMinutes();
+        const nowMinutes = getBrazilNowMinutes();
         if (timeToMinutes(t) <= nowMinutes) return false;
       }
       return true;
     });
   };
 
-  const getMinDate = () => {
-    const brazilNow = getBrazilNow();
-    return brazilNow.toISOString().split("T")[0];
-  };
+  const getMinDate = () => getBrazilTodayStr();
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
