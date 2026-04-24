@@ -1,8 +1,9 @@
 import { Star, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=ChIJ_____JOSE_BARBEARIA";
-const GOOGLE_MAPS_URL = "https://maps.app.goo.gl/JVahTmuAYLfAiyx57";
+const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=/g/11w2h36q57";
+const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Jose+Barbearia+Guariba&query_place_id=/g/11w2h36q57";
+const GOOGLE_SEARCH_URL = "https://www.google.com/search?kgmid=/g/11w2h36q57";
 
 const Reviews = () => {
   return (
