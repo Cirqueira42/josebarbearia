@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Archive, Database } from "lucide-react";
+import { subtractMonthsFromTodayStr } from "@/lib/brazilTime";
 
 const DataCleanup = () => {
   const [months, setMonths] = useState("6");
@@ -29,11 +30,7 @@ const DataCleanup = () => {
   const [working, setWorking] = useState(false);
   const { toast } = useToast();
 
-  const cutoffDate = () => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - parseInt(months));
-    return d.toISOString().split("T")[0];
-  };
+  const cutoffDate = () => subtractMonthsFromTodayStr(parseInt(months));
 
   const load = async () => {
     const cutoff = cutoffDate();

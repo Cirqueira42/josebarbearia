@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarOff, Plus, Trash2, Clock } from "lucide-react";
+import { getBrazilTodayStr } from "@/lib/brazilTime";
 
 type BlockedSlot = {
   id: string;
@@ -30,11 +31,7 @@ const HORARIOS = (() => {
   return slots;
 })();
 
-const getMinDate = () => {
-  const now = new Date();
-  const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-  return brazilNow.toISOString().split("T")[0];
-};
+const getMinDate = () => getBrazilTodayStr();
 
 const DAYS_PT = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
