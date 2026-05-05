@@ -35,6 +35,7 @@ import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import DataCleanup from "@/components/admin/DataCleanup";
+import ProductsManagement from "@/components/admin/ProductsManagement";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -329,6 +330,7 @@ const Admin = () => {
           <ReportsHistory />
           <BarberManagement />
           <BlockedSlots />
+          <ProductsManagement />
           <AdminSettings />
         </div>
 
