@@ -1,87 +1,156 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Sparkles } from "lucide-react";
+import ceraExtra from "@/assets/produto-cera-extra-forte.jpg";
+import ceraBlack from "@/assets/produto-cera-black.jpg";
+import ceraMatte from "@/assets/produto-cera-matte.jpg";
+import ceraTeia from "@/assets/produto-cera-teia.jpg";
+import shampooPuroFio from "@/assets/produto-shampoo-puro-fio.jpg";
+import oleoDonVitor from "@/assets/produto-oleo-donvitor.jpg";
 
-const products = [
+type Product = {
+  brand: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  highlight?: string;
+};
+
+const PHONE = "5516997369740";
+
+const products: Product[] = [
   {
+    brand: "Vision Barber Shop",
     name: "Cera Extra Forte",
-    price: "R$ 17.99",
-    image: "https://balanced-salmon-qsofaxkatm.edgeone.app/IMG_20260123_170049871.jpg",
-    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Extra%20Forte*%20-%20R%24%2017.99",
+    description: "Estilizadora de fixação máxima — 250g",
+    price: 17.99,
+    image: ceraExtra,
+    highlight: "Mais Vendida",
   },
   {
-    name: "Cera Perolada",
-    price: "R$ 17.99",
-    image: "https://theoretical-purple-vn8yt2jhi8.edgeone.app/IMG_20260123_170040419.jpg",
-    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Perolada*%20-%20R%24%2017.99",
-  },
-  {
+    brand: "Vision Barber Shop",
     name: "Cera Black",
-    price: "R$ 17.99",
-    image: "https://intense-lime-lkcmgnmiy5.edgeone.app/IMG_20260123_170135657.jpg",
-    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Black*%20-%20R%24%2017.99",
+    description: "Estilizadora preta — 130g",
+    price: 17.99,
+    image: ceraBlack,
   },
   {
+    brand: "Vision Barber Shop",
     name: "Cera Matte",
-    price: "R$ 17.99",
-    image: "https://horrible-blue-zxweihvc7r.edgeone.app/IMG_20260123_170127186.jpg",
-    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Matte*%20-%20R%24%2017.99",
+    description: "Acabamento fosco natural — 70g",
+    price: 11.99,
+    image: ceraMatte,
   },
   {
-    name: "Cera Teia",
-    price: "R$ 17.99",
-    image: "",
-    emoji: "🕸️",
-    whatsapp: "https://wa.me/5516997369740?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20*Cera%20Teia*%20-%20R%24%2017.99",
+    brand: "Vision Barber Shop",
+    name: "Cera Efeito Teia",
+    description: "Efeito teia / textura — 70g",
+    price: 11.99,
+    image: ceraTeia,
+  },
+  {
+    brand: "Puro Fio",
+    name: "Shampoo Anticaspa",
+    description: "Frescor e equilíbrio — 250ml",
+    price: 19.99,
+    image: shampooPuroFio,
+  },
+  {
+    brand: "DonVitor",
+    name: "Óleo para Barba Adrenaline",
+    description: "Premium Edition — barba, cabelo e bigode — 30ml",
+    price: 14.99,
+    image: oleoDonVitor,
   },
 ];
 
+const formatPrice = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const buildWhatsappLink = (p: Product) => {
+  const msg = `Olá! Gostaria de comprar *${p.brand} — ${p.name}* (${formatPrice(p.price)}).`;
+  return `https://api.whatsapp.com/send?phone=${PHONE}&text=${encodeURIComponent(msg)}`;
+};
+
 const Products = () => {
   return (
-    <section className="section-padding bg-secondary/30">
+    <section id="produtos" className="section-padding bg-secondary/30">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold font-display text-gradient text-center mb-4">
-          Pomadas Modeladoras
+        <div className="flex justify-center mb-3">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
+            <Sparkles className="w-3.5 h-3.5" />
+            Catálogo Oficial
+          </span>
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-gradient text-center mb-3">
+          Produtos da Barbearia
         </h2>
-        <p className="text-muted-foreground text-center mb-12">
-          R$ 17.99 por unidade
+        <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
+          Pomadas, shampoo e óleo para barba selecionados. Peça direto pelo WhatsApp e retire na loja.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <div
-              key={product.name}
-              className="bg-card rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-all group"
+            <article
+              key={`${product.brand}-${product.name}`}
+              className="group relative bg-card rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all flex flex-col shadow-sm hover:shadow-lg hover:shadow-primary/10"
             >
-              <div className="aspect-square overflow-hidden bg-secondary flex items-center justify-center">
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-7xl">{"emoji" in product ? (product as any).emoji : "📦"}</span>
-                )}
-              </div>
-              <div className="p-4">
-                <span className="text-xs font-semibold text-success uppercase tracking-wider">
-                  Disponível
+              {product.highlight && (
+                <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                  {product.highlight}
                 </span>
-                <h3 className="text-foreground font-semibold mt-1">{product.name}</h3>
-                <p className="text-primary font-bold text-xl mt-2">{product.price}</p>
+              )}
+
+              <div className="aspect-square overflow-hidden bg-background">
+                <img
+                  src={product.image}
+                  alt={`${product.brand} ${product.name}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+
+              <div className="p-4 flex flex-col flex-1">
+                <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">
+                  {product.brand}
+                </span>
+                <h3 className="text-foreground font-bold mt-0.5 leading-tight">
+                  {product.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-3 flex-1">
+                  {product.description}
+                </p>
+
+                <div className="flex items-end justify-between mb-3">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
+                      Preço
+                    </span>
+                    <span className="text-primary font-bold text-2xl font-display leading-none">
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-success uppercase tracking-wider bg-success/10 px-2 py-1 rounded">
+                    Disponível
+                  </span>
+                </div>
+
                 <a
-                  href={product.whatsapp}
+                  href={buildWhatsappLink(product)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-whatsapp text-success-foreground py-2.5 rounded-md font-medium hover:brightness-110 transition-all text-sm"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-whatsapp text-success-foreground py-2.5 rounded-md font-semibold hover:brightness-110 transition-all text-sm"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Comprar via WhatsApp
+                  Pedir pelo WhatsApp
                 </a>
               </div>
-            </div>
+            </article>
           ))}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center mt-8">
+          Estoque limitado · Retirada na barbearia · Pagamento na entrega
+        </p>
       </div>
     </section>
   );
