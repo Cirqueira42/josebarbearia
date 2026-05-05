@@ -185,6 +185,48 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          brand: string
+          created_at: string
+          description: string | null
+          display_order: number
+          highlight: string | null
+          id: string
+          image_path: string | null
+          in_stock: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          highlight?: string | null
+          id?: string
+          image_path?: string | null
+          in_stock?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          highlight?: string | null
+          id?: string
+          image_path?: string | null
+          in_stock?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           appointment_id: string | null
@@ -233,6 +275,7 @@ export type Database = {
           duration_minutes: number
           icon: string | null
           id: string
+          image_path: string | null
           name: string
           price: number
         }
@@ -242,6 +285,7 @@ export type Database = {
           duration_minutes?: number
           icon?: string | null
           id?: string
+          image_path?: string | null
           name: string
           price?: number
         }
@@ -251,6 +295,7 @@ export type Database = {
           duration_minutes?: number
           icon?: string | null
           id?: string
+          image_path?: string | null
           name?: string
           price?: number
         }

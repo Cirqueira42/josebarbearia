@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Trash2, Plus } from "lucide-react";
+import { Settings, Save, Trash2, Plus, Upload, Image as ImageIcon } from "lucide-react";
 
 type Service = {
   id: string;
@@ -12,6 +12,7 @@ type Service = {
   price: number;
   icon: string | null;
   duration_minutes: number;
+  image_path: string | null;
 };
 
 const AdminSettings = () => {
@@ -132,15 +133,54 @@ const AdminSettings = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{s.icon}</span>
-                  <div>
-                    <p className="font-bold text-foreground text-sm">{s.name}</p>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {s.image_path ? (
+                    <img
+                      src={supabase.storage.from("services").getPublicUrl(s.image_path).data.publicUrl}
+                      alt={s.name}
+                      className="w-12 h-12 rounded object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <span className="text-2xl w-12 h-12 flex items-center justify-center bg-secondary rounded flex-shrink-0">
+                      {s.icon || "✂️"}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-bold text-foreground text-sm truncate">{s.name}</p>
                     <p className="text-xs text-muted-foreground">R$ {s.price.toFixed(2)} • {s.duration_minutes} min</p>
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id={`svc-img-${s.id}`}
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast({ title: "Máx 5 MB", variant: "destructive" });
+                        return;
+                      }
+                      const ext = file.name.split(".").pop();
+                      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                      const { error: upErr } = await supabase.storage.from("services").upload(path, file);
+                      if (upErr) {
+                        toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
+                        return;
+                      }
+                      if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
+                      await supabase.from("services").update({ image_path: path }).eq("id", s.id);
+                      toast({ title: "Foto atualizada ✅" });
+                      fetchServices();
+                    }}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => document.getElementById(`svc-img-${s.id}`)?.click()} title="Foto">
+                    <ImageIcon className="w-3 h-3" />
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => startEdit(s)} className="text-xs">Editar</Button>
                   <Button size="sm" variant="ghost" onClick={() => deleteService(s.id)} className="text-destructive hover:text-destructive">
                     <Trash2 className="w-3 h-3" />
