@@ -127,15 +127,15 @@ const BlockedSlots = () => {
         <h2 className="text-lg font-bold text-foreground">Bloquear Dias / Horários</h2>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-4">
         <Input
           type="date"
           min={getMinDate()}
           value={newDate}
           onChange={(e) => setNewDate(e.target.value)}
-          className="w-44"
+          className="w-full sm:w-44"
         />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
@@ -154,15 +154,15 @@ const BlockedSlots = () => {
               onChange={() => setBlockType("range")}
               className="accent-primary"
             />
-            <span className="text-sm text-foreground whitespace-nowrap">Horário específico</span>
+            <span className="text-sm text-foreground whitespace-nowrap">Horário</span>
           </label>
         </div>
         {blockType === "range" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+              className="flex-1 sm:flex-none h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
             >
               {HORARIOS.map((h) => (
                 <option key={h} value={h}>{h}</option>
@@ -172,7 +172,7 @@ const BlockedSlots = () => {
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+              className="flex-1 sm:flex-none h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
             >
               {HORARIOS.map((h) => (
                 <option key={h} value={h}>{h}</option>
@@ -184,9 +184,9 @@ const BlockedSlots = () => {
           placeholder="Motivo (opcional)"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="flex-1"
+          className="w-full sm:flex-1 sm:min-w-[140px]"
         />
-        <Button onClick={addBlock} size="sm" className="shrink-0">
+        <Button onClick={addBlock} size="sm" className="w-full sm:w-auto shrink-0">
           <Plus className="w-4 h-4 mr-1" />
           Bloquear
         </Button>
