@@ -105,29 +105,29 @@ const CashRegister = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {/* Daily */}
-        <div className="bg-background border border-border rounded-lg p-3 text-center space-y-1">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <Calendar className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-xs text-muted-foreground">Hoje</p>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(stats.daily)}</p>
-          <p className="text-[10px] text-muted-foreground">{stats.dailyCount} serviço(s)</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Hoje</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground break-all leading-tight">{formatCurrency(stats.daily)}</p>
+          <p className="text-[10px] text-muted-foreground">{stats.dailyCount} serv.</p>
         </div>
 
         {/* Weekly */}
-        <div className="bg-background border border-border rounded-lg p-3 text-center space-y-1">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <TrendingUp className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-xs text-muted-foreground">Semana</p>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(stats.weekly)}</p>
-          <p className="text-[10px] text-muted-foreground">{stats.weeklyCount} serviço(s)</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Semana</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground break-all leading-tight">{formatCurrency(stats.weekly)}</p>
+          <p className="text-[10px] text-muted-foreground">{stats.weeklyCount} serv.</p>
         </div>
 
         {/* Monthly */}
-        <div className="bg-background border border-border rounded-lg p-3 text-center space-y-1">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <DollarSign className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-xs text-muted-foreground">Mês</p>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(stats.monthly)}</p>
-          <p className="text-[10px] text-muted-foreground">{stats.monthlyCount} serviço(s)</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Mês</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground break-all leading-tight">{formatCurrency(stats.monthly)}</p>
+          <p className="text-[10px] text-muted-foreground">{stats.monthlyCount} serv.</p>
         </div>
       </div>
 

@@ -122,7 +122,7 @@ const ReportsHistory = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <Select value={filterPeriod} onValueChange={(v) => { setFilterPeriod(v); setFilterDate(""); }}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-full sm:w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -133,29 +133,29 @@ const ReportsHistory = () => {
             <SelectItem value="all">Todos</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <Input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setFilterPeriod("all"); }} className="w-44" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setFilterPeriod("all"); }} className="w-full sm:w-44" />
         </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        <div className="bg-background border border-border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-          <p className="text-xs text-muted-foreground">Agendamentos</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
+          <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.total}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Agendamentos</p>
         </div>
-        <div className="bg-background border border-border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-green-400">{stats.completed}</p>
-          <p className="text-xs text-muted-foreground">Concluídos</p>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
+          <p className="text-xl sm:text-2xl font-bold text-green-400">{stats.completed}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Concluídos</p>
         </div>
-        <div className="bg-background border border-border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-primary">{formatCurrency(stats.revenue)}</p>
-          <p className="text-xs text-muted-foreground">Faturamento</p>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
+          <p className="text-base sm:text-2xl font-bold text-primary break-all leading-tight">{formatCurrency(stats.revenue)}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Faturamento</p>
         </div>
-        <div className="bg-background border border-border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{stats.uniqueClients}</p>
-          <p className="text-xs text-muted-foreground">Clientes</p>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
+          <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.uniqueClients}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes</p>
         </div>
       </div>
 

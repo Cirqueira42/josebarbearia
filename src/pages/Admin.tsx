@@ -237,11 +237,11 @@ const Admin = () => {
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
       </div>
-      <header className="relative z-10 border-b border-border px-4 py-4 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Scissors className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold font-display text-gradient">PAINEL ADMIN</h1>
+      <header className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 bg-background/80 backdrop-blur">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
+            <h1 className="text-base sm:text-xl font-bold font-display text-gradient truncate">PAINEL ADMIN</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -251,23 +251,27 @@ const Admin = () => {
                 navigator.clipboard.writeText(BOOKING_URL);
                 toast({ title: "Link copiado!", description: BOOKING_URL });
               }}
+              className="flex-1 sm:flex-none"
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Compartilhar
+              <Share2 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Compartilhar</span>
+              <span className="sm:hidden ml-1.5">Link</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.open(BOOKING_URL, "_blank")}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Ver Site
+            <Button variant="outline" size="sm" onClick={() => window.open(BOOKING_URL, "_blank")} className="flex-1 sm:flex-none">
+              <ExternalLink className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Ver Site</span>
+              <span className="sm:hidden ml-1.5">Site</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex-1 sm:flex-none">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
+              <span className="sm:hidden ml-1.5">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
@@ -279,36 +283,38 @@ const Admin = () => {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome do cliente..."
+              placeholder="Buscar cliente..."
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
-              className="pl-9"
+              className="pl-9 w-full"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-muted-foreground" />
-            <Input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="w-44"
-            />
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-1 sm:flex-none min-w-0">
+              <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="flex-1 sm:w-44 min-w-0"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-32 sm:w-40 shrink-0">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="confirmed">Confirmado</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+                <SelectItem value="completed">Concluído</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="confirmed">Confirmado</SelectItem>
-              <SelectItem value="cancelled">Cancelado</SelectItem>
-              <SelectItem value="completed">Concluído</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Stats */}
