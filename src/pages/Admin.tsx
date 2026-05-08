@@ -271,7 +271,7 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
