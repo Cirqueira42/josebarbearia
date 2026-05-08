@@ -237,11 +237,11 @@ const Admin = () => {
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
       </div>
-      <header className="relative z-10 border-b border-border px-4 py-4 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Scissors className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold font-display text-gradient">PAINEL ADMIN</h1>
+      <header className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 bg-background/80 backdrop-blur">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
+            <h1 className="text-base sm:text-xl font-bold font-display text-gradient truncate">PAINEL ADMIN</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -251,17 +251,21 @@ const Admin = () => {
                 navigator.clipboard.writeText(BOOKING_URL);
                 toast({ title: "Link copiado!", description: BOOKING_URL });
               }}
+              className="flex-1 sm:flex-none"
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Compartilhar
+              <Share2 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Compartilhar</span>
+              <span className="sm:hidden ml-1.5">Link</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.open(BOOKING_URL, "_blank")}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Ver Site
+            <Button variant="outline" size="sm" onClick={() => window.open(BOOKING_URL, "_blank")} className="flex-1 sm:flex-none">
+              <ExternalLink className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Ver Site</span>
+              <span className="sm:hidden ml-1.5">Site</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex-1 sm:flex-none">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
+              <span className="sm:hidden ml-1.5">Sair</span>
             </Button>
           </div>
         </div>
