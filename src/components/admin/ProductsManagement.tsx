@@ -224,6 +224,14 @@ const ProductsManagement = () => {
           <p className="text-sm text-muted-foreground text-center py-4">Nenhum produto cadastrado.</p>
         )}
       </div>
+      <CameraCapture
+        open={!!cameraFor}
+        onClose={() => setCameraFor(null)}
+        onCapture={async (file) => {
+          if (cameraFor) await uploadImage(cameraFor, file);
+        }}
+        fileName={cameraFor ? `${cameraFor.brand}-${cameraFor.name}.jpg` : "produto.jpg"}
+      />
     </div>
   );
 };
