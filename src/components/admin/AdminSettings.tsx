@@ -84,6 +84,31 @@ const AdminSettings = () => {
     }
   };
 
+  const uploadServiceImage = async (s: Service, raw: File) => {
+    if (raw.size > 15 * 1024 * 1024) {
+      toast({ title: "Máx 15 MB", variant: "destructive" });
+      return;
+    }
+    let file = raw;
+    try {
+      file = await enhanceImage(raw, raw.name);
+    } catch {
+      // segue com original
+    }
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error: upErr } = await supabase.storage
+      .from("services")
+      .upload(path, file, { contentType: "image/jpeg" });
+    if (upErr) {
+      toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
+    await supabase.from("services").update({ image_path: path }).eq("id", s.id);
+    toast({ title: "Foto atualizada ✅" });
+    fetchServices();
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
