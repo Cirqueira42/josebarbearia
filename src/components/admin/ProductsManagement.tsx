@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { Camera, Package, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import CameraCapture from "./CameraCapture";
+import { enhanceImage } from "@/lib/imageEnhance";
 
 type Product = {
   id: string;
@@ -27,6 +29,7 @@ const ProductsManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Product>>({});
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [cameraFor, setCameraFor] = useState<Product | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -96,14 +99,19 @@ const ProductsManagement = () => {
     load();
   };
 
-  const uploadImage = async (p: Product, file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Máx 5 MB", variant: "destructive" });
+  const uploadImage = async (p: Product, rawFile: File) => {
+    if (rawFile.size > 15 * 1024 * 1024) {
+      toast({ title: "Máx 15 MB", variant: "destructive" });
       return;
     }
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("products").upload(path, file, { upsert: false });
+    let file = rawFile;
+    try {
+      file = await enhanceImage(rawFile, rawFile.name);
+    } catch {
+      // se falhar, segue com o original
+    }
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error: upErr } = await supabase.storage.from("products").upload(path, file, { upsert: false, contentType: "image/jpeg" });
     if (upErr) {
       toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
       return;
