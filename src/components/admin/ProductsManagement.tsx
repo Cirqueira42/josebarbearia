@@ -207,6 +207,9 @@ const ProductsManagement = () => {
                     <Button size="sm" variant="ghost" onClick={() => fileRefs.current[p.id]?.click()} title="Trocar foto">
                       <Upload className="w-3 h-3" />
                     </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setCameraFor(p)} title="Tirar foto">
+                      <Camera className="w-3 h-3" />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => startEdit(p)} className="text-xs">Editar</Button>
                     <Button size="sm" variant="ghost" onClick={() => deleteProduct(p)} className="text-destructive hover:text-destructive">
                       <Trash2 className="w-3 h-3" />
