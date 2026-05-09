@@ -125,8 +125,8 @@ const GalleryManagement = () => {
             disabled={uploading}
             className="flex-1"
           />
-          <Button disabled={uploading} variant="outline" size="icon">
-            <Upload className="w-4 h-4" />
+          <Button disabled={uploading} variant="outline" size="icon" onClick={() => setCameraOpen(true)} title="Tirar foto">
+            <Camera className="w-4 h-4" />
           </Button>
         </div>
         {uploading && <p className="text-xs text-muted-foreground">Enviando foto...</p>}
@@ -157,6 +157,13 @@ const GalleryManagement = () => {
           ))}
         </div>
       )}
+
+      <CameraCapture
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={uploadFile}
+        fileName="galeria.jpg"
+      />
     </div>
   );
 };
