@@ -208,6 +208,14 @@ const AdminSettings = () => {
           </div>
         ))}
       </div>
+      <CameraCapture
+        open={!!cameraFor}
+        onClose={() => setCameraFor(null)}
+        onCapture={async (file) => {
+          if (cameraFor) await uploadServiceImage(cameraFor, file);
+        }}
+        fileName={cameraFor ? `${cameraFor.name}.jpg` : "servico.jpg"}
+      />
     </div>
   );
 };
