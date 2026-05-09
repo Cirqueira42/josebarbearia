@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Image as ImageIcon, Trash2, Upload } from "lucide-react";
+import { Camera, Image as ImageIcon, Trash2, Upload } from "lucide-react";
+import CameraCapture from "./CameraCapture";
+import { enhanceImage } from "@/lib/imageEnhance";
 
 type Photo = {
   id: string;
@@ -17,6 +19,7 @@ const GalleryManagement = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
