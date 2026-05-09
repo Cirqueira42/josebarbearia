@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Trash2, Plus, Upload, Image as ImageIcon } from "lucide-react";
+import { Settings, Save, Trash2, Plus, Upload, Image as ImageIcon, Camera } from "lucide-react";
+import CameraCapture from "./CameraCapture";
+import { enhanceImage } from "@/lib/imageEnhance";
 
 type Service = {
   id: string;
@@ -21,6 +23,7 @@ const AdminSettings = () => {
   const [editData, setEditData] = useState<Partial<Service>>({});
   const [newService, setNewService] = useState({ name: "", description: "", price: 0, icon: "", duration_minutes: 30 });
   const [showAdd, setShowAdd] = useState(false);
+  const [cameraFor, setCameraFor] = useState<Service | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +82,31 @@ const AdminSettings = () => {
       setShowAdd(false);
       fetchServices();
     }
+  };
+
+  const uploadServiceImage = async (s: Service, raw: File) => {
+    if (raw.size > 15 * 1024 * 1024) {
+      toast({ title: "Máx 15 MB", variant: "destructive" });
+      return;
+    }
+    let file = raw;
+    try {
+      file = await enhanceImage(raw, raw.name);
+    } catch {
+      // segue com original
+    }
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error: upErr } = await supabase.storage
+      .from("services")
+      .upload(path, file, { contentType: "image/jpeg" });
+    if (upErr) {
+      toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
+    await supabase.from("services").update({ image_path: path }).eq("id", s.id);
+    toast({ title: "Foto atualizada ✅" });
+    fetchServices();
   };
 
   return (
@@ -161,25 +189,14 @@ const AdminSettings = () => {
                       const file = e.target.files?.[0];
                       e.target.value = "";
                       if (!file) return;
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast({ title: "Máx 5 MB", variant: "destructive" });
-                        return;
-                      }
-                      const ext = file.name.split(".").pop();
-                      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                      const { error: upErr } = await supabase.storage.from("services").upload(path, file);
-                      if (upErr) {
-                        toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
-                        return;
-                      }
-                      if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
-                      await supabase.from("services").update({ image_path: path }).eq("id", s.id);
-                      toast({ title: "Foto atualizada ✅" });
-                      fetchServices();
+                      await uploadServiceImage(s, file);
                     }}
                   />
                   <Button size="sm" variant="ghost" onClick={() => document.getElementById(`svc-img-${s.id}`)?.click()} title="Foto">
                     <ImageIcon className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setCameraFor(s)} title="Tirar foto">
+                    <Camera className="w-3 h-3" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => startEdit(s)} className="text-xs">Editar</Button>
                   <Button size="sm" variant="ghost" onClick={() => deleteService(s.id)} className="text-destructive hover:text-destructive">
@@ -191,6 +208,14 @@ const AdminSettings = () => {
           </div>
         ))}
       </div>
+      <CameraCapture
+        open={!!cameraFor}
+        onClose={() => setCameraFor(null)}
+        onCapture={async (file) => {
+          if (cameraFor) await uploadServiceImage(cameraFor, file);
+        }}
+        fileName={cameraFor ? `${cameraFor.name}.jpg` : "servico.jpg"}
+      />
     </div>
   );
 };

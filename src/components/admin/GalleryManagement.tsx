@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Image as ImageIcon, Trash2, Upload } from "lucide-react";
+import { Camera, Image as ImageIcon, Trash2, Upload } from "lucide-react";
+import CameraCapture from "./CameraCapture";
+import { enhanceImage } from "@/lib/imageEnhance";
 
 type Photo = {
   id: string;
@@ -17,6 +19,7 @@ const GalleryManagement = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -41,21 +44,24 @@ const GalleryManagement = () => {
     load();
   }, []);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "Máx 5 MB.", variant: "destructive" });
+  const uploadFile = async (raw: File) => {
+    if (raw.size > 15 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máx 15 MB.", variant: "destructive" });
       return;
     }
-
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    let file = raw;
+    try {
+      file = await enhanceImage(raw, raw.name);
+    } catch {
+      // segue com original
+    }
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
 
     const { error: upErr } = await supabase.storage.from("gallery").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType: "image/jpeg",
     });
 
     if (upErr) {
@@ -80,6 +86,12 @@ const GalleryManagement = () => {
       await load();
     }
     setUploading(false);
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadFile(file);
   };
 
   const handleDelete = async (photo: Photo) => {
@@ -113,8 +125,8 @@ const GalleryManagement = () => {
             disabled={uploading}
             className="flex-1"
           />
-          <Button disabled={uploading} variant="outline" size="icon">
-            <Upload className="w-4 h-4" />
+          <Button disabled={uploading} variant="outline" size="icon" onClick={() => setCameraOpen(true)} title="Tirar foto">
+            <Camera className="w-4 h-4" />
           </Button>
         </div>
         {uploading && <p className="text-xs text-muted-foreground">Enviando foto...</p>}
@@ -145,6 +157,13 @@ const GalleryManagement = () => {
           ))}
         </div>
       )}
+
+      <CameraCapture
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={uploadFile}
+        fileName="galeria.jpg"
+      />
     </div>
   );
 };
