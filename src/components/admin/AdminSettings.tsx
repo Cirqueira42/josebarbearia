@@ -164,25 +164,14 @@ const AdminSettings = () => {
                       const file = e.target.files?.[0];
                       e.target.value = "";
                       if (!file) return;
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast({ title: "Máx 5 MB", variant: "destructive" });
-                        return;
-                      }
-                      const ext = file.name.split(".").pop();
-                      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                      const { error: upErr } = await supabase.storage.from("services").upload(path, file);
-                      if (upErr) {
-                        toast({ title: "Erro upload", description: upErr.message, variant: "destructive" });
-                        return;
-                      }
-                      if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
-                      await supabase.from("services").update({ image_path: path }).eq("id", s.id);
-                      toast({ title: "Foto atualizada ✅" });
-                      fetchServices();
+                      await uploadServiceImage(s, file);
                     }}
                   />
                   <Button size="sm" variant="ghost" onClick={() => document.getElementById(`svc-img-${s.id}`)?.click()} title="Foto">
                     <ImageIcon className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setCameraFor(s)} title="Tirar foto">
+                    <Camera className="w-3 h-3" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => startEdit(s)} className="text-xs">Editar</Button>
                   <Button size="sm" variant="ghost" onClick={() => deleteService(s.id)} className="text-destructive hover:text-destructive">
