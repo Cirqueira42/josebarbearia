@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Trash2, Plus, Upload, Image as ImageIcon } from "lucide-react";
+import { Settings, Save, Trash2, Plus, Upload, Image as ImageIcon, Camera } from "lucide-react";
+import CameraCapture from "./CameraCapture";
+import { enhanceImage } from "@/lib/imageEnhance";
 
 type Service = {
   id: string;
@@ -21,6 +23,7 @@ const AdminSettings = () => {
   const [editData, setEditData] = useState<Partial<Service>>({});
   const [newService, setNewService] = useState({ name: "", description: "", price: 0, icon: "", duration_minutes: 30 });
   const [showAdd, setShowAdd] = useState(false);
+  const [cameraFor, setCameraFor] = useState<Service | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
