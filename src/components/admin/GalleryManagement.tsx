@@ -44,21 +44,24 @@ const GalleryManagement = () => {
     load();
   }, []);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "Máx 5 MB.", variant: "destructive" });
+  const uploadFile = async (raw: File) => {
+    if (raw.size > 15 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máx 15 MB.", variant: "destructive" });
       return;
     }
-
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    let file = raw;
+    try {
+      file = await enhanceImage(raw, raw.name);
+    } catch {
+      // segue com original
+    }
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
 
     const { error: upErr } = await supabase.storage.from("gallery").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType: "image/jpeg",
     });
 
     if (upErr) {
@@ -83,6 +86,12 @@ const GalleryManagement = () => {
       await load();
     }
     setUploading(false);
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadFile(file);
   };
 
   const handleDelete = async (photo: Photo) => {
