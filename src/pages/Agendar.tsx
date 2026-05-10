@@ -610,7 +610,7 @@ const Agendar = () => {
                           variant="outline"
                           onClick={() => {
                             navigator.clipboard.writeText("75999412596");
-                            toast.success("Chave PIX copiada!");
+                            toast({ title: "Chave PIX copiada! ✅" });
                           }}
                         >
                           Copiar
