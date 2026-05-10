@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, Calendar, TrendingUp } from "lucide-react";
+import { DollarSign, Calendar, TrendingUp, Users } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 
