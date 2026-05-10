@@ -87,8 +87,25 @@ const CashRegister = () => {
       }
     }
 
-    return { daily, dailyCount, weekly, weeklyCount, monthly, monthlyCount };
-  }, [appointments, services]);
+    // Contagem de clientes únicos (telefones distintos) que usaram o app
+    const monthStart = monthStartStr;
+    const todayPhones = new Set<string>();
+    const monthPhones = new Set<string>();
+    const allPhones = new Set<string>();
+    for (const a of allAppointments) {
+      if (!a.customer_phone) continue;
+      allPhones.add(a.customer_phone);
+      if (a.appointment_date >= monthStart) monthPhones.add(a.customer_phone);
+      if (a.appointment_date === todayStr) todayPhones.add(a.customer_phone);
+    }
+
+    return {
+      daily, dailyCount, weekly, weeklyCount, monthly, monthlyCount,
+      clientsToday: todayPhones.size,
+      clientsMonth: monthPhones.size,
+      clientsTotal: allPhones.size,
+    };
+  }, [appointments, allAppointments, services]);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
