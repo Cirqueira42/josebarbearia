@@ -194,10 +194,9 @@ const Admin = () => {
           // Update loyalty program
           await updateLoyalty(appointment.customer_phone, appointment.customer_name);
 
-          const reviewUrl = "https://g.page/r/CYourGoogleMapsPlaceId/review";
-          const mapsUrl = "https://maps.app.goo.gl/jjFh1k1FvjY3Vp9p9";
+          const googleReviewLink = "https://search.google.com/local/writereview?placeid=/g/11w2h36q57";
           const msg = encodeURIComponent(
-            `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Ajude a barbearia com uma avaliação no Google!* É super rápido e nos ajuda demais:\n👉 ${mapsUrl}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
+            `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
