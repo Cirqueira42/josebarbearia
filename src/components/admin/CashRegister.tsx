@@ -15,6 +15,7 @@ const formatCurrency = (value: number) =>
 
 const CashRegister = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [allAppointments, setAllAppointments] = useState<Pick<Appointment, "customer_phone" | "appointment_date">[]>([]);
   const [services, setServices] = useState<{ name: string; price: number }[]>([]);
   const [isClosed, setIsClosed] = useState(false);
 
