@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, Calendar, TrendingUp } from "lucide-react";
+import { DollarSign, Calendar, TrendingUp, Users } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 
@@ -15,6 +15,7 @@ const formatCurrency = (value: number) =>
 
 const CashRegister = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [allAppointments, setAllAppointments] = useState<Pick<Appointment, "customer_phone" | "appointment_date">[]>([]);
   const [services, setServices] = useState<{ name: string; price: number }[]>([]);
   const [isClosed, setIsClosed] = useState(false);
 
@@ -37,18 +38,20 @@ const CashRegister = () => {
   }, []);
 
   const fetchData = async () => {
-    const [appts, svcs] = await Promise.all([
+    const [appts, allAppts, svcs] = await Promise.all([
       supabase.from("appointments").select("*").eq("status", "completed"),
+      supabase.from("appointments").select("customer_phone, appointment_date"),
       supabase.from("services").select("name, price"),
     ]);
     if (appts.data) setAppointments(appts.data);
+    if (allAppts.data) setAllAppointments(allAppts.data as any);
     if (svcs.data) setServices(svcs.data);
   };
 
   const checkClosing = () => {
     const now = getSaoPauloNow();
-    // Auto-close after 21:00 (9 PM)
-    setIsClosed(now.getHours() >= 21);
+    // Fecha automaticamente no fim do expediente (19:00)
+    setIsClosed(now.getHours() >= 19);
   };
 
   const getPrice = (serviceName: string): number => {
@@ -84,8 +87,25 @@ const CashRegister = () => {
       }
     }
 
-    return { daily, dailyCount, weekly, weeklyCount, monthly, monthlyCount };
-  }, [appointments, services]);
+    // Contagem de clientes únicos (telefones distintos) que usaram o app
+    const monthStart = monthStartStr;
+    const todayPhones = new Set<string>();
+    const monthPhones = new Set<string>();
+    const allPhones = new Set<string>();
+    for (const a of allAppointments) {
+      if (!a.customer_phone) continue;
+      allPhones.add(a.customer_phone);
+      if (a.appointment_date >= monthStart) monthPhones.add(a.customer_phone);
+      if (a.appointment_date === todayStr) todayPhones.add(a.customer_phone);
+    }
+
+    return {
+      daily, dailyCount, weekly, weeklyCount, monthly, monthlyCount,
+      clientsToday: todayPhones.size,
+      clientsMonth: monthPhones.size,
+      clientsTotal: allPhones.size,
+    };
+  }, [appointments, allAppointments, services]);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
@@ -131,9 +151,27 @@ const CashRegister = () => {
         </div>
       </div>
 
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes hoje</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsToday}</p>
+        </div>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes mês</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsMonth}</p>
+        </div>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Total no app</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsTotal}</p>
+        </div>
+      </div>
+
       {isClosed && (
         <p className="text-xs text-muted-foreground text-center mt-3">
-          Caixa fechado automaticamente às 21:00. Reabre amanhã.
+          Caixa fechado automaticamente às 19:00 (fim do expediente). Reabre amanhã.
         </p>
       )}
     </div>
