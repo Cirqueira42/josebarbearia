@@ -201,8 +201,9 @@ const Admin = () => {
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
+          const googleReviewUrl = "https://search.google.com/local/writereview?placeid=/g/11w2h36q57";
           sendTelegram(
-            `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}`
+            `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n\n⭐ <b>Peça uma avaliação ao cliente!</b>\n👉 <a href="${googleReviewUrl}">AVALIAR NO GOOGLE</a>\n\n💬 <a href="https://wa.me/55${phone}?text=${encodeURIComponent(`Olá, ${appointment.customer_name}! Que tal nos avaliar no Google? É super rápido e nos ajuda muito 🙏⭐\n\n👉 ${googleReviewUrl}`)}">ENVIAR LINK DE AVALIAÇÃO NO WHATSAPP</a>`
           );
         }
       }
