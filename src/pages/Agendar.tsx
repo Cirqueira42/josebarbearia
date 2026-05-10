@@ -584,6 +584,46 @@ const Agendar = () => {
                 </Select>
               </div>
 
+              {paymentMethod === "pix" && (
+                <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-primary font-bold">
+                    <span className="text-xl">💸</span>
+                    <span>Pagamento via PIX</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Caso queira adiantar o pagamento, faça o PIX para a chave abaixo. O agendamento será confirmado normalmente.
+                  </p>
+                  <div className="bg-background/80 rounded-md p-3 space-y-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Banco</p>
+                      <p className="font-semibold">Mercado Pago</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Chave PIX (Telefone)</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-bold text-lg tracking-wide select-all">
+                          75 99941-2596
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText("75999412596");
+                            toast.success("Chave PIX copiada!");
+                          }}
+                        >
+                          Copiar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Após o pagamento, envie o comprovante pelo WhatsApp para confirmar.
+                  </p>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 disabled={submitting}
