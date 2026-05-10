@@ -38,18 +38,20 @@ const CashRegister = () => {
   }, []);
 
   const fetchData = async () => {
-    const [appts, svcs] = await Promise.all([
+    const [appts, allAppts, svcs] = await Promise.all([
       supabase.from("appointments").select("*").eq("status", "completed"),
+      supabase.from("appointments").select("customer_phone, appointment_date"),
       supabase.from("services").select("name, price"),
     ]);
     if (appts.data) setAppointments(appts.data);
+    if (allAppts.data) setAllAppointments(allAppts.data as any);
     if (svcs.data) setServices(svcs.data);
   };
 
   const checkClosing = () => {
     const now = getSaoPauloNow();
-    // Auto-close after 21:00 (9 PM)
-    setIsClosed(now.getHours() >= 21);
+    // Fecha automaticamente no fim do expediente (19:00)
+    setIsClosed(now.getHours() >= 19);
   };
 
   const getPrice = (serviceName: string): number => {
