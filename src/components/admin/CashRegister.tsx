@@ -151,9 +151,27 @@ const CashRegister = () => {
         </div>
       </div>
 
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes hoje</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsToday}</p>
+        </div>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes mês</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsMonth}</p>
+        </div>
+        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
+          <Users className="w-4 h-4 text-primary mx-auto" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Total no app</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsTotal}</p>
+        </div>
+      </div>
+
       {isClosed && (
         <p className="text-xs text-muted-foreground text-center mt-3">
-          Caixa fechado automaticamente às 21:00. Reabre amanhã.
+          Caixa fechado automaticamente às 19:00 (fim do expediente). Reabre amanhã.
         </p>
       )}
     </div>
