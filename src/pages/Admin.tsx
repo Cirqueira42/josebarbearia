@@ -194,13 +194,13 @@ const Admin = () => {
           // Update loyalty program
           await updateLoyalty(appointment.customer_phone, appointment.customer_name);
 
-          const googleReviewLink = "https://search.google.com/local/writereview?placeid=ChIJ_____jKtv5QR_______&kgmid=/g/11w2h36q57";
+          const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
           const msg = encodeURIComponent(
             `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
           );
           window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
 
-          const googleReviewUrl = GOOGLE_MAPS_LINK;
+          const googleReviewUrl = "https://share.google/hc9HWSbPBPNRGTY8y";
           sendTelegram(
             `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n\n⭐ <b>Link de avaliação já enviado ao cliente!</b>\n👉 <a href="${googleReviewLink}">AVALIAR NO GOOGLE</a>\n\n💬 <a href="https://wa.me/55${phone}?text=${encodeURIComponent(`Olá, ${appointment.customer_name}! Que tal nos avaliar no Google? É super rápido e nos ajuda muito 🙏⭐\n\n👉 ${googleReviewLink}`)}">REENVIAR LINK NO WHATSAPP</a>`
           );
