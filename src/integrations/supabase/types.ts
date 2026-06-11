@@ -332,6 +332,17 @@ export type Database = {
           service_name: string
         }[]
       }
+      get_loyalty_progress: {
+        Args: { _phone: string }
+        Returns: {
+          available: number
+          free_services_earned: number
+          free_services_redeemed: number
+          goal: number
+          progress: number
+          total_services: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Award, Gift, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
@@ -128,6 +128,7 @@ const Agendar = () => {
   const [lastLookedUpPhone, setLastLookedUpPhone] = useState("");
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
+  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -143,6 +144,23 @@ const Agendar = () => {
       if (found.customer_name) setCustomerName(found.customer_name);
       if (found.customer_email) setCustomerEmail(found.customer_email);
       toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${found.customer_name}!` });
+    }
+
+    // Buscar progresso de fidelidade
+    const { data: lp } = await supabase.rpc("get_loyalty_progress", { _phone: phone });
+    if (lp && lp.length > 0) {
+      const r: any = lp[0];
+      const progress = r.progress ?? 0;
+      const goal = r.goal ?? 10;
+      setLoyalty({
+        total: r.total_services ?? 0,
+        available: r.available ?? 0,
+        progress,
+        goal,
+        remaining: Math.max(goal - progress, 0),
+      });
+    } else {
+      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10 });
     }
   }, [lastLookedUpPhone, toast]);
 
@@ -486,6 +504,7 @@ const Agendar = () => {
 
                     if (digits.length < 10) {
                       setLastLookedUpPhone("");
+                      setLoyalty(null);
                     }
 
                     if (digits.length >= 10) {
@@ -495,6 +514,56 @@ const Agendar = () => {
                   required
                 />
               </div>
+
+              {loyalty && (
+                <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-foreground text-sm">Programa de Fidelidade</h3>
+                    {loyalty.available > 0 && (
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
+                        <Gift className="w-3 h-3" />
+                        {loyalty.available} grátis!
+                      </span>
+                    )}
+                  </div>
+
+                  {loyalty.available > 0 ? (
+                    <p className="text-sm text-foreground">
+                      🎉 Você tem <strong className="text-green-400">{loyalty.available} serviço{loyalty.available > 1 ? "s" : ""} grátis</strong> disponível! Avise o barbeiro ao chegar.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-foreground">
+                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você ganhar <strong className="text-primary">1 serviço grátis</strong>!
+                    </p>
+                  )}
+
+                  <div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+                      <span>{loyalty.progress}/{loyalty.goal} concluídos</span>
+                      <span>{Math.round((loyalty.progress / loyalty.goal) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-primary to-amber-400 h-full rounded-full transition-all"
+                        style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex gap-0.5 mt-2 justify-between">
+                      {Array.from({ length: loyalty.goal }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${i < loyalty.progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Total de serviços já feitos: <strong>{loyalty.total}</strong>
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
