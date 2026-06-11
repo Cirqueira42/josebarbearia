@@ -21,7 +21,7 @@ const formatPrice = (n: number) =>
 
 const buildWhatsappLink = (p: Product) => {
   const msg = `Olá! Gostaria de comprar *${p.brand} — ${p.name}* (${formatPrice(p.price)}).`;
-  return `https://api.whatsapp.com/send?phone=${PHONE}&text=${encodeURIComponent(msg)}`;
+  return buildWhatsAppLink(PHONE, msg);
 };
 
 const Products = () => {
