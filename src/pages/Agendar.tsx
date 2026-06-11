@@ -16,6 +16,7 @@ import { ArrowLeft, Check, Award, Gift, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 import serviceCorte from "@/assets/service-corte.jpg";
 import serviceBarba from "@/assets/service-barba.jpg";
