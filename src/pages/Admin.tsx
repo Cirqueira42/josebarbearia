@@ -25,6 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { openWhatsApp } from "@/lib/whatsapp";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 import AdminSettings from "@/components/admin/AdminSettings";
 import CashRegister from "@/components/admin/CashRegister";
@@ -169,10 +170,8 @@ const Admin = () => {
         const bookingCode = generateBookingCode();
 
         if (status === "confirmed") {
-          const msg = encodeURIComponent(
-            `Olá, ${appointment.customer_name} o seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n\n*Quando:* ${fullDate} às ${appointment.appointment_time}\n\n*Profissional:* JOSE GILMARIO\n\n*Código:* ${bookingCode}\n\n📍*Endereço:* ${ADDRESS}\n\n📍*Link Google Maps:* ${GOOGLE_MAPS_LINK}`
-          );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          const text = `Olá, ${appointment.customer_name} o seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n\n*Quando:* ${fullDate} às ${appointment.appointment_time}\n\n*Profissional:* JOSE GILMARIO\n\n*Código:* ${bookingCode}\n\n📍*Endereço:* ${ADDRESS}\n\n📍*Link Google Maps:* ${GOOGLE_MAPS_LINK}`;
+          openWhatsApp(`55${phone}`, text);
 
           sendTelegram(
             `✅ <b>AGENDAMENTO CONFIRMADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}\n🔑 Código: ${bookingCode}\n\n💬 <a href="https://wa.me/55${phone}">Conversar no WhatsApp</a>`
@@ -180,10 +179,8 @@ const Admin = () => {
         }
 
         if (status === "cancelled") {
-          const msg = encodeURIComponent(
-            `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`
-          );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
+          openWhatsApp(`55${phone}`, text);
 
           sendTelegram(
             `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
@@ -195,10 +192,8 @@ const Admin = () => {
           await updateLoyalty(appointment.customer_phone, appointment.customer_name);
 
           const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
-          const msg = encodeURIComponent(
-            `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`
-          );
-          window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+          const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
+          openWhatsApp(`55${phone}`, text);
 
           const googleReviewUrl = "https://share.google/hc9HWSbPBPNRGTY8y";
           sendTelegram(

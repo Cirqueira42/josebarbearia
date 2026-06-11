@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, Sparkles, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Product = {
   id: string;
@@ -20,7 +21,7 @@ const formatPrice = (n: number) =>
 
 const buildWhatsappLink = (p: Product) => {
   const msg = `Olá! Gostaria de comprar *${p.brand} — ${p.name}* (${formatPrice(p.price)}).`;
-  return `https://api.whatsapp.com/send?phone=${PHONE}&text=${encodeURIComponent(msg)}`;
+  return buildWhatsAppLink(PHONE, msg);
 };
 
 const Products = () => {
