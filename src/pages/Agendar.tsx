@@ -128,6 +128,7 @@ const Agendar = () => {
   const [lastLookedUpPhone, setLastLookedUpPhone] = useState("");
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
+  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
