@@ -504,6 +504,7 @@ const Agendar = () => {
 
                     if (digits.length < 10) {
                       setLastLookedUpPhone("");
+                      setLoyalty(null);
                     }
 
                     if (digits.length >= 10) {
@@ -513,6 +514,56 @@ const Agendar = () => {
                   required
                 />
               </div>
+
+              {loyalty && (
+                <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-foreground text-sm">Programa de Fidelidade</h3>
+                    {loyalty.available > 0 && (
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
+                        <Gift className="w-3 h-3" />
+                        {loyalty.available} grátis!
+                      </span>
+                    )}
+                  </div>
+
+                  {loyalty.available > 0 ? (
+                    <p className="text-sm text-foreground">
+                      🎉 Você tem <strong className="text-green-400">{loyalty.available} serviço{loyalty.available > 1 ? "s" : ""} grátis</strong> disponível! Avise o barbeiro ao chegar.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-foreground">
+                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você ganhar <strong className="text-primary">1 serviço grátis</strong>!
+                    </p>
+                  )}
+
+                  <div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+                      <span>{loyalty.progress}/{loyalty.goal} concluídos</span>
+                      <span>{Math.round((loyalty.progress / loyalty.goal) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-primary to-amber-400 h-full rounded-full transition-all"
+                        style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex gap-0.5 mt-2 justify-between">
+                      {Array.from({ length: loyalty.goal }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${i < loyalty.progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Total de serviços já feitos: <strong>{loyalty.total}</strong>
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
