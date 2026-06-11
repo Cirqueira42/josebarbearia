@@ -25,6 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { openWhatsApp } from "@/lib/whatsapp";
 import BlockedSlots from "@/components/admin/BlockedSlots";
 import AdminSettings from "@/components/admin/AdminSettings";
 import CashRegister from "@/components/admin/CashRegister";
