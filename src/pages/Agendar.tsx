@@ -145,6 +145,23 @@ const Agendar = () => {
       if (found.customer_email) setCustomerEmail(found.customer_email);
       toast({ title: "Cliente encontrado! ✅", description: `Bem-vindo de volta, ${found.customer_name}!` });
     }
+
+    // Buscar progresso de fidelidade
+    const { data: lp } = await supabase.rpc("get_loyalty_progress", { _phone: phone });
+    if (lp && lp.length > 0) {
+      const r: any = lp[0];
+      const progress = r.progress ?? 0;
+      const goal = r.goal ?? 10;
+      setLoyalty({
+        total: r.total_services ?? 0,
+        available: r.available ?? 0,
+        progress,
+        goal,
+        remaining: Math.max(goal - progress, 0),
+      });
+    } else {
+      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10 });
+    }
   }, [lastLookedUpPhone, toast]);
 
   useEffect(() => {
