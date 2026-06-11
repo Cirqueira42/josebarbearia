@@ -324,11 +324,9 @@ const Agendar = () => {
       const appointmentNum = inserted?.appointment_number ?? 0;
       const barberNameMsg = inserted?.barber_name || barber?.name || "José Gilmário";
 
-      // Send WhatsApp to barber (no popup, direct redirect)
-      const msg = encodeURIComponent(
-        `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`
-      );
-      const redirectUrl = `https://api.whatsapp.com/send?phone=${BARBER_PHONE}&text=${msg}`;
+      // Send WhatsApp to barber (no popup, direct redirect) — abre direto no app (Business)
+      const barberText = `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`;
+      const redirectUrl = buildWhatsAppLink(BARBER_PHONE, barberText);
 
       flushSync(() => {
         setConfirmedNumber(appointmentNum);
@@ -337,7 +335,7 @@ const Agendar = () => {
         setSuccess(true);
       });
 
-      // Build WhatsApp confirmation message for Telegram (use wa.me for better compatibility)
+      // Build WhatsApp confirmation message for Telegram (wa.me funciona melhor em links externos)
       const clientPhone = customerPhone.replace(/\D/g, "");
       const confirmText = `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* R$ ${selectedService.price.toFixed(2)}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
       const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
