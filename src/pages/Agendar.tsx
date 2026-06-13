@@ -376,11 +376,52 @@ const Agendar = () => {
               💈 Profissional: <strong className="text-success">{confirmedBarber}</strong>
             </p>
           )}
-          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-6">
+          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-4">
             <p className="text-foreground font-medium text-sm">
               💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
             </p>
           </div>
+
+          {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
+          {selectedService && /corte/i.test(selectedService.name) && loyalty && (
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <Award className="w-5 h-5 text-primary" />
+                <p className="font-bold text-foreground text-sm">Programa de Fidelidade</p>
+                {loyalty.available > 0 && (
+                  <span className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Gift className="w-3 h-3" /> {loyalty.available} grátis!
+                  </span>
+                )}
+              </div>
+              {loyalty.available > 0 ? (
+                <p className="text-xs text-foreground mb-2">
+                  🎉 Você tem <strong className="text-green-400">{loyalty.available} corte{loyalty.available > 1 ? "s" : ""} grátis</strong> disponível! Avise o barbeiro ao chegar.
+                </p>
+              ) : (
+                <p className="text-xs text-foreground mb-2">
+                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para ganhar <strong className="text-primary">1 corte grátis</strong>!
+                </p>
+              )}
+              <div className="w-full bg-muted rounded-full h-2 mb-1">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all"
+                  style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
+                />
+              </div>
+              <div className="flex gap-0.5 mt-1">
+                {Array.from({ length: loyalty.goal }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${i < loyalty.progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                * Conta apenas 1 corte por dia. Atualiza após o barbeiro concluir o atendimento.
+              </p>
+            </div>
+          )}
           <div className="space-y-3">
             {whatsAppRedirectUrl && (
               <Button

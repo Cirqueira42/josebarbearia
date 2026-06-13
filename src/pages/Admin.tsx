@@ -120,8 +120,31 @@ const Admin = () => {
     setLoading(false);
   };
 
-  const updateLoyalty = async (customerPhone: string, customerName: string) => {
+  const updateLoyalty = async (
+    customerPhone: string,
+    customerName: string,
+    serviceName: string,
+    appointmentDate: string,
+    currentId: string,
+  ) => {
     const phone = customerPhone.replace(/\D/g, "");
+
+    // Regra 1: só conta serviços de CORTE (corte, corte + barba, corte infantil)
+    if (!/corte/i.test(serviceName)) return;
+
+    // Regra 2: máximo 1 por dia. Se já existe outro agendamento concluído de corte
+    // no mesmo dia pra esse cliente, não incrementa.
+    const { data: sameDay } = await supabase
+      .from("appointments")
+      .select("id, service_name")
+      .eq("customer_phone", phone)
+      .eq("appointment_date", appointmentDate)
+      .eq("status", "completed")
+      .neq("id", currentId);
+
+    const alreadyCountedToday = (sameDay || []).some((a: any) => /corte/i.test(a.service_name));
+    if (alreadyCountedToday) return;
+
     // Check if loyalty record exists
     const { data: existing } = await supabase
       .from("loyalty")
@@ -188,8 +211,14 @@ const Admin = () => {
         }
 
         if (status === "completed") {
-          // Update loyalty program
-          await updateLoyalty(appointment.customer_phone, appointment.customer_name);
+          // Update loyalty program (somente corte, máx 1 por dia)
+          await updateLoyalty(
+            appointment.customer_phone,
+            appointment.customer_name,
+            appointment.service_name,
+            appointment.appointment_date,
+            appointment.id,
+          );
 
           const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
           const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
