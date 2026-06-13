@@ -3,23 +3,24 @@ import { toast } from "sonner";
 
 /**
  * Sistema de auto-atualização do app.
- * - Remove qualquer service worker antigo (evita cache de versão antiga).
- * - Limpa caches do navegador.
- * - Verifica periodicamente se o index.html mudou (hash) e recarrega.
+ * - Remove service workers antigos e caches (uma vez ao abrir).
+ * - Verifica NO MÁXIMO 1 VEZ POR DIA se há uma nova versão.
+ * - Detecta nova versão pelo hash do bundle JS principal (estável).
  */
-const CHECK_INTERVAL_MS = 60_000; // checa a cada 1 minuto
-const STORAGE_KEY = "app:last-html-hash";
+const BUNDLE_KEY = "app:bundle-id";
+const LAST_CHECK_KEY = "app:last-check-date";
 
-const hashString = (str: string) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return String(hash);
+const getTodayInSP = (): string => {
+  // YYYY-MM-DD no fuso de São Paulo
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 };
 
-const fetchHtmlHash = async (): Promise<string | null> => {
+const fetchBundleId = async (): Promise<string | null> => {
   try {
     const res = await fetch(`/?_v=${Date.now()}`, {
       cache: "no-store",
@@ -27,7 +28,10 @@ const fetchHtmlHash = async (): Promise<string | null> => {
     });
     if (!res.ok) return null;
     const text = await res.text();
-    return hashString(text);
+    // Extrai o src do bundle principal (ex.: /assets/index-AbC123.js)
+    const match = text.match(/<script[^>]+type=["']module["'][^>]+src=["']([^"']+)["']/i)
+      || text.match(/src=["'](\/assets\/[^"']+\.js)["']/i);
+    return match ? match[1] : null;
   } catch {
     return null;
   }
@@ -51,7 +55,7 @@ export const useAppUpdater = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. Garante que nenhum service worker antigo esteja interceptando requests
+    // 1. Remove qualquer service worker antigo
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .getRegistrations()
@@ -59,22 +63,29 @@ export const useAppUpdater = () => {
         .catch(() => {});
     }
 
-    // 2. Função que checa se há nova versão
+    // 2. Checa no máximo 1x por dia
     const checkForUpdate = async () => {
       if (checkingRef.current) return;
       checkingRef.current = true;
       try {
-        const newHash = await fetchHtmlHash();
-        if (!newHash) return;
+        const today = getTodayInSP();
+        const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
+        if (lastCheck === today) return; // já checou hoje
 
-        const lastHash = localStorage.getItem(STORAGE_KEY);
-        if (!lastHash) {
-          localStorage.setItem(STORAGE_KEY, newHash);
+        const newBundle = await fetchBundleId();
+        if (!newBundle) return;
+
+        localStorage.setItem(LAST_CHECK_KEY, today);
+
+        const savedBundle = localStorage.getItem(BUNDLE_KEY);
+        if (!savedBundle) {
+          // primeira execução: só armazena, não recarrega
+          localStorage.setItem(BUNDLE_KEY, newBundle);
           return;
         }
 
-        if (lastHash !== newHash) {
-          localStorage.setItem(STORAGE_KEY, newHash);
+        if (savedBundle !== newBundle) {
+          localStorage.setItem(BUNDLE_KEY, newBundle);
           toast.success("Nova versão disponível! Atualizando...", {
             duration: 2500,
           });
@@ -85,26 +96,6 @@ export const useAppUpdater = () => {
       }
     };
 
-    // 3. Checa ao abrir o app
     checkForUpdate();
-
-    // 4. Checa periodicamente
-    const interval = window.setInterval(checkForUpdate, CHECK_INTERVAL_MS);
-
-    // 5. Checa quando a aba volta a ficar visível
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") checkForUpdate();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    // 6. Checa quando a conexão volta
-    const onOnline = () => checkForUpdate();
-    window.addEventListener("online", onOnline);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("online", onOnline);
-    };
   }, []);
 };
