@@ -151,16 +151,26 @@ const LoyaltyProgram = () => {
                   </div>
                 </div>
 
-                {available > 0 && (
+                <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => redeemFree(r)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => notifyClient(r)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   >
-                    <Gift className="w-3 h-3 mr-1" />
-                    Resgatar Serviço Grátis
+                    <MessageCircle className="w-3 h-3 mr-1" />
+                    Notificar no WhatsApp
                   </Button>
-                )}
+                  {available > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={() => redeemFree(r)}
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      <Gift className="w-3 h-3 mr-1" />
+                      Resgatar
+                    </Button>
+                  )}
+                </div>
               </div>
             );
           })}
