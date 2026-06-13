@@ -4,7 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Award, Gift, Search, Star } from "lucide-react";
+import { Award, Gift, Search, Star, MessageCircle } from "lucide-react";
+import { openWhatsApp } from "@/lib/whatsapp";
+
+const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
 
 type LoyaltyRecord = {
   id: string;
@@ -55,6 +58,22 @@ const LoyaltyProgram = () => {
     }
   };
 
+  const notifyClient = (record: LoyaltyRecord) => {
+    const available = record.free_services_earned - record.free_services_redeemed;
+    const progress = record.total_services % GOAL;
+    const remaining = Math.max(GOAL - progress, 0);
+    const phone = record.customer_phone.replace(/\D/g, "");
+    const phoneWithDDI = phone.startsWith("55") ? phone : `55${phone}`;
+
+    let text = "";
+    if (available > 0) {
+      text = `Olá, ${record.customer_name}! 💈\n\n🎁 *José Barbearia* — você tem *${available} corte${available > 1 ? "s" : ""} GRÁTIS* disponível pelo nosso Programa de Fidelidade!\n\nÉ só agendar e avisar ao chegar.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+    } else {
+      text = `Olá, ${record.customer_name}! 💈\n\n⭐ *José Barbearia — Programa de Fidelidade*\n\nVocê já fez *${record.total_services} corte${record.total_services !== 1 ? "s" : ""}* com a gente!\n\nFaltam apenas *${remaining} corte${remaining !== 1 ? "s" : ""}* pra você ganhar *1 corte GRÁTIS* 🎉\n\nAgende já: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+    }
+    openWhatsApp(phoneWithDDI, text);
+  };
+
   const filtered = records.filter((r) =>
     r.customer_name.toLowerCase().includes(search.toLowerCase()) ||
     r.customer_phone.includes(search)
@@ -66,7 +85,7 @@ const LoyaltyProgram = () => {
         <Award className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-bold text-foreground">Programa de Fidelidade</h2>
         <Badge variant="outline" className="ml-auto text-xs">
-          A cada {GOAL} serviços = 1 grátis
+          A cada {GOAL} cortes = 1 grátis
         </Badge>
       </div>
 
