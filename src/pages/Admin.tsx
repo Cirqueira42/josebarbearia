@@ -247,6 +247,9 @@ const Admin = () => {
           );
 
           const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
+          const instagramLink = "https://www.instagram.com/josebarbeariaa/";
+          const tiktokLink = "https://www.tiktok.com/@josebarbeariaa";
+          const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\n📲 *Siga a gente nas redes pra ver novidades, cortes e promoções:*\n📸 Instagram: ${instagramLink}\n🎵 TikTok: ${tiktokLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
           const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
           openWhatsApp(`55${phone}`, text);
 
