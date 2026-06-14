@@ -223,6 +223,11 @@ const Admin = () => {
         }
 
         if (status === "cancelled") {
+          // Se estava concluído e estamos cancelando, reverter a estrela (se aplicável)
+          if (previousStatus === "completed" && /corte/i.test(appointment.service_name)) {
+            await revertLoyalty(appointment.customer_phone);
+          }
+
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
           openWhatsApp(`55${phone}`, text);
 
