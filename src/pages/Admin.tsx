@@ -263,10 +263,15 @@ const Admin = () => {
   };
 
   const deleteAppointment = async (id: string) => {
+    const target = appointments.find((a) => a.id === id);
     const { error } = await supabase.from("appointments").delete().eq("id", id);
     if (error) {
       toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
     } else {
+      // Se o agendamento concluído contava estrela, reverter
+      if (target && target.status === "completed" && /corte/i.test(target.service_name)) {
+        await revertLoyalty(target.customer_phone);
+      }
       toast({ title: "Excluído", description: "Agendamento removido." });
     }
   };
