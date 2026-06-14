@@ -175,8 +175,29 @@ const Admin = () => {
     }
   };
 
+  const revertLoyalty = async (customerPhone: string) => {
+    const phone = customerPhone.replace(/\D/g, "");
+    const { data: existing } = await supabase
+      .from("loyalty")
+      .select("*")
+      .eq("customer_phone", phone)
+      .maybeSingle();
+    if (!existing) return;
+    const newTotal = Math.max(((existing as any).total_services || 0) - 1, 0);
+    const newEarned = Math.floor(newTotal / 10);
+    await supabase
+      .from("loyalty")
+      .update({
+        total_services: newTotal,
+        free_services_earned: newEarned,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("customer_phone", phone);
+  };
+
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
     const appointment = appointments.find((a) => a.id === id);
+    const previousStatus = appointment?.status;
     const { error } = await supabase
       .from("appointments")
       .update({ status })
@@ -202,6 +223,11 @@ const Admin = () => {
         }
 
         if (status === "cancelled") {
+          // Se estava concluído e estamos cancelando, reverter a estrela (se aplicável)
+          if (previousStatus === "completed" && /corte/i.test(appointment.service_name)) {
+            await revertLoyalty(appointment.customer_phone);
+          }
+
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
           openWhatsApp(`55${phone}`, text);
 
@@ -221,7 +247,10 @@ const Admin = () => {
           );
 
           const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
-          const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
+          const instagramLink = "https://www.instagram.com/josebarbeariaa/";
+          const tiktokLink = "https://www.tiktok.com/@josebarbeariaa";
+          const text = `Obrigado pela preferência, ${appointment.customer_name}! 🙏\n\nFoi um prazer atendê-lo na *José Barbearia*! 💈\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n\n⭐ *Sua avaliação no Google é muito importante pra gente!* Leva só 30 segundos e ajuda demais 🙏\n\n👉 Toque aqui pra avaliar:\n${googleReviewLink}\n\n📲 *Siga a gente nas redes pra ver novidades, cortes e promoções:*\n📸 Instagram: ${instagramLink}\n🎵 TikTok: ${tiktokLink}\n\nVolte sempre! Agende novamente:\n${BOOKING_URL}\n\n👊`;
+          
           openWhatsApp(`55${phone}`, text);
 
           const googleReviewUrl = "https://share.google/hc9HWSbPBPNRGTY8y";
@@ -234,10 +263,15 @@ const Admin = () => {
   };
 
   const deleteAppointment = async (id: string) => {
+    const target = appointments.find((a) => a.id === id);
     const { error } = await supabase.from("appointments").delete().eq("id", id);
     if (error) {
       toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
     } else {
+      // Se o agendamento concluído contava estrela, reverter
+      if (target && target.status === "completed" && /corte/i.test(target.service_name)) {
+        await revertLoyalty(target.customer_phone);
+      }
       toast({ title: "Excluído", description: "Agendamento removido." });
     }
   };
