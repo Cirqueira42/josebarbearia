@@ -175,8 +175,29 @@ const Admin = () => {
     }
   };
 
+  const revertLoyalty = async (customerPhone: string) => {
+    const phone = customerPhone.replace(/\D/g, "");
+    const { data: existing } = await supabase
+      .from("loyalty")
+      .select("*")
+      .eq("customer_phone", phone)
+      .maybeSingle();
+    if (!existing) return;
+    const newTotal = Math.max(((existing as any).total_services || 0) - 1, 0);
+    const newEarned = Math.floor(newTotal / 10);
+    await supabase
+      .from("loyalty")
+      .update({
+        total_services: newTotal,
+        free_services_earned: newEarned,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("customer_phone", phone);
+  };
+
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
     const appointment = appointments.find((a) => a.id === id);
+    const previousStatus = appointment?.status;
     const { error } = await supabase
       .from("appointments")
       .update({ status })
