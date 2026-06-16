@@ -66,16 +66,23 @@ const DataCleanup = () => {
       .gte("appointment_date", monthStart)
       .neq("status", "cancelled");
 
-    let corteBarba = 0, corte = 0, barba = 0;
+    let corteBarba = 0, corte = 0, barba = 0, corteInfantil = 0;
     for (const a of monthAppts || []) {
       const n = (a.service_name || "").toLowerCase();
       const hasCorte = n.includes("corte") || n.includes("cabelo");
       const hasBarba = n.includes("barba");
-      if (hasCorte && hasBarba) corteBarba++;
-      else if (hasCorte) corte++;
-      else if (hasBarba) barba++;
+      const isInfantil = n.includes("infantil");
+      if (isInfantil) {
+        corteInfantil++;
+      } else if (hasCorte && hasBarba) {
+        corteBarba++;
+      } else if (hasCorte) {
+        corte++;
+      } else if (hasBarba) {
+        barba++;
+      }
     }
-    setMonthStats({ corteBarba, corte, barba, total: (monthAppts?.length || 0) });
+    setMonthStats({ corteBarba, corte, barba, corteInfantil, total: (monthAppts?.length || 0) });
   };
 
   useEffect(() => {
