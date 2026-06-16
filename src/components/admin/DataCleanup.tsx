@@ -139,8 +139,20 @@ const DataCleanup = () => {
           <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
         </div>
         <div className="flex justify-between">
+          <span>✂️ Apenas corte:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corte}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>🧔 Apenas barba:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
+        </div>
+        <div className="flex justify-between">
           <span>💈 Corte + barba:</span>
           <span className="font-mono font-bold text-primary">{monthStats.corteBarba}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>👶 Corte infantil:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corteInfantil}</span>
         </div>
         <div className="flex justify-between border-t border-border pt-2 mt-2">
           <span className="font-bold">Total do mês:</span>
