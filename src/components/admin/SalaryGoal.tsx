@@ -62,30 +62,30 @@ const SalaryGoal = () => {
   }, [rows, services]);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-6">
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
         <Target className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-bold text-foreground">Meta de Salário</h2>
-        <span className="ml-auto text-xs font-semibold bg-primary/10 text-primary border border-primary/30 rounded-full px-3 py-1">
+        <h2 className="text-base sm:text-lg font-bold text-foreground">Meta de Salário</h2>
+        <span className="ml-auto text-[11px] sm:text-xs font-semibold bg-primary/10 text-primary border border-primary/30 rounded-full px-2 sm:px-3 py-0.5 sm:py-1">
           {formatCurrency(SALARY_GOAL)}/mês
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-4">
-        <div className="flex justify-between text-xs mb-1">
+      <div className="mb-2 sm:mb-4">
+        <div className="flex justify-between text-[11px] sm:text-xs mb-1">
           <span className="text-muted-foreground">Progresso do mês</span>
           <span className="font-bold text-foreground">
             {formatCurrency(stats.monthly)} <span className="text-muted-foreground">/ {formatCurrency(SALARY_GOAL)}</span>
           </span>
         </div>
-        <div className="w-full h-3 bg-background border border-border rounded-full overflow-hidden">
+        <div className="w-full h-2 sm:h-3 bg-background border border-border rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary to-amber-400 transition-all"
             style={{ width: `${stats.progress}%` }}
           />
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1">
+        <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1">
           {stats.remaining > 0
             ? `Faltam ${formatCurrency(stats.remaining)} para bater a meta (${stats.progress.toFixed(1)}%)`
             : `🎉 Meta atingida! +${formatCurrency(stats.monthly - SALARY_GOAL)} acima`}
@@ -93,37 +93,37 @@ const SalaryGoal = () => {
       </div>
 
       {/* Day / Month / Year cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
-          <CalendarIcon className="w-4 h-4 text-primary mx-auto mb-1" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-2 sm:mb-4">
+        <div className="bg-background border border-border rounded-lg p-1.5 sm:p-3 text-center min-w-0">
+          <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mx-auto mb-0.5 sm:mb-1" />
           <p className="text-[10px] sm:text-xs text-muted-foreground">Diário</p>
-          <p className="text-sm sm:text-base font-bold text-foreground break-all leading-tight">{formatCurrency(stats.daily)}</p>
+          <p className="text-xs sm:text-sm font-bold text-foreground break-all leading-tight">{formatCurrency(stats.daily)}</p>
         </div>
-        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
-          <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
+        <div className="bg-background border border-border rounded-lg p-1.5 sm:p-3 text-center min-w-0">
+          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mx-auto mb-0.5 sm:mb-1" />
           <p className="text-[10px] sm:text-xs text-muted-foreground">Mensal</p>
-          <p className="text-sm sm:text-base font-bold text-foreground break-all leading-tight">{formatCurrency(stats.monthly)}</p>
+          <p className="text-xs sm:text-sm font-bold text-foreground break-all leading-tight">{formatCurrency(stats.monthly)}</p>
         </div>
-        <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center min-w-0">
-          <Target className="w-4 h-4 text-primary mx-auto mb-1" />
+        <div className="bg-background border border-border rounded-lg p-1.5 sm:p-3 text-center min-w-0">
+          <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mx-auto mb-0.5 sm:mb-1" />
           <p className="text-[10px] sm:text-xs text-muted-foreground">Anual</p>
-          <p className="text-sm sm:text-base font-bold text-foreground break-all leading-tight">{formatCurrency(stats.yearly)}</p>
+          <p className="text-xs sm:text-sm font-bold text-foreground break-all leading-tight">{formatCurrency(stats.yearly)}</p>
         </div>
       </div>
 
       {/* Weekly breakdown of current month */}
       <div>
-        <p className="text-xs text-muted-foreground mb-2">Por semana (mês atual)</p>
-        <div className="space-y-1.5">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 sm:mb-2">Por semana (mês atual)</p>
+        <div className="space-y-1 sm:space-y-1.5">
           {stats.weekBuckets.map((v, i) => {
             const pct = Math.min((v / SALARY_GOAL) * 100, 100);
             return (
               <div key={i} className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground w-20 shrink-0">{i + 1}ª semana</span>
-                <div className="flex-1 h-2 bg-background border border-border rounded-full overflow-hidden">
+                <span className="text-[10px] sm:text-xs text-muted-foreground w-16 sm:w-20 shrink-0">{i + 1}ª semana</span>
+                <div className="flex-1 h-1.5 sm:h-2 bg-background border border-border rounded-full overflow-hidden">
                   <div className="h-full bg-primary/70" style={{ width: `${pct}%` }} />
                 </div>
-                <span className="text-xs font-mono font-bold text-foreground w-24 text-right">
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-foreground w-16 sm:w-24 text-right">
                   {formatCurrency(v)}
                 </span>
               </div>
