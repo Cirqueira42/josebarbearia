@@ -36,6 +36,7 @@ import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
 import GalleryManagement from "@/components/admin/GalleryManagement";
 import DataCleanup from "@/components/admin/DataCleanup";
+import SalaryGoal from "@/components/admin/SalaryGoal";
 import ProductsManagement from "@/components/admin/ProductsManagement";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
@@ -390,6 +391,7 @@ const Admin = () => {
         {/* Admin sections */}
         <div className="grid gap-6 mb-6">
           <CashRegister />
+          <SalaryGoal />
           <LoyaltyProgram />
           <ReportsHistory />
           <BarberManagement />

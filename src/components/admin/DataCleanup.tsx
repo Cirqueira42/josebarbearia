@@ -21,12 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Archive, Database } from "lucide-react";
-import { subtractMonthsFromTodayStr } from "@/lib/brazilTime";
+import { subtractMonthsFromTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 
 const DataCleanup = () => {
   const [months, setMonths] = useState("6");
   const [scope, setScope] = useState<"completed" | "cancelled" | "both">("both");
   const [counts, setCounts] = useState({ completed: 0, cancelled: 0, eligible: 0 });
+  const [monthStats, setMonthStats] = useState({ corteBarba: 0, corte: 0, barba: 0, total: 0 });
   const [working, setWorking] = useState(false);
   const { toast } = useToast();
 
@@ -56,6 +57,25 @@ const DataCleanup = () => {
     else eligible = completed + cancelled;
 
     setCounts({ completed, cancelled, eligible });
+
+    // Contagem por tipo de serviço no mês atual (todos os status, exceto cancelados)
+    const monthStart = getBrazilMonthStartStr();
+    const { data: monthAppts } = await supabase
+      .from("appointments")
+      .select("service_name, status")
+      .gte("appointment_date", monthStart)
+      .neq("status", "cancelled");
+
+    let corteBarba = 0, corte = 0, barba = 0;
+    for (const a of monthAppts || []) {
+      const n = (a.service_name || "").toLowerCase();
+      const hasCorte = n.includes("corte") || n.includes("cabelo");
+      const hasBarba = n.includes("barba");
+      if (hasCorte && hasBarba) corteBarba++;
+      else if (hasCorte) corte++;
+      else if (hasBarba) barba++;
+    }
+    setMonthStats({ corteBarba, corte, barba, total: (monthAppts?.length || 0) });
   };
 
   useEffect(() => {
@@ -96,6 +116,30 @@ const DataCleanup = () => {
       <p className="text-sm text-muted-foreground">
         Remove agendamentos antigos para liberar espaço e manter o sistema rápido. Os dados financeiros já foram contabilizados nos relatórios.
       </p>
+
+      {/* Relatório de agendamentos do mês por tipo de serviço */}
+      <div className="bg-background/50 rounded-lg p-3 text-sm space-y-1 border border-border">
+        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <Database className="w-4 h-4" />
+          <span className="font-medium">Relatório do mês (por serviço)</span>
+        </div>
+        <div className="flex justify-between">
+          <span>✂️ Apenas corte:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corte}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>🧔 Apenas barba:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>💈 Corte + barba:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corteBarba}</span>
+        </div>
+        <div className="flex justify-between border-t border-border pt-2 mt-2">
+          <span className="font-bold">Total do mês:</span>
+          <span className="font-mono font-bold text-foreground">{monthStats.total}</span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
