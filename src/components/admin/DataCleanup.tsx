@@ -27,7 +27,7 @@ const DataCleanup = () => {
   const [months, setMonths] = useState("6");
   const [scope, setScope] = useState<"completed" | "cancelled" | "both">("both");
   const [counts, setCounts] = useState({ completed: 0, cancelled: 0, eligible: 0 });
-  const [monthStats, setMonthStats] = useState({ corteBarba: 0, corte: 0, barba: 0, total: 0 });
+  const [monthStats, setMonthStats] = useState({ corteBarba: 0, corte: 0, barba: 0, corteInfantil: 0, total: 0 });
   const [working, setWorking] = useState(false);
   const { toast } = useToast();
 
@@ -66,16 +66,23 @@ const DataCleanup = () => {
       .gte("appointment_date", monthStart)
       .neq("status", "cancelled");
 
-    let corteBarba = 0, corte = 0, barba = 0;
+    let corteBarba = 0, corte = 0, barba = 0, corteInfantil = 0;
     for (const a of monthAppts || []) {
       const n = (a.service_name || "").toLowerCase();
       const hasCorte = n.includes("corte") || n.includes("cabelo");
       const hasBarba = n.includes("barba");
-      if (hasCorte && hasBarba) corteBarba++;
-      else if (hasCorte) corte++;
-      else if (hasBarba) barba++;
+      const isInfantil = n.includes("infantil");
+      if (isInfantil) {
+        corteInfantil++;
+      } else if (hasCorte && hasBarba) {
+        corteBarba++;
+      } else if (hasCorte) {
+        corte++;
+      } else if (hasBarba) {
+        barba++;
+      }
     }
-    setMonthStats({ corteBarba, corte, barba, total: (monthAppts?.length || 0) });
+    setMonthStats({ corteBarba, corte, barba, corteInfantil, total: (monthAppts?.length || 0) });
   };
 
   useEffect(() => {
@@ -132,8 +139,20 @@ const DataCleanup = () => {
           <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
         </div>
         <div className="flex justify-between">
+          <span>✂️ Apenas corte:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corte}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>🧔 Apenas barba:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
+        </div>
+        <div className="flex justify-between">
           <span>💈 Corte + barba:</span>
           <span className="font-mono font-bold text-primary">{monthStats.corteBarba}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>👶 Corte infantil:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corteInfantil}</span>
         </div>
         <div className="flex justify-between border-t border-border pt-2 mt-2">
           <span className="font-bold">Total do mês:</span>

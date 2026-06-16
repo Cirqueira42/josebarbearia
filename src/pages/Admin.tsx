@@ -330,18 +330,18 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6">
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
         {/* Limpeza + Galeria */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
           <DataCleanup />
           <GalleryManagement />
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -377,19 +377,19 @@ const Admin = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           {(["pending", "confirmed", "cancelled", "completed"] as const).map((s) => (
-            <div key={s} className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">
+            <div key={s} className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">
                 {appointments.filter((a) => a.status === s).length}
               </p>
-              <p className="text-xs text-muted-foreground">{statusLabels[s].label}</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground">{statusLabels[s].label}</p>
             </div>
           ))}
         </div>
 
         {/* Admin sections */}
-        <div className="grid gap-6 mb-6">
+        <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
           <CashRegister />
           <SalaryGoal />
           <LoyaltyProgram />
