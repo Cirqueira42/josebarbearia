@@ -27,7 +27,7 @@ const DataCleanup = () => {
   const [months, setMonths] = useState("6");
   const [scope, setScope] = useState<"completed" | "cancelled" | "both">("both");
   const [counts, setCounts] = useState({ completed: 0, cancelled: 0, eligible: 0 });
-  const [monthStats, setMonthStats] = useState({ corteBarba: 0, corte: 0, barba: 0, total: 0 });
+  const [monthStats, setMonthStats] = useState({ corteBarba: 0, corte: 0, barba: 0, corteInfantil: 0, total: 0 });
   const [working, setWorking] = useState(false);
   const { toast } = useToast();
 
