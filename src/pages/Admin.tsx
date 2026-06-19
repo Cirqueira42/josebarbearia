@@ -312,7 +312,7 @@ const Admin = () => {
         <PhotoCarousel overlay="heavy" />
       </div>
       <header className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className={`${viewWidthClass} mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all`}>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
             <h1 className="text-base sm:text-xl font-bold font-display text-gradient truncate">PAINEL ADMIN</h1>
