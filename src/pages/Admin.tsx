@@ -23,6 +23,9 @@ import {
   CalendarDays,
   Share2,
   ExternalLink,
+  Monitor,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { openWhatsApp } from "@/lib/whatsapp";
@@ -90,6 +93,18 @@ const Admin = () => {
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchName, setSearchName] = useState("");
+  const [viewMode, setViewMode] = useState<"desktop" | "tablet" | "mobile">(() => {
+    if (typeof window === "undefined") return "mobile";
+    return (localStorage.getItem("admin-view-mode") as any) || "mobile";
+  });
+
+  const setView = (m: "desktop" | "tablet" | "mobile") => {
+    setViewMode(m);
+    try { localStorage.setItem("admin-view-mode", m); } catch {}
+  };
+
+  const viewWidthClass =
+    viewMode === "mobile" ? "max-w-[420px]" : viewMode === "tablet" ? "max-w-3xl" : "max-w-7xl";
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -297,7 +312,7 @@ const Admin = () => {
         <PhotoCarousel overlay="heavy" />
       </div>
       <header className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className={`${viewWidthClass} mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all`}>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
             <h1 className="text-base sm:text-xl font-bold font-display text-gradient truncate">PAINEL ADMIN</h1>
@@ -330,7 +345,39 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6">
+      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all`}>
+        {/* Barra de visualização */}
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 sticky top-2 z-20">
+          <span className="text-[11px] text-muted-foreground px-2 hidden sm:inline">Visualizar:</span>
+          <Button
+            size="sm"
+            variant={viewMode === "mobile" ? "default" : "ghost"}
+            onClick={() => setView("mobile")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Smartphone className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Celular</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "tablet" ? "default" : "ghost"}
+            onClick={() => setView("tablet")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Tablet className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Tablet</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "desktop" ? "default" : "ghost"}
+            onClick={() => setView("desktop")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Monitor className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Desktop</span>
+          </Button>
+        </div>
+
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
