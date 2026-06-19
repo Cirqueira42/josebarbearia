@@ -23,6 +23,9 @@ import {
   CalendarDays,
   Share2,
   ExternalLink,
+  Monitor,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { openWhatsApp } from "@/lib/whatsapp";
