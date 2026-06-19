@@ -93,6 +93,18 @@ const Admin = () => {
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchName, setSearchName] = useState("");
+  const [viewMode, setViewMode] = useState<"desktop" | "tablet" | "mobile">(() => {
+    if (typeof window === "undefined") return "mobile";
+    return (localStorage.getItem("admin-view-mode") as any) || "mobile";
+  });
+
+  const setView = (m: "desktop" | "tablet" | "mobile") => {
+    setViewMode(m);
+    try { localStorage.setItem("admin-view-mode", m); } catch {}
+  };
+
+  const viewWidthClass =
+    viewMode === "mobile" ? "max-w-[420px]" : viewMode === "tablet" ? "max-w-3xl" : "max-w-7xl";
   const navigate = useNavigate();
   const { toast } = useToast();
 
