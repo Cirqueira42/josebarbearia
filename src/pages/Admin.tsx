@@ -345,7 +345,39 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6">
+      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all`}>
+        {/* Barra de visualização */}
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 sticky top-2 z-20">
+          <span className="text-[11px] text-muted-foreground px-2 hidden sm:inline">Visualizar:</span>
+          <Button
+            size="sm"
+            variant={viewMode === "mobile" ? "default" : "ghost"}
+            onClick={() => setView("mobile")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Smartphone className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Celular</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "tablet" ? "default" : "ghost"}
+            onClick={() => setView("tablet")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Tablet className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Tablet</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "desktop" ? "default" : "ghost"}
+            onClick={() => setView("desktop")}
+            className="flex-1 h-8 text-xs"
+          >
+            <Monitor className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Desktop</span>
+          </Button>
+        </div>
+
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
