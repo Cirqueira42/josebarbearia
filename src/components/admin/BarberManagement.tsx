@@ -33,6 +33,7 @@ const BarberManagement = () => {
   const updateCommission = async (id: string, value: number) => {
     await (supabase as any).from("barbers").update({ commission_percent: value }).eq("id", id);
     setBarbers((prev) => prev.map((b) => (b.id === id ? { ...b, commission_percent: value } : b)));
+  };
 
   const toggleEnabled = async (id: string, enabled: boolean) => {
     await supabase.from("barbers").update({ enabled }).eq("id", id);
