@@ -113,6 +113,22 @@ const DataCleanup = () => {
     setWorking(false);
   };
 
+  const exportCsv = async () => {
+    const { data } = await supabase.from("appointments").select("*").order("appointment_date", { ascending: false });
+    if (!data || data.length === 0) { toast({ title: "Nada para exportar" }); return; }
+    const cols = Object.keys(data[0]);
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [cols.join(","), ...data.map(r => cols.map(c => escape((r as any)[c])).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `agendamentos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Backup baixado ✅", description: `${data.length} agendamentos exportados` });
+  };
+
   return (
     <div className="bg-card border border-border rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
@@ -123,6 +139,11 @@ const DataCleanup = () => {
       <p className="text-sm text-muted-foreground">
         Remove agendamentos antigos para liberar espaço e manter o sistema rápido. Os dados financeiros já foram contabilizados nos relatórios.
       </p>
+
+      <Button variant="outline" size="sm" onClick={exportCsv} className="w-full">
+        <Database className="w-4 h-4 mr-2" />
+        Baixar backup (.csv) de todos os agendamentos
+      </Button>
 
       {/* Relatório de agendamentos do mês por tipo de serviço */}
       <div className="bg-background/50 rounded-lg p-3 text-sm space-y-1 border border-border">
@@ -139,12 +160,8 @@ const DataCleanup = () => {
           <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
         </div>
         <div className="flex justify-between">
-          <span>✂️ Apenas corte:</span>
-          <span className="font-mono font-bold text-primary">{monthStats.corte}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>🧔 Apenas barba:</span>
-          <span className="font-mono font-bold text-primary">{monthStats.barba}</span>
+          <span>💈 Corte + barba:</span>
+          <span className="font-mono font-bold text-primary">{monthStats.corteBarba}</span>
         </div>
         <div className="flex justify-between">
           <span>💈 Corte + barba:</span>

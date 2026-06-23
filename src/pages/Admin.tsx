@@ -41,6 +41,11 @@ import GalleryManagement from "@/components/admin/GalleryManagement";
 import DataCleanup from "@/components/admin/DataCleanup";
 import SalaryGoal from "@/components/admin/SalaryGoal";
 import ProductsManagement from "@/components/admin/ProductsManagement";
+import Expenses from "@/components/admin/Expenses";
+import BlockedCustomers from "@/components/admin/BlockedCustomers";
+import CustomerHistory from "@/components/admin/CustomerHistory";
+import Coupons from "@/components/admin/Coupons";
+import BarberRevenue from "@/components/admin/BarberRevenue";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -438,7 +443,12 @@ const Admin = () => {
         {/* Admin sections */}
         <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
           <CashRegister />
+          <Expenses />
           <SalaryGoal />
+          <BarberRevenue />
+          <CustomerHistory />
+          <Coupons />
+          <BlockedCustomers />
           <LoyaltyProgram />
           <ReportsHistory />
           <BarberManagement />

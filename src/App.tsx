@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import Agendar from "./pages/Agendar";
 import BarberView from "./pages/BarberView";
+import MeusAgendamentos from "./pages/MeusAgendamentos";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import { useAppUpdater } from "./hooks/useAppUpdater";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/barbeiro/:id" element={<BarberView />} />
+          <Route path="/meus-agendamentos" element={<MeusAgendamentos />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

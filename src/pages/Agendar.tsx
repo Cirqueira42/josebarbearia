@@ -130,6 +130,8 @@ const Agendar = () => {
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -287,6 +289,18 @@ const Agendar = () => {
     } catch {}
   };
 
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    const { data } = await (supabase as any).rpc("validate_coupon", { _code: couponCode.trim() });
+    const r = (data as any[])?.[0];
+    if (!r || !r.valid) {
+      toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
+      setCouponApplied(null); return;
+    }
+    setCouponApplied({ code: couponCode.trim().toUpperCase(), discount: r.discount_percent });
+    toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService || !customerName || !customerPhone || !selectedDate || !selectedTime) {
@@ -295,6 +309,14 @@ const Agendar = () => {
     }
     if (barbers.length > 1 && !selectedBarber) {
       toast({ title: "Selecione um barbeiro", variant: "destructive" });
+      return;
+    }
+
+    // Verifica se o telefone está bloqueado
+    const cleanPhone = customerPhone.replace(/\D/g, "");
+    const { data: blockedCheck } = await (supabase as any).rpc("is_phone_blocked", { _phone: cleanPhone });
+    if (blockedCheck === true) {
+      toast({ title: "Não foi possível agendar", description: "Entre em contato com a barbearia.", variant: "destructive" });
       return;
     }
 
@@ -319,6 +341,20 @@ const Agendar = () => {
       const fullDate = formatFullDate(selectedDate);
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
+      const finalPrice = couponApplied
+        ? selectedService.price * (1 - couponApplied.discount / 100)
+        : selectedService.price;
+      const priceLabel = couponApplied
+        ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+        : `R$ ${selectedService.price.toFixed(2)}`;
+
+      // Incrementa uso do cupom
+      if (couponApplied) {
+        try {
+          const { data: c } = await (supabase as any).from("coupons").select("id, uses_count").eq("code", couponApplied.code).maybeSingle();
+          if (c) await (supabase as any).from("coupons").update({ uses_count: (c.uses_count || 0) + 1 }).eq("id", c.id);
+        } catch {}
+      }
 
       // Use the real sequential number returned by the database
       const appointmentNum = inserted?.appointment_number ?? 0;
@@ -732,6 +768,26 @@ const Agendar = () => {
                   </p>
                 </div>
               )}
+
+              <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
+                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto <span className="text-xs text-muted-foreground">(opcional)</span></Label>
+                {couponApplied ? (
+                  <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
+                    <span className="text-sm text-green-500 font-bold">{couponApplied.code} · -{couponApplied.discount}%</span>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>Remover</Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input placeholder="DIGITE O CÓDIGO" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="uppercase" />
+                    <Button type="button" variant="outline" onClick={applyCoupon}>Aplicar</Button>
+                  </div>
+                )}
+                {couponApplied && selectedService && (
+                  <p className="text-xs text-muted-foreground">
+                    Valor com desconto: <b className="text-green-500">R$ {(selectedService.price * (1 - couponApplied.discount / 100)).toFixed(2)}</b>
+                  </p>
+                )}
+              </div>
 
               <Button
                 type="submit"
