@@ -41,6 +41,11 @@ import GalleryManagement from "@/components/admin/GalleryManagement";
 import DataCleanup from "@/components/admin/DataCleanup";
 import SalaryGoal from "@/components/admin/SalaryGoal";
 import ProductsManagement from "@/components/admin/ProductsManagement";
+import Expenses from "@/components/admin/Expenses";
+import BlockedCustomers from "@/components/admin/BlockedCustomers";
+import CustomerHistory from "@/components/admin/CustomerHistory";
+import Coupons from "@/components/admin/Coupons";
+import BarberRevenue from "@/components/admin/BarberRevenue";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
