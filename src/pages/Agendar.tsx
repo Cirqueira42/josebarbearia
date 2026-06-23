@@ -341,6 +341,20 @@ const Agendar = () => {
       const fullDate = formatFullDate(selectedDate);
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
+      const finalPrice = couponApplied
+        ? selectedService.price * (1 - couponApplied.discount / 100)
+        : selectedService.price;
+      const priceLabel = couponApplied
+        ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+        : `R$ ${selectedService.price.toFixed(2)}`;
+
+      // Incrementa uso do cupom
+      if (couponApplied) {
+        try {
+          const { data: c } = await (supabase as any).from("coupons").select("id, uses_count").eq("code", couponApplied.code).maybeSingle();
+          if (c) await (supabase as any).from("coupons").update({ uses_count: (c.uses_count || 0) + 1 }).eq("id", c.id);
+        } catch {}
+      }
 
       // Use the real sequential number returned by the database
       const appointmentNum = inserted?.appointment_number ?? 0;
