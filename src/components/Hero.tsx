@@ -75,6 +75,16 @@ const Hero = () => {
           )}
         </div>
 
+        <div className="mt-3">
+          <a href="/meus-agendamentos" className="text-sm text-primary/80 hover:text-primary underline underline-offset-4">
+            Já tenho agendamento — ver / cancelar
+          </a>
+        </div>
+
+        <div className="hidden">
+          {/* spacer */}
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-muted-foreground text-sm">
           <a
             href="https://www.google.com/maps/search/?api=1&query=Av.%20Ot%C3%A1vio%20Rangel%2C%20477%20-%20Vila%20Cecap%2C%20Guariba%20-%20SP%2C%2014845-106"
