@@ -85,22 +85,49 @@ export type Database = {
       }
       barbers: {
         Row: {
+          commission_percent: number
           created_at: string
           enabled: boolean
           id: string
           name: string
         }
         Insert: {
+          commission_percent?: number
           created_at?: string
           enabled?: boolean
           id?: string
           name: string
         }
         Update: {
+          commission_percent?: number
           created_at?: string
           enabled?: boolean
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      blocked_customers: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          id?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -125,6 +152,66 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_percent: number
+          id: string
+          max_uses: number | null
+          uses_count: number
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_percent?: number
+          id?: string
+          max_uses?: number | null
+          uses_count?: number
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_percent?: number
+          id?: string
+          max_uses?: number | null
+          uses_count?: number
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
         }
         Relationships: []
       }
@@ -350,11 +437,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_phone_blocked: { Args: { _phone: string }; Returns: boolean }
       lookup_customer_by_phone: {
         Args: { _phone: string }
         Returns: {
           customer_email: string
           customer_name: string
+        }[]
+      }
+      validate_coupon: {
+        Args: { _code: string }
+        Returns: {
+          discount_percent: number
+          message: string
+          valid: boolean
         }[]
       }
     }
