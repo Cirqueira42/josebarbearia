@@ -17,6 +17,7 @@ const CashRegister = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [allAppointments, setAllAppointments] = useState<Pick<Appointment, "customer_phone" | "appointment_date">[]>([]);
   const [services, setServices] = useState<{ name: string; price: number }[]>([]);
+  const [expensesMonth, setExpensesMonth] = useState(0);
   const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
@@ -38,14 +39,16 @@ const CashRegister = () => {
   }, []);
 
   const fetchData = async () => {
-    const [appts, allAppts, svcs] = await Promise.all([
+    const [appts, allAppts, svcs, exp] = await Promise.all([
       supabase.from("appointments").select("*").eq("status", "completed"),
       supabase.from("appointments").select("customer_phone, appointment_date"),
       supabase.from("services").select("name, price"),
+      (supabase as any).from("expenses").select("amount, expense_date").gte("expense_date", getBrazilMonthStartStr()),
     ]);
     if (appts.data) setAppointments(appts.data);
     if (allAppts.data) setAllAppointments(allAppts.data as any);
     if (svcs.data) setServices(svcs.data);
+    if (exp.data) setExpensesMonth((exp.data as any[]).reduce((a, b) => a + Number(b.amount), 0));
   };
 
   const checkClosing = () => {
@@ -166,6 +169,19 @@ const CashRegister = () => {
           <Users className="w-4 h-4 text-primary mx-auto" />
           <p className="text-[10px] sm:text-xs text-muted-foreground">Total no app</p>
           <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsTotal}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 bg-background border border-border rounded-lg p-3 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-muted-foreground">Despesas do mês</p>
+          <p className="text-sm font-bold text-destructive">- {formatCurrency(expensesMonth)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-muted-foreground">Lucro líquido do mês</p>
+          <p className={`text-lg font-bold ${stats.monthly - expensesMonth >= 0 ? "text-green-500" : "text-destructive"}`}>
+            {formatCurrency(stats.monthly - expensesMonth)}
+          </p>
         </div>
       </div>
 
