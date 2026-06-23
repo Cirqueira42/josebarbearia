@@ -10,6 +10,7 @@ type Barber = {
   id: string;
   name: string;
   enabled: boolean;
+  commission_percent?: number;
 };
 
 const SITE_URL = "https://josebarbearia.lovable.app";
@@ -25,9 +26,13 @@ const BarberManagement = () => {
   }, []);
 
   const fetchBarbers = async () => {
-    const { data } = await supabase.from("barbers").select("id, name, enabled").order("created_at");
+    const { data } = await (supabase as any).from("barbers").select("id, name, enabled, commission_percent").order("created_at");
     if (data) setBarbers(data);
   };
+
+  const updateCommission = async (id: string, value: number) => {
+    await (supabase as any).from("barbers").update({ commission_percent: value }).eq("id", id);
+    setBarbers((prev) => prev.map((b) => (b.id === id ? { ...b, commission_percent: value } : b)));
 
   const toggleEnabled = async (id: string, enabled: boolean) => {
     await supabase.from("barbers").update({ enabled }).eq("id", id);
@@ -112,6 +117,20 @@ const BarberManagement = () => {
                 )}
               </div>
             </div>
+
+            {/* Share link for second barber */}
+            {idx > 0 && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">Comissão:</span>
+                <Input
+                  type="number" min={0} max={100}
+                  value={b.commission_percent ?? 50}
+                  onChange={(e) => updateCommission(b.id, parseInt(e.target.value || "0"))}
+                  className="h-7 w-20 text-xs"
+                />
+                <span>%</span>
+              </div>
+            )}
 
             {/* Share link for second barber */}
             {idx > 0 && b.enabled && (
