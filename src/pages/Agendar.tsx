@@ -172,7 +172,13 @@ const Agendar = () => {
     fetchServices();
     fetchBlockedSlots();
     fetchBarbers();
+    fetchLoyaltyEnabled();
   }, []);
+
+  const fetchLoyaltyEnabled = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
+    setLoyaltyEnabled(data?.value === true);
+  };
 
   useEffect(() => {
     if (selectedDate) {
