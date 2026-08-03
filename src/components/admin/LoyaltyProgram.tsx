@@ -167,7 +167,26 @@ const LoyaltyProgram = () => {
                     <p className="text-xs text-muted-foreground">📞 {r.customer_phone}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Total: {r.total_services} serviços</p>
+                    {editingId === r.id ? (
+                      <div className="flex items-center gap-1 justify-end">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="h-7 w-16 text-xs px-2"
+                        />
+                        <Button size="icon" className="h-7 w-7" onClick={() => saveCount(r)}><Check className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="w-3 h-3" /></Button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setEditingId(r.id); setEditValue(String(r.total_services)); }}
+                        className="text-xs text-muted-foreground flex items-center gap-1 ml-auto hover:text-primary"
+                      >
+                        Total: {r.total_services} serviços <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
                     {available > 0 && (
                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                         <Gift className="w-3 h-3 mr-1" />
@@ -175,6 +194,7 @@ const LoyaltyProgram = () => {
                       </Badge>
                     )}
                   </div>
+
                 </div>
 
                 {/* Progress bar */}
