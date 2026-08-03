@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Award, Gift, Search, Star, MessageCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X } from "lucide-react";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
@@ -23,16 +24,52 @@ const GOAL = 10;
 const LoyaltyProgram = () => {
   const [records, setRecords] = useState<LoyaltyRecord[]>([]);
   const [search, setSearch] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchLoyalty();
+    fetchEnabled();
     const channel = supabase
       .channel("loyalty-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "loyalty" }, () => fetchLoyalty())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const fetchEnabled = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
+    setEnabled(data?.value === true);
+  };
+
+  const toggleEnabled = async (next: boolean) => {
+    setEnabled(next);
+    const { error } = await supabase.from("app_settings").upsert({ key: "loyalty_enabled", value: next, updated_at: new Date().toISOString() });
+    if (error) {
+      setEnabled(!next);
+      toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
+    } else {
+      toast({ title: next ? "Fidelidade ativada ✅" : "Fidelidade desativada", description: next ? "Os clientes voltam a ver o programa ao agendar." : "O programa não aparece mais para os clientes." });
+    }
+  };
+
+  const saveCount = async (record: LoyaltyRecord) => {
+    const total = Math.max(0, parseInt(editValue, 10) || 0);
+    const earned = Math.floor(total / GOAL);
+    const { error } = await supabase
+      .from("loyalty")
+      .update({
+        total_services: total,
+        free_services_earned: earned,
+        free_services_redeemed: Math.min(record.free_services_redeemed, earned),
+      })
+      .eq("id", record.id);
+    setEditingId(null);
+    if (error) toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
+    else { toast({ title: "Atualizado!", description: `${record.customer_name}: ${total} serviços.` }); fetchLoyalty(); }
+  };
 
   const fetchLoyalty = async () => {
     const { data } = await supabase
@@ -41,6 +78,7 @@ const LoyaltyProgram = () => {
       .order("total_services", { ascending: false });
     if (data) setRecords(data as LoyaltyRecord[]);
   };
+
 
   const redeemFree = async (record: LoyaltyRecord) => {
     const available = record.free_services_earned - record.free_services_redeemed;
@@ -81,13 +119,24 @@ const LoyaltyProgram = () => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <Award className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-bold text-foreground">Programa de Fidelidade</h2>
         <Badge variant="outline" className="ml-auto text-xs">
           A cada {GOAL} cortes = 1 grátis
         </Badge>
       </div>
+
+      <div className="flex items-center justify-between gap-3 mb-4 rounded-lg border border-border bg-background p-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{enabled ? "Ativado" : "Desativado"}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {enabled ? "Os clientes veem o programa ao agendar." : "Os clientes não veem o programa ao agendar."}
+          </p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={toggleEnabled} />
+      </div>
+
 
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -118,7 +167,26 @@ const LoyaltyProgram = () => {
                     <p className="text-xs text-muted-foreground">📞 {r.customer_phone}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Total: {r.total_services} serviços</p>
+                    {editingId === r.id ? (
+                      <div className="flex items-center gap-1 justify-end">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="h-7 w-16 text-xs px-2"
+                        />
+                        <Button size="icon" className="h-7 w-7" onClick={() => saveCount(r)}><Check className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="w-3 h-3" /></Button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setEditingId(r.id); setEditValue(String(r.total_services)); }}
+                        className="text-xs text-muted-foreground flex items-center gap-1 ml-auto hover:text-primary"
+                      >
+                        Total: {r.total_services} serviços <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
                     {available > 0 && (
                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                         <Gift className="w-3 h-3 mr-1" />
@@ -126,6 +194,7 @@ const LoyaltyProgram = () => {
                       </Badge>
                     )}
                   </div>
+
                 </div>
 
                 {/* Progress bar */}

@@ -130,6 +130,7 @@ const Agendar = () => {
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
   const { toast } = useToast();
@@ -171,7 +172,13 @@ const Agendar = () => {
     fetchServices();
     fetchBlockedSlots();
     fetchBarbers();
+    fetchLoyaltyEnabled();
   }, []);
+
+  const fetchLoyaltyEnabled = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
+    setLoyaltyEnabled(data?.value === true);
+  };
 
   useEffect(() => {
     if (selectedDate) {
@@ -419,7 +426,7 @@ const Agendar = () => {
           </div>
 
           {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
-          {selectedService && /corte/i.test(selectedService.name) && loyalty && (
+          {loyaltyEnabled && selectedService && /corte/i.test(selectedService.name) && loyalty && (
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-primary" />
@@ -591,7 +598,7 @@ const Agendar = () => {
                 />
               </div>
 
-              {loyalty && (
+              {loyaltyEnabled && loyalty && (
                 <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
