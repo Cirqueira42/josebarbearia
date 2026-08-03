@@ -130,6 +130,7 @@ const Agendar = () => {
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
   const { toast } = useToast();
