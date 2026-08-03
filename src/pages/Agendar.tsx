@@ -598,7 +598,7 @@ const Agendar = () => {
                 />
               </div>
 
-              {loyalty && (
+              {loyaltyEnabled && loyalty && (
                 <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
