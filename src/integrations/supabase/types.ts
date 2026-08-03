@@ -257,6 +257,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_backgrounds: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
       loyalty: {
         Row: {
           created_at: string
