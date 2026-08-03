@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X } from "lucide-react";
+import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X, PartyPopper } from "lucide-react";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
@@ -92,7 +92,7 @@ const LoyaltyProgram = () => {
     if (error) {
       toast({ title: "Erro", description: "Não foi possível resgatar.", variant: "destructive" });
     } else {
-      toast({ title: "🎉 Resgatado!", description: `${record.customer_name} usou 1 serviço grátis.` });
+      toast({ title: "🎉 Desconto aplicado!", description: `${record.customer_name} usou R$ 7,00 de desconto.` });
     }
   };
 
@@ -105,9 +105,9 @@ const LoyaltyProgram = () => {
 
     let text = "";
     if (available > 0) {
-      text = `Olá, ${record.customer_name}! 💈\n\n🎁 *José Barbearia* — você tem *${available} corte${available > 1 ? "s" : ""} GRÁTIS* disponível pelo nosso Programa de Fidelidade!\n\nÉ só agendar e avisar ao chegar.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+      text = `🎉 *PARABÉNS, ${record.customer_name}!* 🎉\n\nVocê completou *${GOAL} atendimentos* na *José Barbearia* e conquistou *${available} cupom${available > 1 ? "ns" : ""} de R$ 7,00 de desconto* 💰\n\nVocê pode usar no *corte* ou em *qualquer produto* do nosso catálogo.\n\nÉ só agendar e avisar ao chegar.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
     } else {
-      text = `Olá, ${record.customer_name}! 💈\n\n⭐ *José Barbearia — Programa de Fidelidade*\n\nVocê já fez *${record.total_services} corte${record.total_services !== 1 ? "s" : ""}* com a gente!\n\nFaltam apenas *${remaining} corte${remaining !== 1 ? "s" : ""}* pra você ganhar *1 corte GRÁTIS* 🎉\n\nAgende já: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+      text = `Olá, ${record.customer_name}! 💈\n\n⭐ *José Barbearia — Programa de Fidelidade*\n\nVocê já fez *${record.total_services} corte${record.total_services !== 1 ? "s" : ""}* com a gente!\n\nFaltam apenas *${remaining} atendimento${remaining !== 1 ? "s" : ""}* pra você ganhar *R$ 7,00 de desconto* no corte ou em qualquer produto do catálogo 🎉\n\nAgende já: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
     }
     openWhatsApp(phoneWithDDI, text);
   };
@@ -123,7 +123,7 @@ const LoyaltyProgram = () => {
         <Award className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-bold text-foreground">Programa de Fidelidade</h2>
         <Badge variant="outline" className="ml-auto text-xs">
-          A cada {GOAL} cortes = 1 grátis
+          A cada {GOAL} atendimentos = R$ 7 de desconto
         </Badge>
       </div>
 
@@ -160,7 +160,13 @@ const LoyaltyProgram = () => {
             const progressPercent = (progress / GOAL) * 100;
 
             return (
-              <div key={r.id} className="bg-background border border-border rounded-lg p-3">
+              <div key={r.id} className={`bg-background border rounded-lg p-3 ${available > 0 ? "border-green-500/60 shadow-[0_0_0_1px_rgba(34,197,94,0.25)]" : "border-border"}`}>
+                {available > 0 && (
+                  <div className="mb-2 rounded-md bg-green-500/15 border border-green-500/30 px-2 py-1.5 text-[11px] text-green-400 font-semibold flex items-center gap-1">
+                    <PartyPopper className="w-3.5 h-3.5" />
+                    Meta batida! Dê os parabéns — R$ 7 de desconto liberado.
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-semibold text-foreground text-sm">{r.customer_name}</p>
@@ -190,7 +196,7 @@ const LoyaltyProgram = () => {
                     {available > 0 && (
                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                         <Gift className="w-3 h-3 mr-1" />
-                        {available} grátis disponível
+                        {available} cupom{available > 1 ? "ns" : ""} de R$ 7
                       </Badge>
                     )}
                   </div>
@@ -200,7 +206,7 @@ const LoyaltyProgram = () => {
                 {/* Progress bar */}
                 <div className="mb-2">
                   <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                    <span>{progress}/{GOAL} para próximo grátis</span>
+                    <span>{progress}/{GOAL} para o próximo desconto de R$ 7</span>
                     <span>{Math.round(progressPercent)}%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
@@ -227,7 +233,7 @@ const LoyaltyProgram = () => {
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
-                    Notificar no WhatsApp
+                    {available > 0 ? "Parabenizar no WhatsApp" : "Notificar no WhatsApp"}
                   </Button>
                   {available > 0 && (
                     <Button
@@ -236,7 +242,7 @@ const LoyaltyProgram = () => {
                       className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Gift className="w-3 h-3 mr-1" />
-                      Resgatar
+                      Usar R$ 7
                     </Button>
                   )}
                 </div>
