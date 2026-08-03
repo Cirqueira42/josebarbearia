@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Award, Gift, Search, Star, MessageCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X } from "lucide-react";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
@@ -23,16 +24,52 @@ const GOAL = 10;
 const LoyaltyProgram = () => {
   const [records, setRecords] = useState<LoyaltyRecord[]>([]);
   const [search, setSearch] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchLoyalty();
+    fetchEnabled();
     const channel = supabase
       .channel("loyalty-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "loyalty" }, () => fetchLoyalty())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const fetchEnabled = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
+    setEnabled(data?.value === true);
+  };
+
+  const toggleEnabled = async (next: boolean) => {
+    setEnabled(next);
+    const { error } = await supabase.from("app_settings").upsert({ key: "loyalty_enabled", value: next, updated_at: new Date().toISOString() });
+    if (error) {
+      setEnabled(!next);
+      toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
+    } else {
+      toast({ title: next ? "Fidelidade ativada ✅" : "Fidelidade desativada", description: next ? "Os clientes voltam a ver o programa ao agendar." : "O programa não aparece mais para os clientes." });
+    }
+  };
+
+  const saveCount = async (record: LoyaltyRecord) => {
+    const total = Math.max(0, parseInt(editValue, 10) || 0);
+    const earned = Math.floor(total / GOAL);
+    const { error } = await supabase
+      .from("loyalty")
+      .update({
+        total_services: total,
+        free_services_earned: earned,
+        free_services_redeemed: Math.min(record.free_services_redeemed, earned),
+      })
+      .eq("id", record.id);
+    setEditingId(null);
+    if (error) toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
+    else { toast({ title: "Atualizado!", description: `${record.customer_name}: ${total} serviços.` }); fetchLoyalty(); }
+  };
 
   const fetchLoyalty = async () => {
     const { data } = await supabase
@@ -41,6 +78,7 @@ const LoyaltyProgram = () => {
       .order("total_services", { ascending: false });
     if (data) setRecords(data as LoyaltyRecord[]);
   };
+
 
   const redeemFree = async (record: LoyaltyRecord) => {
     const available = record.free_services_earned - record.free_services_redeemed;
