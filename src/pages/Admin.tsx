@@ -38,6 +38,7 @@ import LoyaltyProgram from "@/components/admin/LoyaltyProgram";
 import ReportsHistory from "@/components/admin/ReportsHistory";
 import UsageMonitor from "@/components/admin/UsageMonitor";
 import GalleryManagement from "@/components/admin/GalleryManagement";
+import BackgroundManagement from "@/components/admin/BackgroundManagement";
 import DataCleanup from "@/components/admin/DataCleanup";
 import SalaryGoal from "@/components/admin/SalaryGoal";
 import ProductsManagement from "@/components/admin/ProductsManagement";
