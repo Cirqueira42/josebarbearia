@@ -386,6 +386,9 @@ const Admin = () => {
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
+        {/* Fundo da tela principal */}
+        <BackgroundManagement />
+
         {/* Limpeza + Galeria */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
           <DataCleanup />
