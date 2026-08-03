@@ -426,7 +426,7 @@ const Agendar = () => {
           </div>
 
           {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
-          {selectedService && /corte/i.test(selectedService.name) && loyalty && (
+          {loyaltyEnabled && selectedService && /corte/i.test(selectedService.name) && loyalty && (
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-primary" />
