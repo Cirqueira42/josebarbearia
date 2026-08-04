@@ -173,6 +173,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_entries: {
+        Row: {
+          amount: number
+          appointment_id: string | null
+          category: string
+          created_at: string
+          description: string
+          entry_date: string
+          id: string
+          investment_amount: number
+          kind: string
+          payment_method: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          appointment_id?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          entry_date?: string
+          id?: string
+          investment_amount?: number
+          kind?: string
+          payment_method?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          entry_date?: string
+          id?: string
+          investment_amount?: number
+          kind?: string
+          payment_method?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean
@@ -203,6 +245,75 @@ export type Database = {
           max_uses?: number | null
           uses_count?: number
           valid_until?: string | null
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          last_appointment_date: string | null
+          name: string
+          notes: string | null
+          phone: string
+          total_appointments: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_appointment_date?: string | null
+          name: string
+          notes?: string | null
+          phone: string
+          total_appointments?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_appointment_date?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string
+          total_appointments?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_closures: {
+        Row: {
+          appointments_closed: number
+          closure_date: string
+          created_at: string
+          id: string
+          investment_total: number
+          net_total: number
+          total_in: number
+          total_out: number
+        }
+        Insert: {
+          appointments_closed?: number
+          closure_date: string
+          created_at?: string
+          id?: string
+          investment_total?: number
+          net_total?: number
+          total_in?: number
+          total_out?: number
+        }
+        Update: {
+          appointments_closed?: number
+          closure_date?: string
+          created_at?: string
+          id?: string
+          investment_total?: number
+          net_total?: number
+          total_in?: number
+          total_out?: number
         }
         Relationships: []
       }
@@ -308,6 +419,48 @@ export type Database = {
           id?: string
           total_services?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_rewards: {
+        Row: {
+          code: string
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          discount_amount: number
+          id: string
+          milestone: number
+          status: string
+          updated_at: string
+          used_appointment_id: string | null
+          used_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          discount_amount?: number
+          id?: string
+          milestone?: number
+          status?: string
+          updated_at?: string
+          used_appointment_id?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          discount_amount?: number
+          id?: string
+          milestone?: number
+          status?: string
+          updated_at?: string
+          used_appointment_id?: string | null
+          used_at?: string | null
         }
         Relationships: []
       }
@@ -465,6 +618,7 @@ export type Database = {
           free_services_earned: number
           free_services_redeemed: number
           goal: number
+          has_reward: boolean
           progress: number
           total_services: number
         }[]
@@ -477,12 +631,27 @@ export type Database = {
         Returns: boolean
       }
       is_phone_blocked: { Args: { _phone: string }; Returns: boolean }
+      issue_loyalty_rewards: {
+        Args: { _name?: string; _phone: string }
+        Returns: number
+      }
       lookup_customer_by_phone: {
         Args: { _phone: string }
         Returns: {
           customer_email: string
           customer_name: string
         }[]
+      }
+      redeem_loyalty_code: {
+        Args: { _code: string; _phone: string }
+        Returns: {
+          message: string
+          valid: boolean
+        }[]
+      }
+      upsert_customer: {
+        Args: { _date?: string; _email?: string; _name: string; _phone: string }
+        Returns: undefined
       }
       validate_coupon: {
         Args: { _code: string }
