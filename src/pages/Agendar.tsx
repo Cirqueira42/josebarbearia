@@ -291,15 +291,24 @@ const Agendar = () => {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
-    const { data } = await (supabase as any).rpc("validate_coupon", { _code: couponCode.trim() });
+    const code = couponCode.trim().toUpperCase();
+    const { data } = await (supabase as any).rpc("validate_coupon", { _code: code });
     const r = (data as any[])?.[0];
-    if (!r || !r.valid) {
-      toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
-      setCouponApplied(null); return;
+    if (r?.valid) {
+      setCouponApplied({ code, discount: r.discount_percent });
+      toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
+      return;
     }
-    setCouponApplied({ code: couponCode.trim().toUpperCase(), discount: r.discount_percent });
-    toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
+    // Pode ser um código exclusivo de fidelidade — validado na confirmação
+    if (loyalty?.hasReward) {
+      setCouponApplied({ code, discount: 0, loyalty: true });
+      toast({ title: "Código registrado", description: "Ele será validado ao confirmar o agendamento." });
+      return;
+    }
+    toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
+    setCouponApplied(null);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
