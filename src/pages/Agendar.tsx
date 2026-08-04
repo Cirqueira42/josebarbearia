@@ -459,17 +459,17 @@ const Agendar = () => {
                 <p className="font-bold text-foreground text-sm">Programa de Fidelidade</p>
                 {loyalty.available > 0 && (
                   <span className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Gift className="w-3 h-3" /> R$ 7 OFF x{loyalty.available}
+                    <Gift className="w-3 h-3" /> Benefício liberado
                   </span>
                 )}
               </div>
               {loyalty.available > 0 ? (
                 <p className="text-xs text-foreground mb-2">
-                  🎉 Parabéns! Você tem <strong className="text-green-400">{loyalty.available} desconto{loyalty.available > 1 ? "s" : ""} de R$ 7,00</strong> para usar no corte ou em qualquer produto do catálogo. Avise o barbeiro ao chegar.
+                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
                 </p>
               ) : (
                 <p className="text-xs text-foreground mb-2">
-                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para ganhar <strong className="text-primary">R$ 7,00 de desconto</strong>!
+                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para você liberar um <strong className="text-primary">benefício exclusivo</strong>!
                 </p>
               )}
               <div className="w-full bg-muted rounded-full h-2 mb-1">
@@ -632,18 +632,18 @@ const Agendar = () => {
                     {loyalty.available > 0 && (
                       <span className="ml-auto inline-flex items-center gap-1 text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
                         <Gift className="w-3 h-3" />
-                        R$ 7 OFF x{loyalty.available}
+                        Benefício liberado
                       </span>
                     )}
                   </div>
 
                   {loyalty.available > 0 ? (
                     <p className="text-sm text-foreground">
-                      🎉 Parabéns! Você tem <strong className="text-green-400">{loyalty.available} desconto{loyalty.available > 1 ? "s" : ""} de R$ 7,00</strong> para usar no corte ou em qualquer produto. Avise o barbeiro ao chegar.
+                      🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
                     </p>
                   ) : (
                     <p className="text-sm text-foreground">
-                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você ganhar <strong className="text-primary">R$ 7,00 de desconto</strong> no corte ou em qualquer produto!
+                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você liberar um <strong className="text-primary">benefício exclusivo</strong> no próximo atendimento!
                     </p>
                   )}
 
