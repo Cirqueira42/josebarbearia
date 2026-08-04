@@ -331,6 +331,20 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
+    // Valida o código exclusivo de fidelidade (uso único) antes de gravar
+    if (couponApplied?.loyalty) {
+      const { data: rd } = await (supabase as any).rpc("redeem_loyalty_code", {
+        _code: couponApplied.code,
+        _phone: cleanPhone,
+      });
+      const res = (rd as any[])?.[0];
+      if (!res?.valid) {
+        toast({ title: "Código inválido", description: res?.message || "Esse código não está disponível.", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Código aplicado ✅", description: "Seu benefício será aplicado no atendimento." });
+    }
+
     setSubmitting(true);
     const { data: inserted, error } = await supabase.from("appointments").insert({
       customer_name: customerName,
