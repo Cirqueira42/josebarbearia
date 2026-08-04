@@ -362,6 +362,16 @@ const Agendar = () => {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       const fullDate = formatFullDate(selectedDate);
+
+      // Cadastro inteligente: salva/atualiza os dados do cliente para autopreenchimento
+      try {
+        await (supabase as any).rpc("upsert_customer", {
+          _phone: cleanPhone,
+          _name: customerName,
+          _email: customerEmail || null,
+          _date: selectedDate,
+        });
+      } catch {}
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
       const finalPrice = couponApplied
