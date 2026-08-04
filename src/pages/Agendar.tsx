@@ -83,25 +83,10 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-const generateTimeSlots = () => {
-  const slots: string[] = [];
-  // Morning: 8:00 - 11:50, Afternoon: 13:00 - 19:00
-  for (let h = 8; h < 12; h++) {
-    for (let m = 0; m < 60; m += 10) {
-      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  }
-  for (let h = 13; h < 19; h++) {
-    for (let m = 0; m < 60; m += 10) {
-      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  }
-  // 19:00
-  slots.push("19:00");
-  return slots;
-};
+import { buildTimeSlots, parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 
-const ALL_TIME_SLOTS = generateTimeSlots();
+// Horários gerados a partir do horário de funcionamento configurável no painel ADM
+const FALLBACK_SLOTS = buildTimeSlots(DEFAULT_HOURS);
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);
@@ -129,10 +114,11 @@ const Agendar = () => {
   const [lastLookedUpPhone, setLastLookedUpPhone] = useState("");
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
-  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
+  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number; hasReward: boolean } | null>(null);
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
+  const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -162,9 +148,10 @@ const Agendar = () => {
         progress,
         goal,
         remaining: Math.max(goal - progress, 0),
+        hasReward: r.has_reward === true,
       });
     } else {
-      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10 });
+      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10, hasReward: false });
     }
   }, [lastLookedUpPhone, toast]);
 
@@ -173,11 +160,17 @@ const Agendar = () => {
     fetchBlockedSlots();
     fetchBarbers();
     fetchLoyaltyEnabled();
+    fetchBusinessHours();
   }, []);
 
   const fetchLoyaltyEnabled = async () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
     setLoyaltyEnabled(data?.value === true);
+  };
+
+  const fetchBusinessHours = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "business_hours").maybeSingle();
+    if (data?.value) setTimeSlots(buildTimeSlots(parseHours(data.value)));
   };
 
   useEffect(() => {
@@ -265,7 +258,7 @@ const Agendar = () => {
 
     const todayStr = getBrazilTodayStr();
 
-    return ALL_TIME_SLOTS.filter((t) => {
+    return timeSlots.filter((t) => {
       if (!isTimeAvailable(selectedDate, t)) return false;
       // If today, hide past times
       if (selectedDate === todayStr) {
@@ -298,15 +291,24 @@ const Agendar = () => {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
-    const { data } = await (supabase as any).rpc("validate_coupon", { _code: couponCode.trim() });
+    const code = couponCode.trim().toUpperCase();
+    const { data } = await (supabase as any).rpc("validate_coupon", { _code: code });
     const r = (data as any[])?.[0];
-    if (!r || !r.valid) {
-      toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
-      setCouponApplied(null); return;
+    if (r?.valid) {
+      setCouponApplied({ code, discount: r.discount_percent });
+      toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
+      return;
     }
-    setCouponApplied({ code: couponCode.trim().toUpperCase(), discount: r.discount_percent });
-    toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
+    // Pode ser um código exclusivo de fidelidade — validado na confirmação
+    if (loyalty?.hasReward) {
+      setCouponApplied({ code, discount: 0, loyalty: true });
+      toast({ title: "Código registrado", description: "Ele será validado ao confirmar o agendamento." });
+      return;
+    }
+    toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
+    setCouponApplied(null);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -329,6 +331,20 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
+    // Valida o código exclusivo de fidelidade (uso único) antes de gravar
+    if (couponApplied?.loyalty) {
+      const { data: rd } = await (supabase as any).rpc("redeem_loyalty_code", {
+        _code: couponApplied.code,
+        _phone: cleanPhone,
+      });
+      const res = (rd as any[])?.[0];
+      if (!res?.valid) {
+        toast({ title: "Código inválido", description: res?.message || "Esse código não está disponível.", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Código aplicado ✅", description: "Seu benefício será aplicado no atendimento." });
+    }
+
     setSubmitting(true);
     const { data: inserted, error } = await supabase.from("appointments").insert({
       customer_name: customerName,
@@ -346,6 +362,16 @@ const Agendar = () => {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
     } else {
       const fullDate = formatFullDate(selectedDate);
+
+      // Cadastro inteligente: salva/atualiza os dados do cliente para autopreenchimento
+      try {
+        await (supabase as any).rpc("upsert_customer", {
+          _phone: cleanPhone,
+          _name: customerName,
+          _email: customerEmail || null,
+          _date: selectedDate,
+        });
+      } catch {}
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
       const finalPrice = couponApplied
@@ -433,17 +459,17 @@ const Agendar = () => {
                 <p className="font-bold text-foreground text-sm">Programa de Fidelidade</p>
                 {loyalty.available > 0 && (
                   <span className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Gift className="w-3 h-3" /> R$ 7 OFF x{loyalty.available}
+                    <Gift className="w-3 h-3" /> Benefício liberado
                   </span>
                 )}
               </div>
               {loyalty.available > 0 ? (
                 <p className="text-xs text-foreground mb-2">
-                  🎉 Parabéns! Você tem <strong className="text-green-400">{loyalty.available} desconto{loyalty.available > 1 ? "s" : ""} de R$ 7,00</strong> para usar no corte ou em qualquer produto do catálogo. Avise o barbeiro ao chegar.
+                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
                 </p>
               ) : (
                 <p className="text-xs text-foreground mb-2">
-                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para ganhar <strong className="text-primary">R$ 7,00 de desconto</strong>!
+                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para você liberar um <strong className="text-primary">benefício exclusivo</strong>!
                 </p>
               )}
               <div className="w-full bg-muted rounded-full h-2 mb-1">
@@ -606,18 +632,18 @@ const Agendar = () => {
                     {loyalty.available > 0 && (
                       <span className="ml-auto inline-flex items-center gap-1 text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
                         <Gift className="w-3 h-3" />
-                        R$ 7 OFF x{loyalty.available}
+                        Benefício liberado
                       </span>
                     )}
                   </div>
 
                   {loyalty.available > 0 ? (
                     <p className="text-sm text-foreground">
-                      🎉 Parabéns! Você tem <strong className="text-green-400">{loyalty.available} desconto{loyalty.available > 1 ? "s" : ""} de R$ 7,00</strong> para usar no corte ou em qualquer produto. Avise o barbeiro ao chegar.
+                      🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
                     </p>
                   ) : (
                     <p className="text-sm text-foreground">
-                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você ganhar <strong className="text-primary">R$ 7,00 de desconto</strong> no corte ou em qualquer produto!
+                      Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> agendamento{loyalty.remaining !== 1 ? "s" : ""} para você liberar um <strong className="text-primary">benefício exclusivo</strong> no próximo atendimento!
                     </p>
                   )}
 
@@ -777,10 +803,18 @@ const Agendar = () => {
               )}
 
               <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
-                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto <span className="text-xs text-muted-foreground">(opcional)</span></Label>
-                {couponApplied ? (
+                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
+                {loyaltyEnabled && loyalty && !loyalty.hasReward ? (
+                  <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
+                    <span className="text-xs text-muted-foreground">
+                      🔒 Bloqueado — liberado automaticamente quando você completar os {loyalty.goal} atendimentos.
+                    </span>
+                  </div>
+                ) : couponApplied ? (
                   <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
-                    <span className="text-sm text-green-500 font-bold">{couponApplied.code} · -{couponApplied.discount}%</span>
+                    <span className="text-sm text-green-500 font-bold">
+                      {couponApplied.code}{couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
+                    </span>
                     <Button type="button" size="sm" variant="ghost" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>Remover</Button>
                   </div>
                 ) : (
@@ -789,12 +823,13 @@ const Agendar = () => {
                     <Button type="button" variant="outline" onClick={applyCoupon}>Aplicar</Button>
                   </div>
                 )}
-                {couponApplied && selectedService && (
+                {couponApplied && !couponApplied.loyalty && selectedService && (
                   <p className="text-xs text-muted-foreground">
                     Valor com desconto: <b className="text-green-500">R$ {(selectedService.price * (1 - couponApplied.discount / 100)).toFixed(2)}</b>
                   </p>
                 )}
               </div>
+
 
               <Button
                 type="submit"

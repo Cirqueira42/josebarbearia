@@ -80,3 +80,15 @@
     @apply py-16 md:py-24 px-4 md:px-8;
   }
 }
+
+/* Marca d'água da plataforma: discreta e no topo da tela */
+#lovable-badge,
+a[href*="lovable.dev"][target="_blank"] {
+  top: 4px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) scale(0.75);
+  opacity: 0.35;
+  z-index: 20 !important;
+}
