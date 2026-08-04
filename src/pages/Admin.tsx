@@ -218,14 +218,29 @@ const Admin = () => {
         }
 
         if (status === "completed") {
-          // Update loyalty program (somente corte, máx 1 por dia)
-          await updateLoyalty(
+          // Fidelidade: somente corte, máx 1 por dia, e gera o código exclusivo na meta
+          const issued = await updateLoyalty(
             appointment.customer_phone,
             appointment.customer_name,
             appointment.service_name,
             appointment.appointment_date,
             appointment.id,
           );
+
+          // Lança o valor no caixa do dia
+          await registerCashEntry(appointment);
+
+          if (issued && issued > 0) {
+            toast({
+              title: "🎉 Meta de fidelidade batida!",
+              description: `${appointment.customer_name} liberou um código exclusivo. Envie pelo painel em "Códigos de Fidelidade".`,
+            });
+            sendTelegram(
+              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou 10 atendimentos e um código exclusivo foi gerado no painel.`
+            );
+          }
+
+
 
           const googleReviewLink = "https://share.google/hc9HWSbPBPNRGTY8y";
           const instagramLink = "https://www.instagram.com/josebarbeariaa/";
