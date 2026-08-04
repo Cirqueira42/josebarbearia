@@ -83,25 +83,10 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-const generateTimeSlots = () => {
-  const slots: string[] = [];
-  // Morning: 8:00 - 11:50, Afternoon: 13:00 - 19:00
-  for (let h = 8; h < 12; h++) {
-    for (let m = 0; m < 60; m += 10) {
-      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  }
-  for (let h = 13; h < 19; h++) {
-    for (let m = 0; m < 60; m += 10) {
-      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  }
-  // 19:00
-  slots.push("19:00");
-  return slots;
-};
+import { buildTimeSlots, parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 
-const ALL_TIME_SLOTS = generateTimeSlots();
+// Horários gerados a partir do horário de funcionamento configurável no painel ADM
+const FALLBACK_SLOTS = buildTimeSlots(DEFAULT_HOURS);
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);
@@ -129,10 +114,11 @@ const Agendar = () => {
   const [lastLookedUpPhone, setLastLookedUpPhone] = useState("");
   const [confirmedNumber, setConfirmedNumber] = useState<number | null>(null);
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
-  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number } | null>(null);
+  const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number; hasReward: boolean } | null>(null);
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
+  const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -162,9 +148,10 @@ const Agendar = () => {
         progress,
         goal,
         remaining: Math.max(goal - progress, 0),
+        hasReward: r.has_reward === true,
       });
     } else {
-      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10 });
+      setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10, hasReward: false });
     }
   }, [lastLookedUpPhone, toast]);
 
@@ -173,11 +160,17 @@ const Agendar = () => {
     fetchBlockedSlots();
     fetchBarbers();
     fetchLoyaltyEnabled();
+    fetchBusinessHours();
   }, []);
 
   const fetchLoyaltyEnabled = async () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
     setLoyaltyEnabled(data?.value === true);
+  };
+
+  const fetchBusinessHours = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "business_hours").maybeSingle();
+    if (data?.value) setTimeSlots(buildTimeSlots(parseHours(data.value)));
   };
 
   useEffect(() => {
