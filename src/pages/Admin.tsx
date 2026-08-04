@@ -420,6 +420,7 @@ const Admin = () => {
 
         {/* Admin sections */}
         <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
+          <CashFlow />
           <CashRegister />
           <Expenses />
           <SalaryGoal />
@@ -428,10 +429,12 @@ const Admin = () => {
           <Coupons />
           <BlockedCustomers />
           <LoyaltyProgram />
+          <LoyaltyRewards />
           <ReportsHistory />
           <BarberManagement />
           <BlockedSlots />
           <ProductsManagement />
+          <BusinessHoursSettings />
           <AdminSettings />
         </div>
 
