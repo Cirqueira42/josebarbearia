@@ -803,10 +803,18 @@ const Agendar = () => {
               )}
 
               <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
-                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto <span className="text-xs text-muted-foreground">(opcional)</span></Label>
-                {couponApplied ? (
+                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
+                {loyaltyEnabled && loyalty && !loyalty.hasReward ? (
+                  <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
+                    <span className="text-xs text-muted-foreground">
+                      🔒 Bloqueado — liberado automaticamente quando você completar os {loyalty.goal} atendimentos.
+                    </span>
+                  </div>
+                ) : couponApplied ? (
                   <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
-                    <span className="text-sm text-green-500 font-bold">{couponApplied.code} · -{couponApplied.discount}%</span>
+                    <span className="text-sm text-green-500 font-bold">
+                      {couponApplied.code}{couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
+                    </span>
                     <Button type="button" size="sm" variant="ghost" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>Remover</Button>
                   </div>
                 ) : (
@@ -815,12 +823,13 @@ const Agendar = () => {
                     <Button type="button" variant="outline" onClick={applyCoupon}>Aplicar</Button>
                   </div>
                 )}
-                {couponApplied && selectedService && (
+                {couponApplied && !couponApplied.loyalty && selectedService && (
                   <p className="text-xs text-muted-foreground">
                     Valor com desconto: <b className="text-green-500">R$ {(selectedService.price * (1 - couponApplied.discount / 100)).toFixed(2)}</b>
                   </p>
                 )}
               </div>
+
 
               <Button
                 type="submit"
