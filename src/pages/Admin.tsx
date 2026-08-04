@@ -47,6 +47,11 @@ import BlockedCustomers from "@/components/admin/BlockedCustomers";
 import CustomerHistory from "@/components/admin/CustomerHistory";
 import Coupons from "@/components/admin/Coupons";
 import BarberRevenue from "@/components/admin/BarberRevenue";
+import CashFlow from "@/components/admin/CashFlow";
+import BusinessHoursSettings from "@/components/admin/BusinessHoursSettings";
+import LoyaltyRewards from "@/components/admin/LoyaltyRewards";
+import { updateLoyalty, revertLoyalty } from "@/lib/loyalty";
+import { parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 import PhotoCarousel from "@/components/PhotoCarousel";
 
 type Appointment = Tables<"appointments">;
@@ -142,80 +147,34 @@ const Admin = () => {
     setLoading(false);
   };
 
-  const updateLoyalty = async (
-    customerPhone: string,
-    customerName: string,
-    serviceName: string,
-    appointmentDate: string,
-    currentId: string,
-  ) => {
-    const phone = customerPhone.replace(/\D/g, "");
+  // Lança o valor do atendimento concluído no caixa do dia, separando o
+  // valor de investimento em material conforme a regra configurada.
+  const registerCashEntry = async (appointment: Appointment) => {
+    const [{ data: svc }, { data: setting }] = await Promise.all([
+      supabase.from("services").select("price").eq("name", appointment.service_name).maybeSingle(),
+      supabase.from("app_settings").select("value").eq("key", "business_hours").maybeSingle(),
+    ]);
+    const price = Number(svc?.price ?? 0);
+    if (price <= 0) return;
+    const rule = setting?.value ? parseHours(setting.value) : DEFAULT_HOURS;
+    const investment = price > rule.investment_rule_min ? Math.min(rule.investment_rule_amount, price) : 0;
 
-    // Regra 1: só conta serviços de CORTE (corte, corte + barba, corte infantil)
-    if (!/corte/i.test(serviceName)) return;
+    const { data: exists } = await (supabase as any)
+      .from("cash_entries").select("id").eq("appointment_id", appointment.id).maybeSingle();
+    if (exists) return;
 
-    // Regra 2: máximo 1 por dia. Se já existe outro agendamento concluído de corte
-    // no mesmo dia pra esse cliente, não incrementa.
-    const { data: sameDay } = await supabase
-      .from("appointments")
-      .select("id, service_name")
-      .eq("customer_phone", phone)
-      .eq("appointment_date", appointmentDate)
-      .eq("status", "completed")
-      .neq("id", currentId);
-
-    const alreadyCountedToday = (sameDay || []).some((a: any) => /corte/i.test(a.service_name));
-    if (alreadyCountedToday) return;
-
-    // Check if loyalty record exists
-    const { data: existing } = await supabase
-      .from("loyalty")
-      .select("*")
-      .eq("customer_phone", phone)
-      .maybeSingle();
-
-    if (existing) {
-      const newTotal = (existing as any).total_services + 1;
-      const newEarned = Math.floor(newTotal / 10);
-      await supabase
-        .from("loyalty")
-        .update({
-          total_services: newTotal,
-          free_services_earned: newEarned,
-          customer_name: customerName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("customer_phone", phone);
-    } else {
-      await supabase.from("loyalty").insert({
-        customer_phone: phone,
-        customer_name: customerName,
-        total_services: 1,
-        free_services_earned: 0,
-        free_services_redeemed: 0,
-      });
-    }
+    await (supabase as any).from("cash_entries").insert({
+      entry_date: appointment.appointment_date,
+      kind: "in",
+      description: `${appointment.service_name} — ${appointment.customer_name}`,
+      amount: price,
+      investment_amount: investment,
+      category: "atendimento",
+      appointment_id: appointment.id,
+    });
   };
 
-  const revertLoyalty = async (customerPhone: string) => {
-    const phone = customerPhone.replace(/\D/g, "");
-    const { data: existing } = await supabase
-      .from("loyalty")
-      .select("*")
-      .eq("customer_phone", phone)
-      .maybeSingle();
-    if (!existing) return;
-    const newTotal = Math.max(((existing as any).total_services || 0) - 1, 0);
-    const newEarned = Math.floor(newTotal / 10);
-    await supabase
-      .from("loyalty")
-      .update({
-        total_services: newTotal,
-        free_services_earned: newEarned,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("customer_phone", phone);
-  };
+
 
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
     const appointment = appointments.find((a) => a.id === id);
