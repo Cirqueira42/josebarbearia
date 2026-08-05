@@ -914,7 +914,7 @@ const Agendar = () => {
                 ) : couponApplied ? (
                   <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
                     <span className="text-sm text-green-500 font-bold">
-                      {couponApplied.code}{couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
+                      {couponApplied.code}{couponApplied.fixed ? ` · -R$ ${couponApplied.fixed.toFixed(2)}` : couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
                     </span>
                     <Button type="button" size="sm" variant="ghost" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>Remover</Button>
                   </div>
