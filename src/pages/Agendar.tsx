@@ -271,7 +271,7 @@ const Agendar = () => {
 
     const todayStr = getBrazilTodayStr();
 
-    return timeSlots.filter((t) => {
+    return slotsForDate(businessHours, selectedDate).filter((t) => {
       if (!isTimeAvailable(selectedDate, t)) return false;
       // If today, hide past times
       if (selectedDate === todayStr) {
