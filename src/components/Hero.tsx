@@ -73,7 +73,10 @@ const Hero = () => {
               Baixar App
             </button>
           )}
+
+          <ShareButton />
         </div>
+
 
         <div className="mt-3">
           <a href="/meus-agendamentos" className="text-sm text-primary/80 hover:text-primary underline underline-offset-4">
