@@ -118,7 +118,10 @@ const Agendar = () => {
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
   const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean; fixed?: number } | null>(null);
+  const [rewardCode, setRewardCode] = useState<string | null>(null);
+  const [rewardValue, setRewardValue] = useState(7);
+  const [voucherChoice, setVoucherChoice] = useState<"use" | "keep" | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
