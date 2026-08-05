@@ -32,8 +32,11 @@ const SERVICE_IMAGES: Record<string, string> = {
   "corte infantil": serviceInfantil,
 };
 
-const getServiceImage = (name: string) => {
-  const key = name.toLowerCase();
+const getServiceImage = (svc: { name: string; image_path?: string | null }) => {
+  if (svc.image_path) {
+    return supabase.storage.from("services").getPublicUrl(svc.image_path).data.publicUrl;
+  }
+  const key = svc.name.toLowerCase();
   for (const [k, v] of Object.entries(SERVICE_IMAGES)) {
     if (key.includes(k) || k.includes(key)) return v;
   }
@@ -47,6 +50,7 @@ type Service = {
   price: number;
   icon: string | null;
   duration_minutes: number;
+  image_path?: string | null;
 };
 
 type Barber = {
@@ -585,7 +589,7 @@ const Agendar = () => {
                 onClick={() => setSelectedService(s)}
                 className="w-full relative overflow-hidden rounded-lg text-left hover:ring-2 hover:ring-primary/50 transition-all shadow-lg group h-32"
               >
-                <img src={getServiceImage(s.name)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={getServiceImage(s)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
                 <div className="relative z-10 flex items-center gap-4 p-4 h-full">
                   <span className="text-3xl">{s.icon}</span>
