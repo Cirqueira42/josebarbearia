@@ -237,10 +237,8 @@ const Agendar = () => {
     return blockedSlots.some((s) => s.blocked_date === date && s.blocked_time === null);
   };
 
-  const isSunday = (date: string) => {
-    const d = new Date(date + "T12:00:00");
-    return d.getDay() === 0;
-  };
+  const isClosedDate = (date: string) => isClosedDay(businessHours, date);
+
 
   const isTimeAvailable = useCallback((date: string, time: string) => {
     // Blocked by admin
