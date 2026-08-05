@@ -3,9 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Save } from "lucide-react";
-import { BusinessHours, DEFAULT_HOURS, parseHours, timeToMinutes } from "@/lib/businessHours";
+import { Clock, Save, Copy } from "lucide-react";
+import {
+  BusinessHours,
+  DayHours,
+  DAY_LABELS,
+  DEFAULT_HOURS,
+  parseHours,
+  timeToMinutes,
+} from "@/lib/businessHours";
 
 const BusinessHoursSettings = () => {
   const [hours, setHours] = useState<BusinessHours>(DEFAULT_HOURS);
@@ -19,27 +27,48 @@ const BusinessHoursSettings = () => {
     })();
   }, []);
 
-  const set = (k: keyof BusinessHours, v: string) => setHours((h) => ({ ...h, [k]: v } as BusinessHours));
+  const setDay = (i: number, patch: Partial<DayHours>) =>
+    setHours((h) => ({
+      ...h,
+      days: h.days.map((d, idx) => (idx === i ? { ...d, ...patch } : d)),
+    }));
+
+  const copyToAll = (i: number) => {
+    const src = hours.days[i];
+    setHours((h) => ({
+      ...h,
+      days: h.days.map((d) => (d.closed && d !== src ? d : { ...src, closed: d.closed })),
+    }));
+    toast({ title: "Copiado", description: `Horário de ${DAY_LABELS[i]} aplicado aos dias abertos.` });
+  };
 
   const save = async () => {
-    if (timeToMinutes(hours.close) <= timeToMinutes(hours.open)) {
-      toast({ title: "Horário inválido", description: "O encerramento deve ser depois da abertura.", variant: "destructive" });
-      return;
+    for (let i = 0; i < hours.days.length; i++) {
+      const d = hours.days[i];
+      if (d.closed) continue;
+      if (timeToMinutes(d.close) <= timeToMinutes(d.open)) {
+        toast({ title: `${DAY_LABELS[i]}: horário inválido`, description: "O encerramento deve ser depois da abertura.", variant: "destructive" });
+        return;
+      }
+      if (timeToMinutes(d.lunch_end) < timeToMinutes(d.lunch_start)) {
+        toast({ title: `${DAY_LABELS[i]}: horário inválido`, description: "O retorno deve ser depois do almoço.", variant: "destructive" });
+        return;
+      }
     }
-    if (timeToMinutes(hours.lunch_end) < timeToMinutes(hours.lunch_start)) {
-      toast({ title: "Horário inválido", description: "O retorno deve ser depois do almoço.", variant: "destructive" });
-      return;
-    }
+
+    const firstOpen = hours.days.find((d) => !d.closed) || hours.days[1];
+
     setSaving(true);
     const { error } = await supabase.from("app_settings").upsert({
       key: "business_hours",
       value: {
-        open: hours.open,
-        lunch_start: hours.lunch_start,
-        lunch_end: hours.lunch_end,
-        close: hours.close,
+        open: firstOpen.open,
+        lunch_start: firstOpen.lunch_start,
+        lunch_end: firstOpen.lunch_end,
+        close: firstOpen.close,
         investment_rule_min: Number(hours.investment_rule_min) || 20,
         investment_rule_amount: Number(hours.investment_rule_amount) || 5,
+        days: hours.days,
       } as any,
       updated_at: new Date().toISOString(),
     });
@@ -55,23 +84,44 @@ const BusinessHoursSettings = () => {
         <h2 className="text-base sm:text-lg font-bold">Horário de Funcionamento</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <div>
-          <Label className="text-[11px] text-muted-foreground">Abertura</Label>
-          <Input type="time" value={hours.open} onChange={(e) => set("open", e.target.value)} className="h-9 text-sm" />
-        </div>
-        <div>
-          <Label className="text-[11px] text-muted-foreground">Almoço (saída)</Label>
-          <Input type="time" value={hours.lunch_start} onChange={(e) => set("lunch_start", e.target.value)} className="h-9 text-sm" />
-        </div>
-        <div>
-          <Label className="text-[11px] text-muted-foreground">Retorno do almoço</Label>
-          <Input type="time" value={hours.lunch_end} onChange={(e) => set("lunch_end", e.target.value)} className="h-9 text-sm" />
-        </div>
-        <div>
-          <Label className="text-[11px] text-muted-foreground">Encerramento</Label>
-          <Input type="time" value={hours.close} onChange={(e) => set("close", e.target.value)} className="h-9 text-sm" />
-        </div>
+      <div className="space-y-2 mb-4">
+        {hours.days.map((d, i) => (
+          <div key={i} className="rounded-lg border border-border p-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-sm font-semibold">{DAY_LABELS[i]}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">{d.closed ? "Fechado" : "Aberto"}</span>
+                <Switch checked={!d.closed} onCheckedChange={(v) => setDay(i, { closed: !v })} />
+              </div>
+            </div>
+
+            {!d.closed && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">Abertura</Label>
+                    <Input type="time" value={d.open} onChange={(e) => setDay(i, { open: e.target.value })} className="h-9 text-sm" />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">Almoço (saída)</Label>
+                    <Input type="time" value={d.lunch_start} onChange={(e) => setDay(i, { lunch_start: e.target.value })} className="h-9 text-sm" />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">Retorno do almoço</Label>
+                    <Input type="time" value={d.lunch_end} onChange={(e) => setDay(i, { lunch_end: e.target.value })} className="h-9 text-sm" />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">Encerramento</Label>
+                    <Input type="time" value={d.close} onChange={(e) => setDay(i, { close: e.target.value })} className="h-9 text-sm" />
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="mt-1 h-7 text-[11px]" onClick={() => copyToAll(i)}>
+                  <Copy className="w-3 h-3 mr-1" /> Aplicar a todos os dias abertos
+                </Button>
+              </>
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
@@ -98,7 +148,6 @@ const BusinessHoursSettings = () => {
       <p className="text-[11px] text-muted-foreground mb-3">
         Regra do caixa: em cada atendimento acima de R$ {Number(hours.investment_rule_min).toFixed(2)},
         R$ {Number(hours.investment_rule_amount).toFixed(2)} vai para o caixa de investimento em material e o restante para a conta.
-        Domingo permanece fechado.
       </p>
 
       <Button onClick={save} size="sm" className="w-full" disabled={saving}>
