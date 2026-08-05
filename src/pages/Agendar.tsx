@@ -325,6 +325,9 @@ const Agendar = () => {
   };
 
 
+  const voucherEligible =
+    loyaltyEnabled && !!rewardCode && !!selectedService && selectedService.price >= 30;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService || !customerName || !customerPhone || !selectedDate || !selectedTime) {
