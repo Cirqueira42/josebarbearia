@@ -344,6 +344,16 @@ const Agendar = () => {
       return;
     }
 
+    // Vale-presente: escolha obrigatória (usar agora ou guardar)
+    if (voucherEligible && !voucherChoice) {
+      toast({
+        title: "Escolha o seu Vale-Presente",
+        description: "Selecione USAR AGORA ou GUARDAR PARA DEPOIS antes de confirmar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const barber = selectedBarber || barbers[0];
 
     // Valida o código exclusivo de fidelidade (uso único) antes de gravar
