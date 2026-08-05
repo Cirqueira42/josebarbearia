@@ -741,10 +741,15 @@ const Agendar = () => {
                   value={selectedDate}
                   onChange={(e) => {
                     const date = e.target.value;
-                    if (isSunday(date)) {
-                      toast({ title: "Domingo fechado!", description: "Não atendemos aos domingos.", variant: "destructive" });
+                    if (isClosedDate(date)) {
+                      toast({
+                        title: "Dia fechado!",
+                        description: `Não atendemos ${BH_DAY_LABELS[new Date(date + "T12:00:00").getDay()]}.`,
+                        variant: "destructive",
+                      });
                       return;
                     }
+
                     if (isDateBlocked(date)) {
                       toast({ title: "Data indisponível", description: "Este dia está bloqueado.", variant: "destructive" });
                       return;
