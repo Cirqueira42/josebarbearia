@@ -156,6 +156,18 @@ const Agendar = () => {
     } else {
       setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10, hasReward: false });
     }
+
+    // Vale-presente disponível (1 por vez)
+    const { data: rw } = await (supabase as any).rpc("get_active_reward", { _phone: phone });
+    const reward = Array.isArray(rw) ? rw[0] : rw;
+    if (reward?.code) {
+      setRewardCode(reward.code);
+      setRewardValue(Number(reward.discount_amount) || 7);
+    } else {
+      setRewardCode(null);
+    }
+    setVoucherChoice(null);
+    setCouponApplied(null);
   }, [lastLookedUpPhone, toast]);
 
   useEffect(() => {
