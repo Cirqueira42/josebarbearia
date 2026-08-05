@@ -183,7 +183,7 @@ const Agendar = () => {
 
   const fetchBusinessHours = async () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "business_hours").maybeSingle();
-    if (data?.value) setTimeSlots(buildTimeSlots(parseHours(data.value)));
+    if (data?.value) setBusinessHours(parseHours(data.value));
   };
 
   useEffect(() => {
