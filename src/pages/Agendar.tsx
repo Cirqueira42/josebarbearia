@@ -346,17 +346,18 @@ const Agendar = () => {
     }
 
     setSubmitting(true);
-    const { data: inserted, error } = await supabase.from("appointments").insert({
-      customer_name: customerName,
-      customer_phone: customerPhone.replace(/\D/g, ""),
-      customer_email: customerEmail || null,
-      service_id: selectedService.id,
-      service_name: selectedService.name,
-      appointment_date: selectedDate,
-      appointment_time: selectedTime,
-      barber_id: barber?.id || null,
-      barber_name: barber?.name || "José Gilmário",
-    }).select("appointment_number, barber_name").single();
+    const { data: createdRows, error } = await (supabase as any).rpc("create_appointment", {
+      _service_id: selectedService.id,
+      _service_name: selectedService.name,
+      _customer_name: customerName,
+      _customer_phone: cleanPhone,
+      _appointment_date: selectedDate,
+      _appointment_time: selectedTime,
+      _barber_id: barber?.id || null,
+      _barber_name: barber?.name || "José Gilmário",
+      _customer_email: customerEmail || null,
+    });
+    const inserted = Array.isArray(createdRows) ? createdRows[0] : createdRows;
 
     if (error) {
       toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
