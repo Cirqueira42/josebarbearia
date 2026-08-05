@@ -412,10 +412,14 @@ const Agendar = () => {
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
       const finalPrice = couponApplied
-        ? selectedService.price * (1 - couponApplied.discount / 100)
+        ? couponApplied.fixed
+          ? Math.max(selectedService.price - couponApplied.fixed, 0)
+          : selectedService.price * (1 - couponApplied.discount / 100)
         : selectedService.price;
       const priceLabel = couponApplied
-        ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+        ? couponApplied.fixed
+          ? `R$ ${finalPrice.toFixed(2)} (Vale-Presente ${couponApplied.code} -R$ ${couponApplied.fixed.toFixed(2)})`
+          : `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
         : `R$ ${selectedService.price.toFixed(2)}`;
 
       // Incrementa uso do cupom
