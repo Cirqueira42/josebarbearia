@@ -360,7 +360,15 @@ const Agendar = () => {
     const inserted = Array.isArray(createdRows) ? createdRows[0] : createdRows;
 
     if (error) {
-      toast({ title: "Erro ao agendar", description: "Tente novamente.", variant: "destructive" });
+      const msg = String((error as any)?.message || "");
+      toast({
+        title: "Erro ao agendar",
+        description: msg.includes("blocked_customer")
+          ? "Entre em contato com a barbearia."
+          : "Não foi possível concluir. Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      console.error("Erro ao agendar:", error);
     } else {
       const fullDate = formatFullDate(selectedDate);
 
