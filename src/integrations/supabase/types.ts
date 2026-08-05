@@ -603,6 +603,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_appointment: {
+        Args: {
+          _appointment_date: string
+          _appointment_time: string
+          _barber_id?: string
+          _barber_name?: string
+          _customer_email?: string
+          _customer_name: string
+          _customer_phone: string
+          _service_id: string
+          _service_name: string
+        }
+        Returns: {
+          appointment_id: string
+          appointment_number: number
+          barber_name: string
+        }[]
+      }
       get_booked_slots: {
         Args: { _date: string }
         Returns: {
