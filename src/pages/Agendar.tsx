@@ -114,7 +114,7 @@ const Agendar = () => {
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number; hasReward: boolean } | null>(null);
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
-  const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
+  const [businessHours, setBusinessHours] = useState<BusinessHours>(DEFAULT_HOURS);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean; fixed?: number } | null>(null);
   const [rewardCode, setRewardCode] = useState<string | null>(null);
