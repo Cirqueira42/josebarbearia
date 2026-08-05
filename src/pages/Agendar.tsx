@@ -32,8 +32,11 @@ const SERVICE_IMAGES: Record<string, string> = {
   "corte infantil": serviceInfantil,
 };
 
-const getServiceImage = (name: string) => {
-  const key = name.toLowerCase();
+const getServiceImage = (svc: { name: string; image_path?: string | null }) => {
+  if (svc.image_path) {
+    return supabase.storage.from("services").getPublicUrl(svc.image_path).data.publicUrl;
+  }
+  const key = svc.name.toLowerCase();
   for (const [k, v] of Object.entries(SERVICE_IMAGES)) {
     if (key.includes(k) || k.includes(key)) return v;
   }
@@ -47,6 +50,7 @@ type Service = {
   price: number;
   icon: string | null;
   duration_minutes: number;
+  image_path?: string | null;
 };
 
 type Barber = {
@@ -83,10 +87,8 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-import { buildTimeSlots, parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
+import { BusinessHours, DEFAULT_HOURS, DAY_LABELS as BH_DAY_LABELS, isClosedDay, parseHours, slotsForDate } from "@/lib/businessHours";
 
-// Horários gerados a partir do horário de funcionamento configurável no painel ADM
-const FALLBACK_SLOTS = buildTimeSlots(DEFAULT_HOURS);
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);
@@ -116,7 +118,7 @@ const Agendar = () => {
   const [confirmedBarber, setConfirmedBarber] = useState<string>("");
   const [loyalty, setLoyalty] = useState<{ total: number; available: number; progress: number; goal: number; remaining: number; hasReward: boolean } | null>(null);
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
-  const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
+  const [businessHours, setBusinessHours] = useState<BusinessHours>(DEFAULT_HOURS);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean; fixed?: number } | null>(null);
   const [rewardCode, setRewardCode] = useState<string | null>(null);
@@ -185,7 +187,7 @@ const Agendar = () => {
 
   const fetchBusinessHours = async () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "business_hours").maybeSingle();
-    if (data?.value) setTimeSlots(buildTimeSlots(parseHours(data.value)));
+    if (data?.value) setBusinessHours(parseHours(data.value));
   };
 
   useEffect(() => {
@@ -239,10 +241,8 @@ const Agendar = () => {
     return blockedSlots.some((s) => s.blocked_date === date && s.blocked_time === null);
   };
 
-  const isSunday = (date: string) => {
-    const d = new Date(date + "T12:00:00");
-    return d.getDay() === 0;
-  };
+  const isClosedDate = (date: string) => isClosedDay(businessHours, date);
+
 
   const isTimeAvailable = useCallback((date: string, time: string) => {
     // Blocked by admin
@@ -273,7 +273,7 @@ const Agendar = () => {
 
     const todayStr = getBrazilTodayStr();
 
-    return timeSlots.filter((t) => {
+    return slotsForDate(businessHours, selectedDate).filter((t) => {
       if (!isTimeAvailable(selectedDate, t)) return false;
       // If today, hide past times
       if (selectedDate === todayStr) {
@@ -589,7 +589,7 @@ const Agendar = () => {
                 onClick={() => setSelectedService(s)}
                 className="w-full relative overflow-hidden rounded-lg text-left hover:ring-2 hover:ring-primary/50 transition-all shadow-lg group h-32"
               >
-                <img src={getServiceImage(s.name)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={getServiceImage(s)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
                 <div className="relative z-10 flex items-center gap-4 p-4 h-full">
                   <span className="text-3xl">{s.icon}</span>
@@ -745,10 +745,15 @@ const Agendar = () => {
                   value={selectedDate}
                   onChange={(e) => {
                     const date = e.target.value;
-                    if (isSunday(date)) {
-                      toast({ title: "Domingo fechado!", description: "Não atendemos aos domingos.", variant: "destructive" });
+                    if (isClosedDate(date)) {
+                      toast({
+                        title: "Dia fechado!",
+                        description: `Não atendemos ${BH_DAY_LABELS[new Date(date + "T12:00:00").getDay()]}.`,
+                        variant: "destructive",
+                      });
                       return;
                     }
+
                     if (isDateBlocked(date)) {
                       toast({ title: "Data indisponível", description: "Este dia está bloqueado.", variant: "destructive" });
                       return;
