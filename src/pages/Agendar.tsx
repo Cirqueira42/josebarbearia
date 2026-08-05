@@ -118,7 +118,10 @@ const Agendar = () => {
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
   const [timeSlots, setTimeSlots] = useState<string[]>(FALLBACK_SLOTS);
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; loyalty?: boolean; fixed?: number } | null>(null);
+  const [rewardCode, setRewardCode] = useState<string | null>(null);
+  const [rewardValue, setRewardValue] = useState(7);
+  const [voucherChoice, setVoucherChoice] = useState<"use" | "keep" | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -153,6 +156,18 @@ const Agendar = () => {
     } else {
       setLoyalty({ total: 0, available: 0, progress: 0, goal: 10, remaining: 10, hasReward: false });
     }
+
+    // Vale-presente disponível (1 por vez)
+    const { data: rw } = await (supabase as any).rpc("get_active_reward", { _phone: phone });
+    const reward = Array.isArray(rw) ? rw[0] : rw;
+    if (reward?.code) {
+      setRewardCode(reward.code);
+      setRewardValue(Number(reward.discount_amount) || 7);
+    } else {
+      setRewardCode(null);
+    }
+    setVoucherChoice(null);
+    setCouponApplied(null);
   }, [lastLookedUpPhone, toast]);
 
   useEffect(() => {
@@ -310,6 +325,9 @@ const Agendar = () => {
   };
 
 
+  const voucherEligible =
+    loyaltyEnabled && !!rewardCode && !!selectedService && selectedService.price >= 30;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService || !customerName || !customerPhone || !selectedDate || !selectedTime) {
@@ -326,6 +344,16 @@ const Agendar = () => {
     const { data: blockedCheck } = await (supabase as any).rpc("is_phone_blocked", { _phone: cleanPhone });
     if (blockedCheck === true) {
       toast({ title: "Não foi possível agendar", description: "Entre em contato com a barbearia.", variant: "destructive" });
+      return;
+    }
+
+    // Vale-presente: escolha obrigatória (usar agora ou guardar)
+    if (voucherEligible && !voucherChoice) {
+      toast({
+        title: "Escolha o seu Vale-Presente",
+        description: "Selecione USAR AGORA ou GUARDAR PARA DEPOIS antes de confirmar.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -384,10 +412,14 @@ const Agendar = () => {
       
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
       const finalPrice = couponApplied
-        ? selectedService.price * (1 - couponApplied.discount / 100)
+        ? couponApplied.fixed
+          ? Math.max(selectedService.price - couponApplied.fixed, 0)
+          : selectedService.price * (1 - couponApplied.discount / 100)
         : selectedService.price;
       const priceLabel = couponApplied
-        ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+        ? couponApplied.fixed
+          ? `R$ ${finalPrice.toFixed(2)} (Vale-Presente ${couponApplied.code} -R$ ${couponApplied.fixed.toFixed(2)})`
+          : `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
         : `R$ ${selectedService.price.toFixed(2)}`;
 
       // Incrementa uso do cupom
@@ -403,7 +435,7 @@ const Agendar = () => {
       const barberNameMsg = inserted?.barber_name || barber?.name || "José Gilmário";
 
       // Send WhatsApp to barber (no popup, direct redirect) — abre direto no app (Business)
-      const barberText = `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`;
+      const barberText = `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`;
       const redirectUrl = buildWhatsAppLink(BARBER_PHONE, barberText);
 
       flushSync(() => {
@@ -415,13 +447,13 @@ const Agendar = () => {
 
       // Build WhatsApp confirmation message for Telegram (wa.me funciona melhor em links externos)
       const clientPhone = customerPhone.replace(/\D/g, "");
-      const confirmText = `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* R$ ${selectedService.price.toFixed(2)}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
+      const confirmText = `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* ${priceLabel}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
       const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
 
       // Send Telegram notification
       window.setTimeout(() => {
         sendTelegram(
-          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: R$ ${selectedService.price.toFixed(2)}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
+          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
         );
       }, 0);
     }
@@ -811,7 +843,67 @@ const Agendar = () => {
                 </div>
               )}
 
+              {voucherEligible && (
+                <div className="rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-green-400" />
+                    <h3 className="font-bold text-sm text-foreground">
+                      🎁 Vale-Presente de R$ {rewardValue.toFixed(2)} disponível
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Parabéns! Você completou {loyalty?.goal ?? 10}/{loyalty?.goal ?? 10} atendimentos.
+                    Escolha o que fazer com o seu vale antes de confirmar (só é possível usar 1 por vez).
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={voucherChoice === "use" ? "default" : "outline"}
+                      className="h-auto py-3 text-xs font-bold leading-tight"
+                      onClick={() => {
+                        setVoucherChoice("use");
+                        setCouponApplied({ code: rewardCode!, discount: 0, loyalty: true, fixed: rewardValue });
+                        toast({ title: "Vale-Presente selecionado 🎁", description: `Desconto de R$ ${rewardValue.toFixed(2)} neste atendimento.` });
+                      }}
+                    >
+                      USAR AGORA
+                      <br />
+                      <span className="font-normal">-R$ {rewardValue.toFixed(2)}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={voucherChoice === "keep" ? "default" : "outline"}
+                      className="h-auto py-3 text-xs font-bold leading-tight"
+                      onClick={() => {
+                        setVoucherChoice("keep");
+                        setCouponApplied(null);
+                        toast({ title: "Vale guardado ✅", description: "Ele continua disponível para o próximo atendimento." });
+                      }}
+                    >
+                      GUARDAR
+                      <br />
+                      <span className="font-normal">para depois</span>
+                    </Button>
+                  </div>
+                  {voucherChoice === "use" && selectedService && (
+                    <p className="text-xs text-center text-green-400 font-bold">
+                      Valor final: R$ {Math.max(selectedService.price - rewardValue, 0).toFixed(2)}
+                    </p>
+                  )}
+                  {!voucherChoice && (
+                    <p className="text-[11px] text-center text-amber-400">Escolha uma opção para continuar</p>
+                  )}
+                </div>
+              )}
+
+              {loyaltyEnabled && rewardCode && selectedService && selectedService.price < 30 && (
+                <p className="text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
+                  🎁 Você tem um Vale-Presente de R$ {rewardValue.toFixed(2)}, válido em serviços a partir de R$ 30,00.
+                </p>
+              )}
+
               <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
+
                 <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
                 {loyaltyEnabled && loyalty && !loyalty.hasReward ? (
                   <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
@@ -822,7 +914,7 @@ const Agendar = () => {
                 ) : couponApplied ? (
                   <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
                     <span className="text-sm text-green-500 font-bold">
-                      {couponApplied.code}{couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
+                      {couponApplied.code}{couponApplied.fixed ? ` · -R$ ${couponApplied.fixed.toFixed(2)}` : couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
                     </span>
                     <Button type="button" size="sm" variant="ghost" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>Remover</Button>
                   </div>

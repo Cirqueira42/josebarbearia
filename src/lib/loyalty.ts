@@ -1,8 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const GOAL = 10;
+// Valor mínimo do serviço para contar na fidelidade
+export const MIN_VALUE = 30;
 
-// Conta um atendimento na fidelidade. Só serviços de CORTE e no máximo 1 por dia.
+const getServicePrice = async (serviceName: string): Promise<number> => {
+  const { data } = await supabase
+    .from("services")
+    .select("price")
+    .eq("name", serviceName)
+    .maybeSingle();
+  return Number((data as any)?.price ?? 0);
+};
+
+// Conta um atendimento na fidelidade. Qualquer serviço a partir de R$ 30 e no máximo 1 por dia.
 // Somente atendimentos realmente concluídos chamam esta função.
 export const updateLoyalty = async (
   customerPhone: string,
@@ -10,20 +21,24 @@ export const updateLoyalty = async (
   serviceName: string,
   appointmentDate: string,
   currentId: string,
+  servicePrice?: number,
 ) => {
   const phone = (customerPhone || "").replace(/\D/g, "");
   if (!phone) return;
-  if (!/corte/i.test(serviceName)) return;
 
+  const price = typeof servicePrice === "number" ? servicePrice : await getServicePrice(serviceName);
+  if (price < MIN_VALUE) return;
+
+  // Máximo 1 estrela por dia por cliente
   const { data: sameDay } = await supabase
     .from("appointments")
-    .select("id, service_name")
+    .select("id")
     .eq("customer_phone", phone)
     .eq("appointment_date", appointmentDate)
     .eq("status", "completed")
     .neq("id", currentId);
 
-  if ((sameDay || []).some((a: any) => /corte/i.test(a.service_name))) return;
+  if ((sameDay || []).length > 0) return;
 
   const { data: existing } = await supabase
     .from("loyalty")

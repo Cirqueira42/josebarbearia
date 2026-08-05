@@ -621,6 +621,13 @@ export type Database = {
           barber_name: string
         }[]
       }
+      get_active_reward: {
+        Args: { _phone: string }
+        Returns: {
+          code: string
+          discount_amount: number
+        }[]
+      }
       get_booked_slots: {
         Args: { _date: string }
         Returns: {
