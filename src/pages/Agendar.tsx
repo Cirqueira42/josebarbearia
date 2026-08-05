@@ -83,10 +83,8 @@ const formatFullDate = (dateStr: string) => {
   return `${dayName}, ${day} de ${month} de ${year}`;
 };
 
-import { buildTimeSlots, parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
+import { BusinessHours, DEFAULT_HOURS, DAY_LABELS as BH_DAY_LABELS, isClosedDay, parseHours, slotsForDate } from "@/lib/businessHours";
 
-// Horários gerados a partir do horário de funcionamento configurável no painel ADM
-const FALLBACK_SLOTS = buildTimeSlots(DEFAULT_HOURS);
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);
