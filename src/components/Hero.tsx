@@ -1,5 +1,7 @@
 import { Scissors, Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import ShareButton from "@/components/ShareButton";
+
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { toast } from "sonner";
 
