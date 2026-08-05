@@ -843,7 +843,67 @@ const Agendar = () => {
                 </div>
               )}
 
+              {voucherEligible && (
+                <div className="rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-green-400" />
+                    <h3 className="font-bold text-sm text-foreground">
+                      🎁 Vale-Presente de R$ {rewardValue.toFixed(2)} disponível
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Parabéns! Você completou {loyalty?.goal ?? 10}/{loyalty?.goal ?? 10} atendimentos.
+                    Escolha o que fazer com o seu vale antes de confirmar (só é possível usar 1 por vez).
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={voucherChoice === "use" ? "default" : "outline"}
+                      className="h-auto py-3 text-xs font-bold leading-tight"
+                      onClick={() => {
+                        setVoucherChoice("use");
+                        setCouponApplied({ code: rewardCode!, discount: 0, loyalty: true, fixed: rewardValue });
+                        toast({ title: "Vale-Presente selecionado 🎁", description: `Desconto de R$ ${rewardValue.toFixed(2)} neste atendimento.` });
+                      }}
+                    >
+                      USAR AGORA
+                      <br />
+                      <span className="font-normal">-R$ {rewardValue.toFixed(2)}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={voucherChoice === "keep" ? "default" : "outline"}
+                      className="h-auto py-3 text-xs font-bold leading-tight"
+                      onClick={() => {
+                        setVoucherChoice("keep");
+                        setCouponApplied(null);
+                        toast({ title: "Vale guardado ✅", description: "Ele continua disponível para o próximo atendimento." });
+                      }}
+                    >
+                      GUARDAR
+                      <br />
+                      <span className="font-normal">para depois</span>
+                    </Button>
+                  </div>
+                  {voucherChoice === "use" && selectedService && (
+                    <p className="text-xs text-center text-green-400 font-bold">
+                      Valor final: R$ {Math.max(selectedService.price - rewardValue, 0).toFixed(2)}
+                    </p>
+                  )}
+                  {!voucherChoice && (
+                    <p className="text-[11px] text-center text-amber-400">Escolha uma opção para continuar</p>
+                  )}
+                </div>
+              )}
+
+              {loyaltyEnabled && rewardCode && selectedService && selectedService.price < 30 && (
+                <p className="text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
+                  🎁 Você tem um Vale-Presente de R$ {rewardValue.toFixed(2)}, válido em serviços a partir de R$ 30,00.
+                </p>
+              )}
+
               <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
+
                 <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
                 {loyaltyEnabled && loyalty && !loyalty.hasReward ? (
                   <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
