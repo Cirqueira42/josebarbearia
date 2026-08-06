@@ -28,10 +28,23 @@ const Gallery = () => {
           return { src: pub.publicUrl, alt: p.caption || "Trabalho realizado na José Barbearia" };
         });
         setPhotos(mapped);
+      } else {
+        setPhotos(FALLBACK);
       }
     };
     load();
+
+    // Atualiza automaticamente quando o painel ADM adiciona/remove/reordena fotos
+    const channel = supabase
+      .channel("gallery-photos-public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "gallery_photos" }, () => load())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
 
   const [featured, ...rest] = photos;
 
