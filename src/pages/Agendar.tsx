@@ -325,6 +325,12 @@ const Agendar = () => {
   };
 
 
+  // Fidelidade só vale para serviços participantes (Corte / Corte+Barba / valor >= R$ 30)
+  const serviceEligibleForLoyalty =
+    !!selectedService &&
+    selectedService.price >= 30 &&
+    !/^\s*barba/i.test(selectedService.name);
+
   const voucherEligible =
     loyaltyEnabled && !!rewardCode && !!selectedService && selectedService.price >= 30;
 
@@ -436,7 +442,8 @@ const Agendar = () => {
 
       // Send WhatsApp to barber (no popup, direct redirect) — abre direto no app (Business)
       const barberText = `📅 Novo Agendamento #${appointmentNum}\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\n${ADDRESS}\n\n🗺️ Ver no Mapa: ${GOOGLE_MAPS_LINK}\n\n⚡ Acesse o painel para confirmar.`;
-      const redirectUrl = buildWhatsAppLink(BARBER_PHONE, barberText);
+      // Sempre abre a conversa com o número da barbearia (nunca o WhatsApp do cliente)
+      const redirectUrl = `https://wa.me/${BARBER_PHONE}?text=${encodeURIComponent(barberText)}`;
 
       flushSync(() => {
         setConfirmedNumber(appointmentNum);
@@ -493,7 +500,7 @@ const Agendar = () => {
           </div>
 
           {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
-          {loyaltyEnabled && selectedService && /corte/i.test(selectedService.name) && loyalty && (
+          {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-primary" />
@@ -665,7 +672,7 @@ const Agendar = () => {
                 />
               </div>
 
-              {loyaltyEnabled && loyalty && (
+              {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
                 <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
@@ -910,7 +917,7 @@ const Agendar = () => {
               <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
                 <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
-                {loyaltyEnabled && loyalty && !loyalty.hasReward ? (
+                {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && !loyalty.hasReward ? (
                   <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
                     <span className="text-xs text-muted-foreground">
                       🔒 Bloqueado — liberado automaticamente quando você completar os {loyalty.goal} atendimentos.
