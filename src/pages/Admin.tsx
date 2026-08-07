@@ -53,6 +53,7 @@ import LoyaltyRewards from "@/components/admin/LoyaltyRewards";
 import { updateLoyalty, revertLoyalty } from "@/lib/loyalty";
 import { parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import ProjectExport from "@/components/admin/ProjectExport";
 
 type Appointment = Tables<"appointments">;
 
