@@ -61,6 +61,16 @@ Deno.serve(async (req) => {
     let sentCount = 0;
 
     for (const appt of appointments) {
+      // Marca ANTES de enviar (evita duplicidade se duas execuções coincidirem)
+      const { data: claimed } = await supabase
+        .from('appointments')
+        .update({ reminder_sent: true })
+        .eq('id', appt.id)
+        .eq('reminder_sent', false)
+        .select('id');
+
+      if (!claimed || claimed.length === 0) continue;
+
       const d = new Date(appt.appointment_date + 'T12:00:00');
       const dayName = DAYS_PT[d.getDay()];
       const day = String(d.getDate()).padStart(2, '0');
