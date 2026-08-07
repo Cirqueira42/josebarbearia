@@ -362,6 +362,10 @@ const Admin = () => {
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
 
+        {/* Projeto completo (cópia/backup) */}
+        <ProjectExport />
+
+
         {/* Fundo da tela principal */}
         <BackgroundManagement />
 
