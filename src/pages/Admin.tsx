@@ -263,6 +263,9 @@ const Admin = () => {
         }
       }
     }
+    } finally {
+      busyIdsRef.current.delete(id);
+    }
   };
 
   const deleteAppointment = async (id: string) => {
