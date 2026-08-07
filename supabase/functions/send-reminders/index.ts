@@ -94,11 +94,8 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Mark as reminded
-      await supabase
-        .from('appointments')
-        .update({ reminder_sent: true })
-        .eq('id', appt.id);
+
+
 
       sentCount++;
     }
