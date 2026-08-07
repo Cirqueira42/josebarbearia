@@ -177,7 +177,13 @@ const Admin = () => {
 
 
 
+  const busyIdsRef = useRef<Set<string>>(new Set());
+
   const updateStatus = async (id: string, status: "confirmed" | "cancelled" | "completed") => {
+    // Evita envio duplicado de mensagens se o botão for tocado mais de uma vez
+    if (busyIdsRef.current.has(id)) return;
+    busyIdsRef.current.add(id);
+    try {
     const appointment = appointments.find((a) => a.id === id);
     const previousStatus = appointment?.status;
     const { error } = await supabase
