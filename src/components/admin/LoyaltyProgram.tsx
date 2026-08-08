@@ -71,6 +71,29 @@ const LoyaltyProgram = () => {
     else { toast({ title: "Atualizado!", description: `${record.customer_name}: ${total} serviços.` }); fetchLoyalty(); }
   };
 
+  // Ajuste rápido: tira ou adiciona 1 estrela (serviço feito fora do sistema, correção, etc.)
+  const adjustStars = async (record: LoyaltyRecord, delta: number) => {
+    const total = Math.max(0, record.total_services + delta);
+    const earned = Math.floor(total / GOAL);
+    const { error } = await supabase
+      .from("loyalty")
+      .update({
+        total_services: total,
+        free_services_earned: earned,
+        free_services_redeemed: Math.min(record.free_services_redeemed, earned),
+      })
+      .eq("id", record.id);
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível ajustar.", variant: "destructive" });
+    } else {
+      toast({
+        title: delta > 0 ? "⭐ Estrela adicionada" : "Estrela removida",
+        description: `${record.customer_name}: ${total} serviço${total !== 1 ? "s" : ""}.`,
+      });
+      fetchLoyalty();
+    }
+  };
+
   const fetchLoyalty = async () => {
     const { data } = await supabase
       .from("loyalty")
