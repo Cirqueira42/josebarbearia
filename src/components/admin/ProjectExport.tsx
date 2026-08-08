@@ -223,7 +223,7 @@ const ProjectExport = () => {
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
           Copiar projeto inteiro
         </Button>
-        <Button onClick={handleDownload} disabled={busy} variant="outline" className="flex-1">
+        <Button onClick={() => handleDownload()} disabled={busy} variant="outline" className="flex-1">
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
           Baixar no celular
         </Button>
