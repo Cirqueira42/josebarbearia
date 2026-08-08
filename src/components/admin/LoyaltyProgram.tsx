@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X, PartyPopper } from "lucide-react";
+import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X, PartyPopper, Plus, Minus } from "lucide-react";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
