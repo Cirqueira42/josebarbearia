@@ -238,14 +238,37 @@ const LoyaltyProgram = () => {
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  {/* Stars */}
-                  <div className="flex gap-0.5 mt-1">
-                    {Array.from({ length: GOAL }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3 h-3 ${i < progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
-                      />
-                    ))}
+                  {/* Stars + ajuste manual */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: GOAL }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        title="Tirar 1 estrela"
+                        disabled={r.total_services <= 0}
+                        onClick={() => adjustStars(r, -1)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        title="Adicionar 1 estrela (serviço feito fora do sistema)"
+                        onClick={() => adjustStars(r, 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
