@@ -182,10 +182,10 @@ const ProjectExport = () => {
     setBusy(false);
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (preBuilt?: string) => {
     setBusy(true);
     try {
-      const text = await buildBundle();
+      const text = preBuilt ?? (await buildBundle());
       const date = new Date().toISOString().slice(0, 10);
       const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -196,7 +196,7 @@ const ProjectExport = () => {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast({ title: "Download iniciado", description: "Arquivo salvo na memória do celular." });
+      if (!preBuilt) toast({ title: "Download iniciado", description: "Arquivo salvo na memória do celular." });
     } catch {
       toast({ title: "Erro", description: "Não foi possível gerar o arquivo.", variant: "destructive" });
     }
