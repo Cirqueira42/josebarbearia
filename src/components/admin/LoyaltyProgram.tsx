@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X, PartyPopper } from "lucide-react";
+import { Award, Gift, Search, Star, MessageCircle, Pencil, Check, X, PartyPopper, Plus, Minus } from "lucide-react";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
@@ -69,6 +69,29 @@ const LoyaltyProgram = () => {
     setEditingId(null);
     if (error) toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
     else { toast({ title: "Atualizado!", description: `${record.customer_name}: ${total} serviços.` }); fetchLoyalty(); }
+  };
+
+  // Ajuste rápido: tira ou adiciona 1 estrela (serviço feito fora do sistema, correção, etc.)
+  const adjustStars = async (record: LoyaltyRecord, delta: number) => {
+    const total = Math.max(0, record.total_services + delta);
+    const earned = Math.floor(total / GOAL);
+    const { error } = await supabase
+      .from("loyalty")
+      .update({
+        total_services: total,
+        free_services_earned: earned,
+        free_services_redeemed: Math.min(record.free_services_redeemed, earned),
+      })
+      .eq("id", record.id);
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível ajustar.", variant: "destructive" });
+    } else {
+      toast({
+        title: delta > 0 ? "⭐ Estrela adicionada" : "Estrela removida",
+        description: `${record.customer_name}: ${total} serviço${total !== 1 ? "s" : ""}.`,
+      });
+      fetchLoyalty();
+    }
   };
 
   const fetchLoyalty = async () => {
@@ -215,14 +238,37 @@ const LoyaltyProgram = () => {
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  {/* Stars */}
-                  <div className="flex gap-0.5 mt-1">
-                    {Array.from({ length: GOAL }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3 h-3 ${i < progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
-                      />
-                    ))}
+                  {/* Stars + ajuste manual */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: GOAL }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < progress ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        title="Tirar 1 estrela"
+                        disabled={r.total_services <= 0}
+                        onClick={() => adjustStars(r, -1)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        title="Adicionar 1 estrela (serviço feito fora do sistema)"
+                        onClick={() => adjustStars(r, 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

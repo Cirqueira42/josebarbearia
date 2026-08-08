@@ -127,25 +127,65 @@ const ProjectExport = () => {
     );
   };
 
+  // Alguns celulares bloqueiam a área de transferência para textos muito grandes.
+  // Tentamos 3 caminhos, do melhor para o mais simples, e por último baixamos o arquivo.
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* tenta o próximo modo */ }
+
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy");
+      ta.remove();
+      if (ok) return true;
+    } catch { /* último recurso abaixo */ }
+
+    return false;
+  };
+
   const handleCopy = async () => {
     setBusy(true);
     try {
       const text = await buildBundle();
-      await navigator.clipboard.writeText(text);
+      const ok = await copyToClipboard(text);
+      if (ok) {
+        toast({
+          title: "Cópia pronta!",
+          description: `Projeto inteiro copiado (${Math.round(text.length / 1024)} KB). É só colar em outra IA.`,
+        });
+      } else {
+        await handleDownload(text);
+        toast({
+          title: "Cópia muito grande para a área de transferência",
+          description: "Baixamos o arquivo no seu celular. É só anexar/colar o conteúdo dele na outra IA.",
+        });
+      }
+    } catch (e: any) {
       toast({
-        title: "Cópia pronta!",
-        description: `Projeto inteiro copiado (${Math.round(text.length / 1024)} KB). É só colar em outra IA.`,
+        title: "Erro ao gerar a cópia",
+        description: e?.message ? String(e.message).slice(0, 140) : "Tente novamente pelo botão de baixar.",
+        variant: "destructive",
       });
-    } catch {
-      toast({ title: "Erro", description: "Não foi possível copiar. Use o botão de baixar.", variant: "destructive" });
     }
     setBusy(false);
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (preBuilt?: string) => {
     setBusy(true);
     try {
-      const text = await buildBundle();
+      const text = preBuilt ?? (await buildBundle());
       const date = new Date().toISOString().slice(0, 10);
       const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -156,7 +196,7 @@ const ProjectExport = () => {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast({ title: "Download iniciado", description: "Arquivo salvo na memória do celular." });
+      if (!preBuilt) toast({ title: "Download iniciado", description: "Arquivo salvo na memória do celular." });
     } catch {
       toast({ title: "Erro", description: "Não foi possível gerar o arquivo.", variant: "destructive" });
     }
@@ -183,7 +223,7 @@ const ProjectExport = () => {
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
           Copiar projeto inteiro
         </Button>
-        <Button onClick={handleDownload} disabled={busy} variant="outline" className="flex-1">
+        <Button onClick={() => handleDownload()} disabled={busy} variant="outline" className="flex-1">
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
           Baixar no celular
         </Button>
