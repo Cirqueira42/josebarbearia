@@ -336,7 +336,7 @@ const CashFlow = () => {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium truncate">{e.description}</p>
                   <p className="text-muted-foreground text-[10px]">
-                    {e.category} · {new Date(e.entry_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                    {categoryLabel(e.category)} · {new Date(e.entry_date + "T12:00:00").toLocaleDateString("pt-BR")}
                     {Number(e.investment_amount) > 0 ? ` · ${fmt(Number(e.investment_amount))} p/ material` : ""}
                   </p>
                 </div>
