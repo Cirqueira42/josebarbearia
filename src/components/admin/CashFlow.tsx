@@ -251,6 +251,27 @@ const CashFlow = () => {
         </div>
       </div>
 
+      {/* Saídas de hoje separadas por destino */}
+      <div className="grid grid-cols-4 gap-1.5 mb-2">
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🔧 Despesas</p>
+          <p className="text-[11px] font-bold text-destructive break-all">{fmt(totals.dayDespesa)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🧰 Materiais</p>
+          <p className="text-[11px] font-bold text-amber-500 break-all">{fmt(totals.dayMaterial)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🏠 Pessoais</p>
+          <p className="text-[11px] font-bold text-blue-400 break-all">{fmt(totals.dayPessoal)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🎉 Lazer</p>
+          <p className="text-[11px] font-bold text-pink-400 break-all">{fmt(totals.dayLazer)}</p>
+        </div>
+      </div>
+
+
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-primary/10 border border-primary/30 rounded p-2 text-center min-w-0">
           <PiggyBank className="w-4 h-4 text-primary mx-auto" />
