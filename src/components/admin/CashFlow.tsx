@@ -87,10 +87,16 @@ const CashFlow = () => {
     const sum = (list: Entry[], k: "in" | "out") =>
       list.filter((e) => e.kind === k).reduce((a, b) => a + Number(b.amount), 0);
     const invest = (list: Entry[]) => list.reduce((a, b) => a + Number(b.investment_amount || 0), 0);
+    const byBucket = (list: Entry[], b: string) =>
+      list.filter((e) => e.kind === "out" && bucketOf(e.category) === b).reduce((a, c) => a + Number(c.amount), 0);
     return {
       dayIn: sum(todayEntries, "in"),
       dayOut: sum(todayEntries, "out"),
       dayInvest: invest(todayEntries),
+      dayDespesa: byBucket(todayEntries, "despesa"),
+      dayMaterial: byBucket(todayEntries, "material"),
+      dayPessoal: byBucket(todayEntries, "pessoal"),
+      dayLazer: byBucket(todayEntries, "lazer"),
       monthIn: sum(entries, "in"),
       monthOut: sum(entries, "out"),
       monthInvest: invest(entries),
