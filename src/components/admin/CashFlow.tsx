@@ -40,7 +40,6 @@ type Closure = {
 const fmt = (v: number) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const IN_CATEGORIES = ["atendimento", "produto", "gorjeta", "outros"];
-const OUT_CATEGORIES = ["material", "produto", "aluguel", "energia", "água", "marketing", "outros"];
 
 const CashFlow = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
