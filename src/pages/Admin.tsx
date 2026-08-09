@@ -48,6 +48,7 @@ import CustomerHistory from "@/components/admin/CustomerHistory";
 import Coupons from "@/components/admin/Coupons";
 import BarberRevenue from "@/components/admin/BarberRevenue";
 import CashFlow from "@/components/admin/CashFlow";
+import FinancialPanel from "@/components/admin/FinancialPanel";
 import BusinessHoursSettings from "@/components/admin/BusinessHoursSettings";
 import LoyaltyRewards from "@/components/admin/LoyaltyRewards";
 import { updateLoyalty, revertLoyalty } from "@/lib/loyalty";
