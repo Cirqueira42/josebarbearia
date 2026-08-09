@@ -14,6 +14,7 @@ import { Wallet, Plus, Trash2, Pencil, Check, X, Lock, ArrowDownCircle, ArrowUpC
 import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 import { parseHours, DEFAULT_HOURS, BusinessHours } from "@/lib/businessHours";
 import { updateLoyalty } from "@/lib/loyalty";
+import { ALL_OUT_CATEGORIES, bucketOf, categoryLabel } from "@/lib/finance";
 
 type Entry = {
   id: string;
@@ -40,7 +41,6 @@ type Closure = {
 const fmt = (v: number) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const IN_CATEGORIES = ["atendimento", "produto", "gorjeta", "outros"];
-const OUT_CATEGORIES = ["material", "produto", "aluguel", "energia", "água", "marketing", "outros"];
 
 const CashFlow = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -87,10 +87,16 @@ const CashFlow = () => {
     const sum = (list: Entry[], k: "in" | "out") =>
       list.filter((e) => e.kind === k).reduce((a, b) => a + Number(b.amount), 0);
     const invest = (list: Entry[]) => list.reduce((a, b) => a + Number(b.investment_amount || 0), 0);
+    const byBucket = (list: Entry[], b: string) =>
+      list.filter((e) => e.kind === "out" && bucketOf(e.category) === b).reduce((a, c) => a + Number(c.amount), 0);
     return {
       dayIn: sum(todayEntries, "in"),
       dayOut: sum(todayEntries, "out"),
       dayInvest: invest(todayEntries),
+      dayDespesa: byBucket(todayEntries, "despesa"),
+      dayMaterial: byBucket(todayEntries, "material"),
+      dayPessoal: byBucket(todayEntries, "pessoal"),
+      dayLazer: byBucket(todayEntries, "lazer"),
       monthIn: sum(entries, "in"),
       monthOut: sum(entries, "out"),
       monthInvest: invest(entries),
@@ -245,6 +251,27 @@ const CashFlow = () => {
         </div>
       </div>
 
+      {/* Saídas de hoje separadas por destino */}
+      <div className="grid grid-cols-4 gap-1.5 mb-2">
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🔧 Despesas</p>
+          <p className="text-[11px] font-bold text-destructive break-all">{fmt(totals.dayDespesa)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🧰 Materiais</p>
+          <p className="text-[11px] font-bold text-amber-500 break-all">{fmt(totals.dayMaterial)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🏠 Pessoais</p>
+          <p className="text-[11px] font-bold text-blue-400 break-all">{fmt(totals.dayPessoal)}</p>
+        </div>
+        <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
+          <p className="text-[9px] text-muted-foreground leading-tight">🎉 Lazer</p>
+          <p className="text-[11px] font-bold text-pink-400 break-all">{fmt(totals.dayLazer)}</p>
+        </div>
+      </div>
+
+
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-primary/10 border border-primary/30 rounded p-2 text-center min-w-0">
           <PiggyBank className="w-4 h-4 text-primary mx-auto" />
@@ -277,8 +304,11 @@ const CashFlow = () => {
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {(kind === "in" ? IN_CATEGORIES : OUT_CATEGORIES).map((c) => (
-                <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+              {(kind === "in"
+                ? IN_CATEGORIES.map((c) => ({ value: c, label: c }))
+                : ALL_OUT_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))
+              ).map((c) => (
+                <SelectItem key={c.value} value={c.value} className="capitalize">{c.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -306,7 +336,7 @@ const CashFlow = () => {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium truncate">{e.description}</p>
                   <p className="text-muted-foreground text-[10px]">
-                    {e.category} · {new Date(e.entry_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                    {categoryLabel(e.category)} · {new Date(e.entry_date + "T12:00:00").toLocaleDateString("pt-BR")}
                     {Number(e.investment_amount) > 0 ? ` · ${fmt(Number(e.investment_amount))} p/ material` : ""}
                   </p>
                 </div>
