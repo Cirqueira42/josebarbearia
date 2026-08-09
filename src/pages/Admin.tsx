@@ -434,6 +434,7 @@ const Admin = () => {
 
         {/* Admin sections */}
         <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
+          <FinancialPanel />
           <CashFlow />
           <CashRegister />
           <Expenses />
