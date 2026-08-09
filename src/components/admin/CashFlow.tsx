@@ -276,8 +276,11 @@ const CashFlow = () => {
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {(kind === "in" ? IN_CATEGORIES : OUT_CATEGORIES).map((c) => (
-                <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+              {(kind === "in"
+                ? IN_CATEGORIES.map((c) => ({ value: c, label: c }))
+                : ALL_OUT_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))
+              ).map((c) => (
+                <SelectItem key={c.value} value={c.value} className="capitalize">{c.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
