@@ -14,6 +14,7 @@ import { Wallet, Plus, Trash2, Pencil, Check, X, Lock, ArrowDownCircle, ArrowUpC
 import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 import { parseHours, DEFAULT_HOURS, BusinessHours } from "@/lib/businessHours";
 import { updateLoyalty } from "@/lib/loyalty";
+import { ALL_OUT_CATEGORIES, bucketOf, categoryLabel } from "@/lib/finance";
 
 type Entry = {
   id: string;
