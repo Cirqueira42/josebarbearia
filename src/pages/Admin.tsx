@@ -116,8 +116,26 @@ const Admin = () => {
     try { localStorage.setItem("admin-view-mode", m); } catch {}
   };
 
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    const v = parseFloat(localStorage.getItem("admin-zoom") || "1");
+    return v >= 0.5 && v <= 1.5 ? v : 1;
+  });
+  const [zoomSaved, setZoomSaved] = useState(true);
+  const stepZoom = (d: number) => {
+    setZoom((z) => Math.min(1.5, Math.max(0.5, Math.round((z + d) * 100) / 100)));
+    setZoomSaved(false);
+  };
+  const saveZoom = () => {
+    try { localStorage.setItem("admin-zoom", String(zoom)); } catch {}
+    setZoomSaved(true);
+    toast({ title: "Tela salva", description: `Zoom do painel: ${Math.round(zoom * 100)}%` });
+  };
+  const zoomStyle = { zoom } as React.CSSProperties;
+
   const viewWidthClass =
     viewMode === "mobile" ? "max-w-[420px]" : viewMode === "tablet" ? "max-w-3xl" : "max-w-7xl";
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
