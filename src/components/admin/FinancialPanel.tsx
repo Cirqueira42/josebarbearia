@@ -279,7 +279,7 @@ const FinancialPanel = () => {
       <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <p className="text-[11px] text-muted-foreground">Faturamento Bruto ({data.apptCount} atendimentos)</p>
+          <p className="text-[11px] text-muted-foreground">Faturamento Bruto — {periodLabel} ({data.apptCount} atendimentos)</p>
         </div>
         <p className="text-2xl font-bold text-primary break-all">{fmt(data.gross)}</p>
 
@@ -303,21 +303,74 @@ const FinancialPanel = () => {
         <p className="text-[10px] text-muted-foreground mt-0.5">{pct}% da meta</p>
       </div>
 
-      {/* Destinos do dinheiro */}
+      {/* Despesas reais da barbearia */}
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas da barbearia" value={data.despesas} color="text-destructive" />
-        <Card icon={<Hammer className="w-3.5 h-3.5" />} label="🧰 Investimento em materiais" value={data.materiais} color="text-amber-500" />
-        <Card icon={<Home className="w-3.5 h-3.5" />} label="👤 Contas pessoais" value={data.pessoal} color="text-blue-400" />
-        <Card icon={<PartyPopper className="w-3.5 h-3.5" />} label="🎉 Lazer" value={data.lazer} color="text-pink-400" />
+        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas da barbearia (real)" value={data.despesas} color="text-destructive" />
+        <div className="bg-background/60 rounded-lg p-2 min-w-0">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Wallet className="w-3.5 h-3.5" />
+            <span className="text-[10px] leading-tight">🏦 Reserva planejada</span>
+          </div>
+          <p className="text-sm font-bold break-all text-green-500">{fmt(planned.reserva)}</p>
+        </div>
+      </div>
+
+      {/* Planejado x Realizado */}
+      <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
+        <div className="flex items-center gap-2 mb-2">
+          <PieChart className="w-4 h-4 text-primary" />
+          <p className="text-sm font-bold">Planejado x Realizado</p>
+          <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto" onClick={() => { setDistInput(dist); setEditDist((v) => !v); }}>
+            <Pencil className="w-3 h-3" />
+          </Button>
+        </div>
+
+        {editDist && (
+          <div className="mb-2 rounded-md border border-border p-2">
+            <p className="text-[11px] text-muted-foreground mb-1.5">Porcentagens da distribuição (total 100%)</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ["material", "🧰 Materiais"],
+                ["pessoal", "🏠 Contas pessoais"],
+                ["lazer", "🎉 Lazer"],
+                ["reserva", "🏦 Reserva"],
+              ] as const).map(([k, label]) => (
+                <div key={k}>
+                  <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                  <Input
+                    inputMode="numeric"
+                    className="h-8 text-sm"
+                    value={String(distInput[k])}
+                    onChange={(e) => setDistInput({ ...distInput, [k]: Number(e.target.value.replace(/\D/g, "")) || 0 })}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`text-[11px] font-bold ${Math.round(distTotal) === 100 ? "text-green-500" : "text-destructive"}`}>Total: {distTotal}%</span>
+              <Button size="sm" className="h-8 ml-auto" onClick={saveDist}><Check className="w-3 h-3 mr-1" />Salvar</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <PlanCard label="🧰 Investimento em materiais" percent={dist.material} plan={planned.material} used={data.materiais} usedLabel="Já investido" color="text-amber-500" />
+          <PlanCard label="🏠 Contas pessoais" percent={dist.pessoal} plan={planned.pessoal} used={data.pessoal} usedLabel="Retirado" color="text-blue-400" />
+          <PlanCard label="🎉 Lazer" percent={dist.lazer} plan={planned.lazer} used={data.lazer} usedLabel="Utilizado" color="text-pink-400" />
+          <PlanCard label="🏦 Reserva / Barbearia" percent={dist.reserva} plan={planned.reserva} used={data.despesas} usedLabel="Despesas reais" color="text-green-500" />
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1.5">
+          Os valores planejados são apenas reservas calculadas sobre o faturamento — não entram como saída no caixa.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-background/60 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">Total destinado/gasto</p>
+          <p className="text-[10px] text-muted-foreground">Total realmente gasto/retirado</p>
           <p className="text-sm font-bold text-destructive break-all">{fmt(data.totalOut)}</p>
         </div>
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">💰 Saldo da barbearia</p>
+          <p className="text-[10px] text-muted-foreground">💰 Saldo real da barbearia</p>
           <p className={`text-sm font-bold break-all ${data.balance >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(data.balance)}</p>
         </div>
       </div>
@@ -327,7 +380,20 @@ const FinancialPanel = () => {
         <div className="flex items-center gap-2 mb-1.5">
           <Wallet className="w-4 h-4 text-blue-400" />
           <p className="text-sm font-bold">Minha Retirada</p>
-          <span className="ml-auto text-sm font-bold text-blue-400">{fmt(data.pessoal + data.lazer)}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 mb-1.5 text-center">
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Planejado</p>
+            <p className="text-[11px] font-bold text-blue-400 break-all">{fmt(planned.pessoal + planned.lazer)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Retirado</p>
+            <p className="text-[11px] font-bold text-destructive break-all">{fmt(data.pessoal + data.lazer)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Disponível</p>
+            <p className="text-[11px] font-bold text-green-500 break-all">{fmt(planned.pessoal + planned.lazer - (data.pessoal + data.lazer))}</p>
+          </div>
         </div>
         <div className="space-y-0.5">
           {data.personalBreakdown.map((p) => (
@@ -342,6 +408,7 @@ const FinancialPanel = () => {
           </div>
         </div>
       </div>
+
 
       {/* Novo lançamento */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
