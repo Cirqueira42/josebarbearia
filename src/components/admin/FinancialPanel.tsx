@@ -35,6 +35,9 @@ type Entry = {
 
 type Period = "today" | "week" | "month" | "last_month" | "custom" | "all";
 
+type Dist = { material: number; pessoal: number; lazer: number; reserva: number };
+const DEFAULT_DIST: Dist = { material: 10, pessoal: 40, lazer: 10, reserva: 40 };
+
 const FinancialPanel = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [appts, setAppts] = useState<{ service_name: string; appointment_date: string }[]>([]);
@@ -42,6 +45,10 @@ const FinancialPanel = () => {
   const [goal, setGoal] = useState(2500);
   const [editGoal, setEditGoal] = useState(false);
   const [goalInput, setGoalInput] = useState("2500");
+
+  const [dist, setDist] = useState<Dist>(DEFAULT_DIST);
+  const [distInput, setDistInput] = useState<Dist>(DEFAULT_DIST);
+  const [editDist, setEditDist] = useState(false);
 
   const [period, setPeriod] = useState<Period>("month");
   const [from, setFrom] = useState(getBrazilMonthStartStr());
@@ -54,18 +61,30 @@ const FinancialPanel = () => {
   const { toast } = useToast();
 
   const load = async () => {
-    const [e, a, s, g] = await Promise.all([
+    const [e, a, s, g, d] = await Promise.all([
       (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id").order("entry_date", { ascending: false }).limit(2000),
       supabase.from("appointments").select("service_name, appointment_date").eq("status", "completed"),
       supabase.from("services").select("name, price"),
       supabase.from("app_settings").select("value").eq("key", "monthly_goal").maybeSingle(),
+      supabase.from("app_settings").select("value").eq("key", "finance_distribution").maybeSingle(),
     ]);
     setEntries((e.data as Entry[]) || []);
     setAppts((a.data as any) || []);
     setServices(s.data || []);
     const gv = Number(g.data?.value);
     if (gv > 0) { setGoal(gv); setGoalInput(String(gv)); }
+    const dv = d.data?.value as any;
+    if (dv && typeof dv === "object") {
+      const parsed: Dist = {
+        material: Number(dv.material ?? DEFAULT_DIST.material),
+        pessoal: Number(dv.pessoal ?? DEFAULT_DIST.pessoal),
+        lazer: Number(dv.lazer ?? DEFAULT_DIST.lazer),
+        reserva: Number(dv.reserva ?? DEFAULT_DIST.reserva),
+      };
+      setDist(parsed); setDistInput(parsed);
+    }
   };
+
 
   useEffect(() => {
     load();
@@ -165,6 +184,33 @@ const FinancialPanel = () => {
     toast({ title: "Meta atualizada" });
   };
 
+  const distTotal = distInput.material + distInput.pessoal + distInput.lazer + distInput.reserva;
+
+  const saveDist = async () => {
+    if (Math.round(distTotal) !== 100) {
+      toast({ title: "As porcentagens precisam somar 100%", description: `Total atual: ${distTotal}%`, variant: "destructive" });
+      return;
+    }
+    await supabase.from("app_settings").upsert({ key: "finance_distribution", value: distInput as any }, { onConflict: "key" });
+    setDist(distInput); setEditDist(false);
+    toast({ title: "Distribuição salva" });
+  };
+
+  // Valores PLANEJADOS (nunca viram saída no caixa) — recalculados a cada mudança no faturamento
+  const planned = useMemo(() => ({
+    material: (data.gross * dist.material) / 100,
+    pessoal: (data.gross * dist.pessoal) / 100,
+    lazer: (data.gross * dist.lazer) / 100,
+    reserva: (data.gross * dist.reserva) / 100,
+  }), [data.gross, dist]);
+
+  const periodLabel =
+    period === "today" ? "Hoje" :
+    period === "week" ? "Esta semana" :
+    period === "month" ? "Este mês" :
+    period === "last_month" ? "Mês anterior" :
+    period === "all" ? "Acumulado" : "Período personalizado";
+
   const pct = goal > 0 ? Math.min(100, Math.round((data.gross / goal) * 100)) : 0;
 
   const Card = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) => (
@@ -176,6 +222,30 @@ const FinancialPanel = () => {
       <p className={`text-sm font-bold break-all ${color}`}>{fmt(value)}</p>
     </div>
   );
+
+  const PlanCard = ({
+    label, percent, plan, used, usedLabel, color,
+  }: { label: string; percent: number; plan: number; used: number; usedLabel: string; color: string }) => {
+    const available = plan - used;
+    const bar = plan > 0 ? Math.min(100, Math.round((used / plan) * 100)) : 0;
+    return (
+      <div className="bg-background/60 rounded-lg p-2 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold leading-tight">{label}</span>
+          <span className="text-[10px] text-muted-foreground shrink-0">{percent}%</span>
+        </div>
+        <div className="mt-1 space-y-0.5 text-[11px]">
+          <div className="flex justify-between"><span className="text-muted-foreground">Planejado</span><span className={`font-semibold ${color}`}>{fmt(plan)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">{usedLabel}</span><span className="font-semibold text-destructive">{fmt(used)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Disponível</span><span className={`font-bold ${available >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(available)}</span></div>
+        </div>
+        <div className="h-1.5 w-full bg-background rounded-full overflow-hidden mt-1">
+          <div className={`h-full ${available >= 0 ? "bg-primary" : "bg-destructive"}`} style={{ width: `${bar}%` }} />
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4">
@@ -209,7 +279,7 @@ const FinancialPanel = () => {
       <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <p className="text-[11px] text-muted-foreground">Faturamento Bruto ({data.apptCount} atendimentos)</p>
+          <p className="text-[11px] text-muted-foreground">Faturamento Bruto — {periodLabel} ({data.apptCount} atendimentos)</p>
         </div>
         <p className="text-2xl font-bold text-primary break-all">{fmt(data.gross)}</p>
 
@@ -233,21 +303,74 @@ const FinancialPanel = () => {
         <p className="text-[10px] text-muted-foreground mt-0.5">{pct}% da meta</p>
       </div>
 
-      {/* Destinos do dinheiro */}
+      {/* Despesas reais da barbearia */}
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas da barbearia" value={data.despesas} color="text-destructive" />
-        <Card icon={<Hammer className="w-3.5 h-3.5" />} label="🧰 Investimento em materiais" value={data.materiais} color="text-amber-500" />
-        <Card icon={<Home className="w-3.5 h-3.5" />} label="👤 Contas pessoais" value={data.pessoal} color="text-blue-400" />
-        <Card icon={<PartyPopper className="w-3.5 h-3.5" />} label="🎉 Lazer" value={data.lazer} color="text-pink-400" />
+        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas da barbearia (real)" value={data.despesas} color="text-destructive" />
+        <div className="bg-background/60 rounded-lg p-2 min-w-0">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Wallet className="w-3.5 h-3.5" />
+            <span className="text-[10px] leading-tight">🏦 Reserva planejada</span>
+          </div>
+          <p className="text-sm font-bold break-all text-green-500">{fmt(planned.reserva)}</p>
+        </div>
+      </div>
+
+      {/* Planejado x Realizado */}
+      <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
+        <div className="flex items-center gap-2 mb-2">
+          <PieChart className="w-4 h-4 text-primary" />
+          <p className="text-sm font-bold">Planejado x Realizado</p>
+          <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto" onClick={() => { setDistInput(dist); setEditDist((v) => !v); }}>
+            <Pencil className="w-3 h-3" />
+          </Button>
+        </div>
+
+        {editDist && (
+          <div className="mb-2 rounded-md border border-border p-2">
+            <p className="text-[11px] text-muted-foreground mb-1.5">Porcentagens da distribuição (total 100%)</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ["material", "🧰 Materiais"],
+                ["pessoal", "🏠 Contas pessoais"],
+                ["lazer", "🎉 Lazer"],
+                ["reserva", "🏦 Reserva"],
+              ] as const).map(([k, label]) => (
+                <div key={k}>
+                  <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                  <Input
+                    inputMode="numeric"
+                    className="h-8 text-sm"
+                    value={String(distInput[k])}
+                    onChange={(e) => setDistInput({ ...distInput, [k]: Number(e.target.value.replace(/\D/g, "")) || 0 })}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`text-[11px] font-bold ${Math.round(distTotal) === 100 ? "text-green-500" : "text-destructive"}`}>Total: {distTotal}%</span>
+              <Button size="sm" className="h-8 ml-auto" onClick={saveDist}><Check className="w-3 h-3 mr-1" />Salvar</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <PlanCard label="🧰 Investimento em materiais" percent={dist.material} plan={planned.material} used={data.materiais} usedLabel="Já investido" color="text-amber-500" />
+          <PlanCard label="🏠 Contas pessoais" percent={dist.pessoal} plan={planned.pessoal} used={data.pessoal} usedLabel="Retirado" color="text-blue-400" />
+          <PlanCard label="🎉 Lazer" percent={dist.lazer} plan={planned.lazer} used={data.lazer} usedLabel="Utilizado" color="text-pink-400" />
+          <PlanCard label="🏦 Reserva / Barbearia" percent={dist.reserva} plan={planned.reserva} used={data.despesas} usedLabel="Despesas reais" color="text-green-500" />
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1.5">
+          Os valores planejados são apenas reservas calculadas sobre o faturamento — não entram como saída no caixa.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-background/60 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">Total destinado/gasto</p>
+          <p className="text-[10px] text-muted-foreground">Total realmente gasto/retirado</p>
           <p className="text-sm font-bold text-destructive break-all">{fmt(data.totalOut)}</p>
         </div>
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">💰 Saldo da barbearia</p>
+          <p className="text-[10px] text-muted-foreground">💰 Saldo real da barbearia</p>
           <p className={`text-sm font-bold break-all ${data.balance >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(data.balance)}</p>
         </div>
       </div>
@@ -257,7 +380,20 @@ const FinancialPanel = () => {
         <div className="flex items-center gap-2 mb-1.5">
           <Wallet className="w-4 h-4 text-blue-400" />
           <p className="text-sm font-bold">Minha Retirada</p>
-          <span className="ml-auto text-sm font-bold text-blue-400">{fmt(data.pessoal + data.lazer)}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 mb-1.5 text-center">
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Planejado</p>
+            <p className="text-[11px] font-bold text-blue-400 break-all">{fmt(planned.pessoal + planned.lazer)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Retirado</p>
+            <p className="text-[11px] font-bold text-destructive break-all">{fmt(data.pessoal + data.lazer)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Disponível</p>
+            <p className="text-[11px] font-bold text-green-500 break-all">{fmt(planned.pessoal + planned.lazer - (data.pessoal + data.lazer))}</p>
+          </div>
         </div>
         <div className="space-y-0.5">
           {data.personalBreakdown.map((p) => (
@@ -272,6 +408,7 @@ const FinancialPanel = () => {
           </div>
         </div>
       </div>
+
 
       {/* Novo lançamento */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">

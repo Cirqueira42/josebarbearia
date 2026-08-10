@@ -116,8 +116,26 @@ const Admin = () => {
     try { localStorage.setItem("admin-view-mode", m); } catch {}
   };
 
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    const v = parseFloat(localStorage.getItem("admin-zoom") || "1");
+    return v >= 0.5 && v <= 1.5 ? v : 1;
+  });
+  const [zoomSaved, setZoomSaved] = useState(true);
+  const stepZoom = (d: number) => {
+    setZoom((z) => Math.min(1.5, Math.max(0.5, Math.round((z + d) * 100) / 100)));
+    setZoomSaved(false);
+  };
+  const saveZoom = () => {
+    try { localStorage.setItem("admin-zoom", String(zoom)); } catch {}
+    setZoomSaved(true);
+    toast({ title: "Tela salva", description: `Zoom do painel: ${Math.round(zoom * 100)}%` });
+  };
+  const zoomStyle = { zoom } as React.CSSProperties;
+
   const viewWidthClass =
     viewMode === "mobile" ? "max-w-[420px]" : viewMode === "tablet" ? "max-w-3xl" : "max-w-7xl";
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -336,9 +354,26 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all`}>
-        {/* Barra de visualização */}
+      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all`} style={zoomStyle}>
+        {/* Ajuste de tela (zoom) — apenas painel admin */}
         <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 sticky top-2 z-20">
+          <Button size="sm" variant="outline" className="h-8 w-9 p-0 shrink-0" onClick={() => stepZoom(-0.05)} aria-label="Diminuir tela">
+            <span className="text-base leading-none">−</span>
+          </Button>
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-xs font-bold leading-none">{Math.round(zoom * 100)}%</p>
+            <p className="text-[9px] text-muted-foreground leading-tight">tamanho da tela</p>
+          </div>
+          <Button size="sm" variant="outline" className="h-8 w-9 p-0 shrink-0" onClick={() => stepZoom(0.05)} aria-label="Aumentar tela">
+            <span className="text-base leading-none">+</span>
+          </Button>
+          <Button size="sm" variant={zoomSaved ? "ghost" : "default"} className="h-8 text-xs shrink-0" onClick={saveZoom}>
+            {zoomSaved ? "Salvo" : "Salvar"}
+          </Button>
+        </div>
+
+        {/* Barra de visualização */}
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1">
           <span className="text-[11px] text-muted-foreground px-2 hidden sm:inline">Visualizar:</span>
           <Button
             size="sm"
@@ -368,6 +403,7 @@ const Admin = () => {
             <span className="hidden sm:inline">Desktop</span>
           </Button>
         </div>
+
 
         {/* Monitor de uso do plano grátis */}
         <UsageMonitor />
