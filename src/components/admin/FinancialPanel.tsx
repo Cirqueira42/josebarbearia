@@ -35,6 +35,9 @@ type Entry = {
 
 type Period = "today" | "week" | "month" | "last_month" | "custom" | "all";
 
+type Dist = { material: number; pessoal: number; lazer: number; reserva: number };
+const DEFAULT_DIST: Dist = { material: 10, pessoal: 40, lazer: 10, reserva: 40 };
+
 const FinancialPanel = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [appts, setAppts] = useState<{ service_name: string; appointment_date: string }[]>([]);
@@ -42,6 +45,10 @@ const FinancialPanel = () => {
   const [goal, setGoal] = useState(2500);
   const [editGoal, setEditGoal] = useState(false);
   const [goalInput, setGoalInput] = useState("2500");
+
+  const [dist, setDist] = useState<Dist>(DEFAULT_DIST);
+  const [distInput, setDistInput] = useState<Dist>(DEFAULT_DIST);
+  const [editDist, setEditDist] = useState(false);
 
   const [period, setPeriod] = useState<Period>("month");
   const [from, setFrom] = useState(getBrazilMonthStartStr());
@@ -54,18 +61,30 @@ const FinancialPanel = () => {
   const { toast } = useToast();
 
   const load = async () => {
-    const [e, a, s, g] = await Promise.all([
+    const [e, a, s, g, d] = await Promise.all([
       (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id").order("entry_date", { ascending: false }).limit(2000),
       supabase.from("appointments").select("service_name, appointment_date").eq("status", "completed"),
       supabase.from("services").select("name, price"),
       supabase.from("app_settings").select("value").eq("key", "monthly_goal").maybeSingle(),
+      supabase.from("app_settings").select("value").eq("key", "finance_distribution").maybeSingle(),
     ]);
     setEntries((e.data as Entry[]) || []);
     setAppts((a.data as any) || []);
     setServices(s.data || []);
     const gv = Number(g.data?.value);
     if (gv > 0) { setGoal(gv); setGoalInput(String(gv)); }
+    const dv = d.data?.value as any;
+    if (dv && typeof dv === "object") {
+      const parsed: Dist = {
+        material: Number(dv.material ?? DEFAULT_DIST.material),
+        pessoal: Number(dv.pessoal ?? DEFAULT_DIST.pessoal),
+        lazer: Number(dv.lazer ?? DEFAULT_DIST.lazer),
+        reserva: Number(dv.reserva ?? DEFAULT_DIST.reserva),
+      };
+      setDist(parsed); setDistInput(parsed);
+    }
   };
+
 
   useEffect(() => {
     load();
