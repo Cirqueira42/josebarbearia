@@ -184,6 +184,33 @@ const FinancialPanel = () => {
     toast({ title: "Meta atualizada" });
   };
 
+  const distTotal = distInput.material + distInput.pessoal + distInput.lazer + distInput.reserva;
+
+  const saveDist = async () => {
+    if (Math.round(distTotal) !== 100) {
+      toast({ title: "As porcentagens precisam somar 100%", description: `Total atual: ${distTotal}%`, variant: "destructive" });
+      return;
+    }
+    await supabase.from("app_settings").upsert({ key: "finance_distribution", value: distInput as any }, { onConflict: "key" });
+    setDist(distInput); setEditDist(false);
+    toast({ title: "Distribuição salva" });
+  };
+
+  // Valores PLANEJADOS (nunca viram saída no caixa) — recalculados a cada mudança no faturamento
+  const planned = useMemo(() => ({
+    material: (data.gross * dist.material) / 100,
+    pessoal: (data.gross * dist.pessoal) / 100,
+    lazer: (data.gross * dist.lazer) / 100,
+    reserva: (data.gross * dist.reserva) / 100,
+  }), [data.gross, dist]);
+
+  const periodLabel =
+    period === "today" ? "Hoje" :
+    period === "week" ? "Esta semana" :
+    period === "month" ? "Este mês" :
+    period === "last_month" ? "Mês anterior" :
+    period === "all" ? "Acumulado" : "Período personalizado";
+
   const pct = goal > 0 ? Math.min(100, Math.round((data.gross / goal) * 100)) : 0;
 
   const Card = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) => (
@@ -195,6 +222,30 @@ const FinancialPanel = () => {
       <p className={`text-sm font-bold break-all ${color}`}>{fmt(value)}</p>
     </div>
   );
+
+  const PlanCard = ({
+    label, percent, plan, used, usedLabel, color,
+  }: { label: string; percent: number; plan: number; used: number; usedLabel: string; color: string }) => {
+    const available = plan - used;
+    const bar = plan > 0 ? Math.min(100, Math.round((used / plan) * 100)) : 0;
+    return (
+      <div className="bg-background/60 rounded-lg p-2 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold leading-tight">{label}</span>
+          <span className="text-[10px] text-muted-foreground shrink-0">{percent}%</span>
+        </div>
+        <div className="mt-1 space-y-0.5 text-[11px]">
+          <div className="flex justify-between"><span className="text-muted-foreground">Planejado</span><span className={`font-semibold ${color}`}>{fmt(plan)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">{usedLabel}</span><span className="font-semibold text-destructive">{fmt(used)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Disponível</span><span className={`font-bold ${available >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(available)}</span></div>
+        </div>
+        <div className="h-1.5 w-full bg-background rounded-full overflow-hidden mt-1">
+          <div className={`h-full ${available >= 0 ? "bg-primary" : "bg-destructive"}`} style={{ width: `${bar}%` }} />
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4">
