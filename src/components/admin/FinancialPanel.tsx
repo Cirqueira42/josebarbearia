@@ -35,6 +35,7 @@ type Entry = {
   amount: number;
   category: string;
   appointment_id: string | null;
+  investment_amount?: number | null;
 };
 
 type Period = "today" | "week" | "month" | "last_month" | "custom" | "all";
@@ -59,7 +60,7 @@ const FinancialPanel = () => {
 
   const load = async () => {
     const [e, a, g] = await Promise.all([
-      (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id").order("entry_date", { ascending: false }).limit(2000),
+      (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id, investment_amount").order("entry_date", { ascending: false }).limit(2000),
       supabase.from("appointments").select("appointment_date").eq("status", "completed"),
       supabase.from("app_settings").select("value").eq("key", "monthly_goals").maybeSingle(),
     ]);
@@ -120,13 +121,19 @@ const FinancialPanel = () => {
     const sumOfBucket = (b: string) => outs.filter((e) => bucketOf(e.category) === b).reduce((s, e) => s + Number(e.amount), 0);
 
     const despesas = sumOfBucket("despesa");
+    // Reserva de material separada automaticamente no fechamento do caixa (não é saída)
+    const materialReserve = ins.reduce((s2, e) => s2 + Number(e.investment_amount || 0), 0);
     const materiais = sumOfBucket("material");
     const pessoal = sumOfBucket("pessoal");
     const lazer = sumOfBucket("lazer");
     const totalOut = despesas + materiais + pessoal + lazer;
 
-    const realizedOf = (g: MonthlyGoal) =>
-      outs.filter((e) => g.categories.includes((e.category || "").toLowerCase())).reduce((s, e) => s + Number(e.amount), 0);
+    const realizedOf = (g: MonthlyGoal) => {
+      const base = outs
+        .filter((e) => g.categories.includes((e.category || "").toLowerCase()))
+        .reduce((s2, e) => s2 + Number(e.amount), 0);
+      return g.key === "material" ? base + materialReserve : base;
+    };
 
     return {
       gross,
@@ -135,6 +142,8 @@ const FinancialPanel = () => {
       apptTotal: apptCount.filter((a) => inRange(a.appointment_date)).length,
       despesas,
       materiais,
+      materialReserve,
+      materialInvested: materiais + materialReserve,
       pessoal,
       lazer,
       totalOut,
@@ -279,7 +288,7 @@ const FinancialPanel = () => {
       {/* Resumo real */}
       <div className="grid grid-cols-2 gap-2 mb-2">
         <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas reais" value={data.despesas} color="text-destructive" />
-        <Card icon={<PiggyBank className="w-3.5 h-3.5" />} label="Material já investido" value={data.materiais} color="text-amber-500" />
+        <Card icon={<PiggyBank className="w-3.5 h-3.5" />} label="Material já investido" value={data.materialInvested} color="text-amber-500" />
         <Card icon={<Wallet className="w-3.5 h-3.5" />} label="Retiradas reais (pessoal + lazer)" value={data.pessoal + data.lazer} color="text-blue-400" />
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 min-w-0">
           <div className="flex items-center gap-1 text-muted-foreground">
