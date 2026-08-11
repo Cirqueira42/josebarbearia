@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { PieChart, Plus, TrendingUp, Wrench, Hammer, Home, PartyPopper, Wallet, Target, Pencil, Check } from "lucide-react";
+import { PieChart, Plus, TrendingUp, Wrench, Wallet, Target, Pencil, Check, PiggyBank, Coins } from "lucide-react";
 import {
   getBrazilTodayStr,
   getBrazilWeekStartStr,
@@ -13,7 +13,6 @@ import {
   addDaysToDateStr,
 } from "@/lib/brazilTime";
 import {
-  ALL_OUT_CATEGORIES,
   MATERIAL_CATEGORIES,
   SHOP_EXPENSE_CATEGORIES,
   PERSONAL_CATEGORIES,
@@ -21,6 +20,11 @@ import {
   bucketOf,
   categoryLabel,
   fmtBRL as fmt,
+  DEFAULT_MONTHLY_GOALS,
+  MonthlyGoal,
+  goalsTotal,
+  goalPercent,
+  allocateToGoals,
 } from "@/lib/finance";
 
 type Entry = {
@@ -31,24 +35,18 @@ type Entry = {
   amount: number;
   category: string;
   appointment_id: string | null;
+  investment_amount?: number | null;
 };
 
 type Period = "today" | "week" | "month" | "last_month" | "custom" | "all";
 
-type Dist = { material: number; pessoal: number; lazer: number; reserva: number };
-const DEFAULT_DIST: Dist = { material: 10, pessoal: 40, lazer: 10, reserva: 40 };
-
 const FinancialPanel = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [appts, setAppts] = useState<{ service_name: string; appointment_date: string }[]>([]);
-  const [services, setServices] = useState<{ name: string; price: number }[]>([]);
-  const [goal, setGoal] = useState(2500);
-  const [editGoal, setEditGoal] = useState(false);
-  const [goalInput, setGoalInput] = useState("2500");
+  const [apptCount, setApptCount] = useState<{ appointment_date: string }[]>([]);
 
-  const [dist, setDist] = useState<Dist>(DEFAULT_DIST);
-  const [distInput, setDistInput] = useState<Dist>(DEFAULT_DIST);
-  const [editDist, setEditDist] = useState(false);
+  const [goals, setGoals] = useState<MonthlyGoal[]>(DEFAULT_MONTHLY_GOALS);
+  const [goalsInput, setGoalsInput] = useState<MonthlyGoal[]>(DEFAULT_MONTHLY_GOALS);
+  const [editGoals, setEditGoals] = useState(false);
 
   const [period, setPeriod] = useState<Period>("month");
   const [from, setFrom] = useState(getBrazilMonthStartStr());
@@ -61,30 +59,23 @@ const FinancialPanel = () => {
   const { toast } = useToast();
 
   const load = async () => {
-    const [e, a, s, g, d] = await Promise.all([
-      (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id").order("entry_date", { ascending: false }).limit(2000),
-      supabase.from("appointments").select("service_name, appointment_date").eq("status", "completed"),
-      supabase.from("services").select("name, price"),
-      supabase.from("app_settings").select("value").eq("key", "monthly_goal").maybeSingle(),
-      supabase.from("app_settings").select("value").eq("key", "finance_distribution").maybeSingle(),
+    const [e, a, g] = await Promise.all([
+      (supabase as any).from("cash_entries").select("id, entry_date, kind, description, amount, category, appointment_id, investment_amount").order("entry_date", { ascending: false }).limit(2000),
+      supabase.from("appointments").select("appointment_date").eq("status", "completed"),
+      supabase.from("app_settings").select("value").eq("key", "monthly_goals").maybeSingle(),
     ]);
     setEntries((e.data as Entry[]) || []);
-    setAppts((a.data as any) || []);
-    setServices(s.data || []);
-    const gv = Number(g.data?.value);
-    if (gv > 0) { setGoal(gv); setGoalInput(String(gv)); }
-    const dv = d.data?.value as any;
-    if (dv && typeof dv === "object") {
-      const parsed: Dist = {
-        material: Number(dv.material ?? DEFAULT_DIST.material),
-        pessoal: Number(dv.pessoal ?? DEFAULT_DIST.pessoal),
-        lazer: Number(dv.lazer ?? DEFAULT_DIST.lazer),
-        reserva: Number(dv.reserva ?? DEFAULT_DIST.reserva),
-      };
-      setDist(parsed); setDistInput(parsed);
+    setApptCount((a.data as any) || []);
+    const gv = g.data?.value as any;
+    if (Array.isArray(gv) && gv.length) {
+      const merged = DEFAULT_MONTHLY_GOALS.map((d) => {
+        const found = gv.find((x: any) => x.key === d.key);
+        return found ? { ...d, target: Number(found.target) || 0 } : d;
+      });
+      setGoals(merged);
+      setGoalsInput(merged);
     }
   };
-
 
   useEffect(() => {
     load();
@@ -114,47 +105,58 @@ const FinancialPanel = () => {
 
   const inRange = (d: string) => d >= range.from && d <= range.to;
 
-  const priceOf = (name: string) =>
-    Number(services.find((s) => s.name.toLowerCase() === name.toLowerCase())?.price ?? 0);
-
   const data = useMemo(() => {
     const periodEntries = entries.filter((e) => inRange(e.entry_date));
-
-    // Faturamento bruto = atendimentos concluídos + entradas manuais sem atendimento vinculado
-    const apptRevenue = appts
-      .filter((a) => inRange(a.appointment_date))
-      .reduce((sum, a) => sum + priceOf(a.service_name), 0);
-    const manualIn = periodEntries
-      .filter((e) => e.kind === "in" && !e.appointment_id && e.category !== "atendimento")
-      .reduce((s, e) => s + Number(e.amount), 0);
-    const gross = apptRevenue + manualIn;
-
+    const ins = periodEntries.filter((e) => e.kind === "in");
     const outs = periodEntries.filter((e) => e.kind === "out");
-    const sumOf = (b: string) => outs.filter((e) => bucketOf(e.category) === b).reduce((s, e) => s + Number(e.amount), 0);
 
-    const despesas = sumOf("despesa");
-    const materiais = sumOf("material");
-    const pessoal = sumOf("pessoal");
-    const lazer = sumOf("lazer");
+    // ÚNICA FONTE DE VERDADE: faturamento bruto = total de ENTRADAS REAIS do período
+    const gross = ins.reduce((s, e) => s + Number(e.amount), 0);
+    // Quanto desse total veio de atendimentos (apenas informativo, não soma de novo)
+    const fromAppointments = ins
+      .filter((e) => e.appointment_id || e.category === "atendimento")
+      .reduce((s, e) => s + Number(e.amount), 0);
+    const otherIn = gross - fromAppointments;
 
-    const personalBreakdown = PERSONAL_CATEGORIES.map((c) => ({
-      label: c.label,
-      value: outs.filter((e) => e.category === c.value).reduce((s, e) => s + Number(e.amount), 0),
-    }));
+    const sumOfBucket = (b: string) => outs.filter((e) => bucketOf(e.category) === b).reduce((s, e) => s + Number(e.amount), 0);
+
+    const despesas = sumOfBucket("despesa");
+    // Reserva de material separada automaticamente no fechamento do caixa (não é saída)
+    const materialReserve = ins.reduce((s2, e) => s2 + Number(e.investment_amount || 0), 0);
+    const materiais = sumOfBucket("material");
+    const pessoal = sumOfBucket("pessoal");
+    const lazer = sumOfBucket("lazer");
+    const totalOut = despesas + materiais + pessoal + lazer;
+
+    const realizedOf = (g: MonthlyGoal) => {
+      const base = outs
+        .filter((e) => g.categories.includes((e.category || "").toLowerCase()))
+        .reduce((s2, e) => s2 + Number(e.amount), 0);
+      return g.key === "material" ? base + materialReserve : base;
+    };
 
     return {
       gross,
-      apptCount: appts.filter((a) => inRange(a.appointment_date)).length,
+      fromAppointments,
+      otherIn,
+      apptTotal: apptCount.filter((a) => inRange(a.appointment_date)).length,
       despesas,
       materiais,
+      materialReserve,
+      materialInvested: materiais + materialReserve,
       pessoal,
       lazer,
-      totalOut: despesas + materiais + pessoal + lazer,
-      balance: gross - (despesas + materiais + pessoal + lazer),
-      personalBreakdown,
+      totalOut,
+      balance: gross - totalOut, // saldo real = entradas reais - saídas reais
+      realizedOf,
       outs,
+      insCount: ins.length,
     };
-  }, [entries, appts, services, range]);
+  }, [entries, apptCount, range]);
+
+  const alloc = useMemo(() => allocateToGoals(data.gross, goals), [data.gross, goals]);
+  const targetsTotal = goalsTotal(goals);
+  const missingToGoals = Math.max(0, targetsTotal - alloc.totalAllocated);
 
   const add = async () => {
     const v = parseFloat(amount.replace(",", "."));
@@ -176,33 +178,15 @@ const FinancialPanel = () => {
     load();
   };
 
-  const saveGoal = async () => {
-    const v = parseFloat(goalInput.replace(",", "."));
-    if (!v || v <= 0) { toast({ title: "Meta inválida", variant: "destructive" }); return; }
-    await supabase.from("app_settings").upsert({ key: "monthly_goal", value: v as any }, { onConflict: "key" });
-    setGoal(v); setEditGoal(false);
-    toast({ title: "Meta atualizada" });
+  const saveGoals = async () => {
+    const clean = goalsInput.map((g) => ({ ...g, target: Number(g.target) || 0 }));
+    await supabase.from("app_settings").upsert(
+      { key: "monthly_goals", value: clean.map((g) => ({ key: g.key, target: g.target })) as any },
+      { onConflict: "key" },
+    );
+    setGoals(clean); setEditGoals(false);
+    toast({ title: "Metas mensais salvas", description: `Total: ${fmt(goalsTotal(clean))}` });
   };
-
-  const distTotal = distInput.material + distInput.pessoal + distInput.lazer + distInput.reserva;
-
-  const saveDist = async () => {
-    if (Math.round(distTotal) !== 100) {
-      toast({ title: "As porcentagens precisam somar 100%", description: `Total atual: ${distTotal}%`, variant: "destructive" });
-      return;
-    }
-    await supabase.from("app_settings").upsert({ key: "finance_distribution", value: distInput as any }, { onConflict: "key" });
-    setDist(distInput); setEditDist(false);
-    toast({ title: "Distribuição salva" });
-  };
-
-  // Valores PLANEJADOS (nunca viram saída no caixa) — recalculados a cada mudança no faturamento
-  const planned = useMemo(() => ({
-    material: (data.gross * dist.material) / 100,
-    pessoal: (data.gross * dist.pessoal) / 100,
-    lazer: (data.gross * dist.lazer) / 100,
-    reserva: (data.gross * dist.reserva) / 100,
-  }), [data.gross, dist]);
 
   const periodLabel =
     period === "today" ? "Hoje" :
@@ -211,7 +195,7 @@ const FinancialPanel = () => {
     period === "last_month" ? "Mês anterior" :
     period === "all" ? "Acumulado" : "Período personalizado";
 
-  const pct = goal > 0 ? Math.min(100, Math.round((data.gross / goal) * 100)) : 0;
+  const pct = targetsTotal > 0 ? Math.min(100, Math.round((data.gross / targetsTotal) * 100)) : 0;
 
   const Card = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) => (
     <div className="bg-background/60 rounded-lg p-2 min-w-0">
@@ -223,29 +207,30 @@ const FinancialPanel = () => {
     </div>
   );
 
-  const PlanCard = ({
-    label, percent, plan, used, usedLabel, color,
-  }: { label: string; percent: number; plan: number; used: number; usedLabel: string; color: string }) => {
-    const available = plan - used;
-    const bar = plan > 0 ? Math.min(100, Math.round((used / plan) * 100)) : 0;
+  const GoalCard = ({ g }: { g: MonthlyGoal }) => {
+    const destined = alloc.allocated[g.key] || 0;
+    const realized = data.realizedOf(g);
+    const missing = Math.max(0, Number(g.target) - destined);
+    const bar = Number(g.target) > 0 ? Math.min(100, (destined / Number(g.target)) * 100) : 0;
     return (
       <div className="bg-background/60 rounded-lg p-2 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-semibold leading-tight">{label}</span>
-          <span className="text-[10px] text-muted-foreground shrink-0">{percent}%</span>
+          <span className="text-[11px] font-semibold leading-tight">{g.label}</span>
+          <span className="text-[10px] text-muted-foreground shrink-0">{goalPercent(goals, g).toFixed(2)}%</span>
         </div>
         <div className="mt-1 space-y-0.5 text-[11px]">
-          <div className="flex justify-between"><span className="text-muted-foreground">Planejado</span><span className={`font-semibold ${color}`}>{fmt(plan)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">{usedLabel}</span><span className="font-semibold text-destructive">{fmt(used)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Disponível</span><span className={`font-bold ${available >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(available)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Meta</span><span className="font-semibold">{fmt(Number(g.target))}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Destinado</span><span className="font-semibold text-primary">{fmt(destined)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Já {g.key === "material" ? "investido" : "pago"}</span><span className="font-semibold text-destructive">{fmt(realized)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Falta destinar</span><span className={`font-bold ${missing > 0 ? "text-amber-500" : "text-green-500"}`}>{fmt(missing)}</span></div>
         </div>
         <div className="h-1.5 w-full bg-background rounded-full overflow-hidden mt-1">
-          <div className={`h-full ${available >= 0 ? "bg-primary" : "bg-destructive"}`} style={{ width: `${bar}%` }} />
+          <div className={`h-full ${missing > 0 ? "bg-primary" : "bg-green-500"}`} style={{ width: `${bar}%` }} />
         </div>
+        <p className="text-[9px] text-muted-foreground mt-0.5">{Math.round(bar)}% da meta destinada</p>
       </div>
     );
   };
-
 
   return (
     <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4">
@@ -275,107 +260,105 @@ const FinancialPanel = () => {
         )}
       </div>
 
-      {/* Faturamento bruto */}
+      {/* Faturamento bruto = total de entradas reais */}
       <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <p className="text-[11px] text-muted-foreground">Faturamento Bruto — {periodLabel} ({data.apptCount} atendimentos)</p>
+          <p className="text-[11px] text-muted-foreground">Faturamento Bruto — {periodLabel} (entradas reais)</p>
         </div>
         <p className="text-2xl font-bold text-primary break-all">{fmt(data.gross)}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {data.insCount} entrada(s) · atendimentos {fmt(data.fromAppointments)} · outras entradas {fmt(data.otherIn)} · {data.apptTotal} atendimentos concluídos
+        </p>
+        <p className="text-[10px] text-muted-foreground">Despesas, investimentos e retiradas não reduzem o faturamento bruto.</p>
 
         <div className="flex items-center gap-2 mt-2">
           <Target className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-          {editGoal ? (
-            <>
-              <Input value={goalInput} inputMode="decimal" onChange={(e) => setGoalInput(e.target.value)} className="h-7 text-xs w-24" />
-              <Button size="icon" className="h-7 w-7" onClick={saveGoal}><Check className="w-3 h-3" /></Button>
-            </>
-          ) : (
-            <>
-              <span className="text-[11px] text-muted-foreground">Meta mensal: {fmt(goal)}</span>
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditGoal(true)}><Pencil className="w-3 h-3" /></Button>
-            </>
-          )}
+          <span className="text-[11px] text-muted-foreground">Total das metas do mês: {fmt(targetsTotal)}</span>
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setGoalsInput(goals); setEditGoals((v) => !v); }}>
+            <Pencil className="w-3 h-3" />
+          </Button>
         </div>
         <div className="h-2.5 w-full bg-background rounded-full overflow-hidden mt-1">
           <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{pct}% da meta</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">{pct}% do total das metas</p>
       </div>
 
-      {/* Despesas reais da barbearia */}
+      {/* Resumo real */}
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas da barbearia (real)" value={data.despesas} color="text-destructive" />
-        <div className="bg-background/60 rounded-lg p-2 min-w-0">
+        <Card icon={<Wrench className="w-3.5 h-3.5" />} label="Despesas reais" value={data.despesas} color="text-destructive" />
+        <Card icon={<PiggyBank className="w-3.5 h-3.5" />} label="Material já investido" value={data.materialInvested} color="text-amber-500" />
+        <Card icon={<Wallet className="w-3.5 h-3.5" />} label="Retiradas reais (pessoal + lazer)" value={data.pessoal + data.lazer} color="text-blue-400" />
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 min-w-0">
           <div className="flex items-center gap-1 text-muted-foreground">
-            <Wallet className="w-3.5 h-3.5" />
-            <span className="text-[10px] leading-tight">🏦 Reserva planejada</span>
+            <Coins className="w-3.5 h-3.5" />
+            <span className="text-[10px] leading-tight">💰 Saldo real disponível</span>
           </div>
-          <p className="text-sm font-bold break-all text-green-500">{fmt(planned.reserva)}</p>
+          <p className={`text-sm font-bold break-all ${data.balance >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(data.balance)}</p>
         </div>
       </div>
 
-      {/* Planejado x Realizado */}
+      {/* Metas mensais */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
         <div className="flex items-center gap-2 mb-2">
-          <PieChart className="w-4 h-4 text-primary" />
-          <p className="text-sm font-bold">Planejado x Realizado</p>
-          <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto" onClick={() => { setDistInput(dist); setEditDist((v) => !v); }}>
-            <Pencil className="w-3 h-3" />
-          </Button>
+          <Target className="w-4 h-4 text-primary" />
+          <p className="text-sm font-bold">Metas mensais</p>
+          <span className="text-[10px] text-muted-foreground ml-auto">{fmt(targetsTotal)}</span>
         </div>
 
-        {editDist && (
+        {editGoals && (
           <div className="mb-2 rounded-md border border-border p-2">
-            <p className="text-[11px] text-muted-foreground mb-1.5">Porcentagens da distribuição (total 100%)</p>
+            <p className="text-[11px] text-muted-foreground mb-1.5">Valores em R$ de cada meta mensal</p>
             <div className="grid grid-cols-2 gap-2">
-              {([
-                ["material", "🧰 Materiais"],
-                ["pessoal", "🏠 Contas pessoais"],
-                ["lazer", "🎉 Lazer"],
-                ["reserva", "🏦 Reserva"],
-              ] as const).map(([k, label]) => (
-                <div key={k}>
-                  <Label className="text-[10px] text-muted-foreground">{label}</Label>
+              {goalsInput.map((g, i) => (
+                <div key={g.key}>
+                  <Label className="text-[10px] text-muted-foreground">{g.label}</Label>
                   <Input
-                    inputMode="numeric"
+                    inputMode="decimal"
                     className="h-8 text-sm"
-                    value={String(distInput[k])}
-                    onChange={(e) => setDistInput({ ...distInput, [k]: Number(e.target.value.replace(/\D/g, "")) || 0 })}
+                    value={String(g.target)}
+                    onChange={(e) => {
+                      const next = [...goalsInput];
+                      next[i] = { ...g, target: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 };
+                      setGoalsInput(next);
+                    }}
                   />
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <span className={`text-[11px] font-bold ${Math.round(distTotal) === 100 ? "text-green-500" : "text-destructive"}`}>Total: {distTotal}%</span>
-              <Button size="sm" className="h-8 ml-auto" onClick={saveDist}><Check className="w-3 h-3 mr-1" />Salvar</Button>
+              <span className="text-[11px] font-bold text-primary">Total: {fmt(goalsTotal(goalsInput))}</span>
+              <Button size="sm" className="h-8 ml-auto" onClick={saveGoals}><Check className="w-3 h-3 mr-1" />Salvar</Button>
             </div>
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <PlanCard label="🧰 Investimento em materiais" percent={dist.material} plan={planned.material} used={data.materiais} usedLabel="Já investido" color="text-amber-500" />
-          <PlanCard label="🏠 Contas pessoais" percent={dist.pessoal} plan={planned.pessoal} used={data.pessoal} usedLabel="Retirado" color="text-blue-400" />
-          <PlanCard label="🎉 Lazer" percent={dist.lazer} plan={planned.lazer} used={data.lazer} usedLabel="Utilizado" color="text-pink-400" />
-          <PlanCard label="🏦 Reserva / Barbearia" percent={dist.reserva} plan={planned.reserva} used={data.despesas} usedLabel="Despesas reais" color="text-green-500" />
+          {goals.map((g) => <GoalCard key={g.key} g={g} />)}
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5 mt-2 text-center">
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Total destinado</p>
+            <p className="text-[11px] font-bold text-primary break-all">{fmt(alloc.totalAllocated)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Falta p/ completar</p>
+            <p className="text-[11px] font-bold text-amber-500 break-all">{fmt(missingToGoals)}</p>
+          </div>
+          <div className="bg-background/60 rounded p-1.5 min-w-0">
+            <p className="text-[9px] text-muted-foreground">Sobra do mês</p>
+            <p className="text-[11px] font-bold text-green-500 break-all">{fmt(alloc.leftover)}</p>
+          </div>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1.5">
-          Os valores planejados são apenas reservas calculadas sobre o faturamento — não entram como saída no caixa.
+          A distribuição é apenas uma reserva virtual do dinheiro que entrou — não cria entrada nem saída no caixa.
+          Metas completas param de receber e o valor é redistribuído para as que ainda faltam.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="bg-background/60 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">Total realmente gasto/retirado</p>
-          <p className="text-sm font-bold text-destructive break-all">{fmt(data.totalOut)}</p>
-        </div>
-        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 text-center min-w-0">
-          <p className="text-[10px] text-muted-foreground">💰 Saldo real da barbearia</p>
-          <p className={`text-sm font-bold break-all ${data.balance >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(data.balance)}</p>
-        </div>
-      </div>
-
-      {/* Minha retirada */}
+      {/* Minha retirada (usa os mesmos dados, sem duplicar) */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
         <div className="flex items-center gap-2 mb-1.5">
           <Wallet className="w-4 h-4 text-blue-400" />
@@ -383,23 +366,27 @@ const FinancialPanel = () => {
         </div>
         <div className="grid grid-cols-3 gap-1.5 mb-1.5 text-center">
           <div className="bg-background/60 rounded p-1.5 min-w-0">
-            <p className="text-[9px] text-muted-foreground">Planejado</p>
-            <p className="text-[11px] font-bold text-blue-400 break-all">{fmt(planned.pessoal + planned.lazer)}</p>
+            <p className="text-[9px] text-muted-foreground">Destinado</p>
+            <p className="text-[11px] font-bold text-blue-400 break-all">
+              {fmt((alloc.allocated["pensao"] || 0) + (alloc.allocated["contas"] || 0) + (alloc.allocated["aluguel"] || 0) + (alloc.allocated["diversao"] || 0))}
+            </p>
           </div>
           <div className="bg-background/60 rounded p-1.5 min-w-0">
-            <p className="text-[9px] text-muted-foreground">Retirado</p>
+            <p className="text-[9px] text-muted-foreground">Já retirado</p>
             <p className="text-[11px] font-bold text-destructive break-all">{fmt(data.pessoal + data.lazer)}</p>
           </div>
           <div className="bg-background/60 rounded p-1.5 min-w-0">
             <p className="text-[9px] text-muted-foreground">Disponível</p>
-            <p className="text-[11px] font-bold text-green-500 break-all">{fmt(planned.pessoal + planned.lazer - (data.pessoal + data.lazer))}</p>
+            <p className="text-[11px] font-bold text-green-500 break-all">
+              {fmt(Math.max(0, (alloc.allocated["pensao"] || 0) + (alloc.allocated["contas"] || 0) + (alloc.allocated["aluguel"] || 0) + (alloc.allocated["diversao"] || 0) - (data.pessoal + data.lazer)))}
+            </p>
           </div>
         </div>
         <div className="space-y-0.5">
-          {data.personalBreakdown.map((p) => (
-            <div key={p.label} className="flex justify-between text-[11px]">
-              <span className="text-muted-foreground">{p.label}</span>
-              <span className="font-semibold">{fmt(p.value)}</span>
+          {PERSONAL_CATEGORIES.map((c) => (
+            <div key={c.value} className="flex justify-between text-[11px]">
+              <span className="text-muted-foreground">{c.label}</span>
+              <span className="font-semibold">{fmt(data.outs.filter((e) => e.category === c.value).reduce((s, e) => s + Number(e.amount), 0))}</span>
             </div>
           ))}
           <div className="flex justify-between text-[11px]">
@@ -408,7 +395,6 @@ const FinancialPanel = () => {
           </div>
         </div>
       </div>
-
 
       {/* Novo lançamento */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
@@ -448,7 +434,7 @@ const FinancialPanel = () => {
       </div>
 
       <p className="text-[10px] text-muted-foreground mt-2">
-        O faturamento bruto vem dos atendimentos concluídos (sem duplicar lançamentos automáticos do caixa) e não diminui com retiradas.
+        Faturamento bruto = soma das entradas reais do caixa no período. Nada é lançado novamente e nenhum histórico é apagado.
       </p>
     </div>
   );

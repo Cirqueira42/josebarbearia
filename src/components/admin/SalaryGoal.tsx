@@ -8,32 +8,28 @@ const SALARY_GOAL = 2500;
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type Row = { appointment_date: string; service_name: string };
-type Service = { name: string; price: number };
+type Row = { entry_date: string; amount: number };
 
 const SalaryGoal = () => {
   const [rows, setRows] = useState<Row[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      const [a, s] = await Promise.all([
-        supabase.from("appointments").select("appointment_date, service_name").eq("status", "completed"),
-        supabase.from("services").select("name, price"),
-      ]);
-      if (a.data) setRows(a.data as Row[]);
-      if (s.data) setServices(s.data);
+      // Fonte única: ENTRADAS REAIS do caixa (não recalcula preços de atendimento)
+      const { data } = await (supabase as any)
+        .from("cash_entries")
+        .select("entry_date, amount")
+        .eq("kind", "in")
+        .limit(5000);
+      setRows((data as Row[]) || []);
     };
     load();
     const ch = supabase
       .channel("salary-goal-rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "cash_entries" }, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
-
-  const priceOf = (name: string) =>
-    services.find((s) => s.name.toLowerCase() === name.toLowerCase())?.price ?? 0;
 
   const stats = useMemo(() => {
     const today = getBrazilTodayStr();
@@ -44,22 +40,23 @@ const SalaryGoal = () => {
     const weekBuckets: number[] = [0, 0, 0, 0, 0]; // weeks 1..5 of current month
 
     for (const r of rows) {
-      const p = priceOf(r.service_name);
-      if (r.appointment_date.startsWith(year)) yearly += p;
-      if (r.appointment_date >= monthStart) {
+      const p = Number(r.amount) || 0;
+      if (r.entry_date.startsWith(year)) yearly += p;
+      if (r.entry_date >= monthStart) {
         monthly += p;
-        const day = parseInt(r.appointment_date.slice(8, 10), 10);
+        const day = parseInt(r.entry_date.slice(8, 10), 10);
         const wk = Math.min(Math.ceil(day / 7), 5) - 1;
         weekBuckets[wk] += p;
       }
-      if (r.appointment_date === today) daily += p;
+      if (r.entry_date === today) daily += p;
     }
 
     const progress = Math.min((monthly / SALARY_GOAL) * 100, 100);
     const remaining = Math.max(SALARY_GOAL - monthly, 0);
 
     return { daily, monthly, yearly, weekBuckets, progress, remaining };
-  }, [rows, services]);
+  }, [rows]);
+
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 sm:p-6">
