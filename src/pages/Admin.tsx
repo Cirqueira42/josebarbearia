@@ -257,8 +257,11 @@ const Admin = () => {
             appointment.id,
           );
 
-          // Lança o valor no caixa do dia
+          // Lança o valor no caixa do dia (uma única vez por atendimento)
           await registerCashEntry(appointment);
+          // Atualiza faturamento, caixa e indicadores imediatamente
+          emitDataRefresh("cash");
+          emitDataRefresh("loyalty");
 
           if (issued && issued > 0) {
             toast({
