@@ -468,65 +468,92 @@ const Agendar = () => {
   };
 
   if (success) {
+    const calStart = `${selectedDate.replace(/-/g, "")}T${selectedTime.replace(":", "")}00`;
+    const endMin = timeToMinutes(selectedTime) + (selectedService?.duration_minutes || 30);
+    const calEnd = `${selectedDate.replace(/-/g, "")}T${String(Math.floor(endMin / 60)).padStart(2, "0")}${String(endMin % 60).padStart(2, "0")}00`;
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+      `${selectedService?.name} — José Barbearia`
+    )}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(ADDRESS.replace("\n", ", "))}&details=${encodeURIComponent(
+      `Agendamento #${confirmedNumber ?? ""} • Profissional: ${confirmedBarber || "José Gilmário"}`
+    )}&ctz=America/Sao_Paulo`;
+
     return (
-      <div className="min-h-screen bg-success flex items-center justify-center px-4 py-6">
-        <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-          <div className="w-20 h-20 bg-success rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
-            <Check className="w-10 h-10 text-success-foreground" />
-          </div>
-          <h2 className="text-2xl font-bold font-display text-foreground mb-2">
-            Agendamento Confirmado!
-          </h2>
-          {confirmedNumber !== null && (
-            <div className="inline-block bg-success text-success-foreground text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
-              Agendamento #{confirmedNumber}
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md animate-fade-in-up">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xl">
+            <div className="px-6 pt-8 pb-6 text-center border-b border-border/70">
+              <div className="w-14 h-14 rounded-full border border-success/50 bg-success/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-7 h-7 text-success" />
+              </div>
+              <h2 className="text-lg font-bold uppercase tracking-[0.2em] text-foreground">
+                Horário reservado
+              </h2>
+              {confirmedNumber !== null && (
+                <p className="text-xs text-muted-foreground mt-2">Agendamento #{confirmedNumber}</p>
+              )}
             </div>
-          )}
-          <p className="text-foreground font-medium mb-1">
-            {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
-          </p>
-          <p className="text-success font-bold text-lg mb-4">
-            {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
-          </p>
-          {confirmedBarber && (
-            <p className="text-foreground text-sm mb-4">
-              💈 Profissional: <strong className="text-success">{confirmedBarber}</strong>
-            </p>
-          )}
-          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-4">
-            <p className="text-foreground font-medium text-sm">
-              💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
-            </p>
+
+            <div className="divide-y divide-border/60">
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Serviço</span>
+                <span className="font-semibold text-foreground text-right">{selectedService?.name}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Data</span>
+                <span className="font-semibold text-foreground text-right">
+                  {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} · {getDayOfWeek(selectedDate)}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Horário</span>
+                <span className="font-bold text-primary text-lg">{selectedTime}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Profissional</span>
+                <span className="font-semibold text-foreground text-right">{confirmedBarber || "José Gilmário"}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Valor</span>
+                <span className="font-semibold text-foreground">R$ {selectedService?.price.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 text-center border-t border-border/70">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-primary/80">José Barbearia</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Seu horário está reservado. Estamos esperando por você.
+              </p>
+            </div>
           </div>
 
           {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
           {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
-            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
+            <div className="bg-card border border-primary/30 rounded-xl p-4 mt-4 text-left">
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-5 h-5 text-primary" />
-                <p className="font-bold text-foreground text-sm">Programa de Fidelidade</p>
+                <Award className="w-4 h-4 text-primary" />
+                <p className="font-semibold text-foreground text-xs uppercase tracking-widest">Fidelidade</p>
                 {loyalty.available > 0 && (
-                  <span className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="ml-auto bg-success/15 text-success border border-success/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Gift className="w-3 h-3" /> Benefício liberado
                   </span>
                 )}
               </div>
               {loyalty.available > 0 ? (
-                <p className="text-xs text-foreground mb-2">
-                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
+                <p className="text-xs text-muted-foreground mb-2">
+                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-success">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp.
                 </p>
               ) : (
-                <p className="text-xs text-foreground mb-2">
-                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para você liberar um <strong className="text-primary">benefício exclusivo</strong>!
+                <p className="text-xs text-muted-foreground mb-2">
+                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong>. Faltam <strong className="text-primary">{loyalty.remaining}</strong> para liberar um benefício exclusivo.
                 </p>
               )}
-              <div className="w-full bg-muted rounded-full h-2 mb-1">
+              <div className="w-full bg-muted rounded-full h-1.5 mb-1">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all"
+                  className="bg-primary h-1.5 rounded-full transition-all"
                   style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
                 />
               </div>
-              <div className="flex gap-0.5 mt-1">
+              <div className="flex gap-0.5 mt-1.5">
                 {Array.from({ length: loyalty.goal }).map((_, i) => (
                   <Star
                     key={i}
@@ -539,25 +566,38 @@ const Agendar = () => {
               </p>
             </div>
           )}
-          <div className="space-y-3">
+
+          <div className="space-y-2.5 mt-5">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full py-6 text-sm font-bold uppercase tracking-wider border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <a href={calendarUrl} target="_blank" rel="noopener noreferrer">
+                <CalendarPlus className="w-4 h-4" />
+                Adicionar à agenda
+              </a>
+            </Button>
             {whatsAppRedirectUrl && (
               <Button
                 asChild
-                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-lg font-bold"
+                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-sm font-bold uppercase tracking-wider"
               >
                 <a href={whatsAppRedirectUrl} target="_blank" rel="noopener noreferrer">
-                  Abrir mensagem no WhatsApp
+                  <MessageCircle className="w-4 h-4" />
+                  Falar no WhatsApp
                 </a>
               </Button>
             )}
-            <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
-              Voltar ao Início
+            <Button onClick={() => navigate("/")} variant="ghost" className="w-full py-5 text-sm text-muted-foreground">
+              Voltar ao início
             </Button>
           </div>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background relative">
