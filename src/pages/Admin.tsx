@@ -214,6 +214,9 @@ const Admin = () => {
     if (error) {
       toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
     } else {
+      // Atualiza a lista na hora, sem esperar o realtime
+      setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+      emitDataRefresh("appointments");
       toast({ title: "Sucesso", description: `Agendamento ${statusLabels[status].label.toLowerCase()}.` });
 
       if (appointment) {
