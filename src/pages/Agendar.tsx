@@ -689,7 +689,7 @@ const Agendar = () => {
               {/* Barber selection - only show when more than 1 barber */}
               {barbers.length > 1 && (
                 <div className="order-2">
-                  <Label className="flex items-center gap-2 mb-2">💈 Barbeiro</Label>
+                  <Label className="mb-2 block text-sm">Profissional</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {barbers.map((b) => (
                       <button
@@ -710,7 +710,8 @@ const Agendar = () => {
               )}
 
               <div className="order-5">
-                <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 4 · Seus dados</p>
+                <Label className="mb-2 block text-sm">Telefone</Label>
                 <Input
                   placeholder="(00) 00000-0000"
                   value={customerPhone}
@@ -783,7 +784,7 @@ const Agendar = () => {
               )}
 
               <div className="order-7">
-                <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
+                <Label className="mb-2 block text-sm">Nome completo</Label>
                 <Input
                   placeholder="Seu nome"
                   value={customerName}
@@ -793,9 +794,7 @@ const Agendar = () => {
               </div>
 
               <div className="order-8">
-                <Label className="flex items-center gap-2 mb-2">
-                  ✉️ Email <span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
+                <Label className="mb-2 block text-sm text-muted-foreground">E-mail <span className="text-xs">(opcional)</span></Label>
                 <Input
                   type="email"
                   placeholder="seu@email.com"
@@ -805,7 +804,8 @@ const Agendar = () => {
               </div>
 
               <div className="order-3">
-                <Label className="flex items-center gap-2 mb-2">📅 Data</Label>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 2 · Data</p>
+                <Label className="mb-2 block text-sm">Escolha o dia</Label>
                 <Input
                   type="date"
                   min={getMinDate()}
@@ -833,7 +833,8 @@ const Agendar = () => {
               </div>
 
               <div className="order-4">
-                <Label className="flex items-center gap-2 mb-2">🕐 Horário</Label>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 3 · Horário</p>
+                <Label className="mb-2 block text-sm">Escolha o horário</Label>
                 <Select
                   value={selectedTime}
                   onValueChange={setSelectedTime}
@@ -859,9 +860,7 @@ const Agendar = () => {
               </div>
 
               <div className="order-9">
-                <Label className="flex items-center gap-2 mb-2">
-                  💳 Forma de Pagamento <span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
+                <Label className="mb-2 block text-sm text-muted-foreground">Forma de pagamento <span className="text-xs">(opcional)</span></Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a forma de pagamento" />
@@ -976,7 +975,7 @@ const Agendar = () => {
 
               <div className="order-11 rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
-                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
+                <Label className="block text-sm text-muted-foreground">Cupom de desconto</Label>
                 {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && !loyalty.hasReward ? (
                   <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
                     <span className="text-xs text-muted-foreground">
