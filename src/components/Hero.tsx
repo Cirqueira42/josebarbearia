@@ -1,4 +1,4 @@
-import { Scissors, Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
+import { Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ShareButton from "@/components/ShareButton";
 
@@ -37,84 +37,84 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
       <PhotoCarousel overlay="light" />
 
-      {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 border border-primary/30 mb-8 animate-pulse-glow">
-          <Scissors className="w-10 h-10 text-primary" />
-        </div>
+      {/* Véu para leitura sobre a foto, sem apagar o ambiente real */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background" />
 
-        <p className="text-sm uppercase tracking-widest text-muted-foreground mb-4">Conheça Nossa Barbearia</p>
+      {/* Marca */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pt-20 pb-10">
+        <div className="w-12 h-px bg-primary/60 mb-6" />
 
-        <h1 className="text-5xl md:text-7xl font-bold font-display text-gradient mb-6">
-          José Barbearia
+        <h1 className="text-[2.6rem] leading-[1.05] md:text-7xl font-bold font-display text-gradient tracking-tight">
+          JOSÉ
+          <span className="block">BARBEARIA</span>
         </h1>
 
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-          Barba, cabelo e bigode é coisa séria!
+        <p className="mt-5 text-base md:text-lg text-foreground/75 max-w-sm mx-auto font-light italic">
+          “Barba, cabelo e bigode é coisa séria.”
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a
-            href="/agendar"
-            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-semibold hover:brightness-110 transition-all glow-primary"
-          >
-            <Calendar className="w-5 h-5" />
-            Agendar Horário Online
-          </a>
+        <a
+          href="/agendar"
+          className="mt-9 w-full max-w-xs inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground px-8 py-5 rounded-xl text-base font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all glow-primary"
+        >
+          <Calendar className="w-5 h-5" />
+          Agendar meu horário
+        </a>
 
-          {!isInstalled && (
-            <button
-              onClick={handleInstall}
-              className="inline-flex items-center gap-3 bg-primary/15 backdrop-blur border-2 border-primary text-primary px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary hover:text-primary-foreground transition-all glow-primary"
-              aria-label="Baixar aplicativo"
+        <p className="mt-6 text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+          Corte <span className="text-primary/70">•</span> Barba <span className="text-primary/70">•</span> Estilo
+        </p>
+      </div>
+
+      {/* Informações secundárias */}
+      <div className="relative z-10 px-6 pb-10">
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="flex items-center justify-center gap-2">
+            {!isInstalled && (
+              <button
+                onClick={handleInstall}
+                className="inline-flex items-center gap-2 border border-border/70 bg-background/40 backdrop-blur text-foreground/80 px-4 py-2.5 rounded-lg text-xs font-medium hover:border-primary/60 hover:text-primary transition-all"
+                aria-label="Baixar aplicativo"
+              >
+                {isIOS ? <Share className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                Baixar app
+              </button>
+            )}
+            <ShareButton />
+          </div>
+
+          <div className="flex flex-col items-center gap-2 text-muted-foreground text-xs pt-2 border-t border-border/40">
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=Av.%20Ot%C3%A1vio%20Rangel%2C%20477%20-%20Vila%20Cecap%2C%20Guariba%20-%20SP%2C%2014845-106"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-primary transition-colors mt-3"
             >
-              {isIOS ? <Share className="w-5 h-5" /> : <Download className="w-5 h-5" />}
-              Baixar App
-            </button>
-          )}
-
-          <ShareButton />
-        </div>
-
-
-        <div className="mt-3">
-          <a href="/meus-agendamentos" className="text-sm text-primary/80 hover:text-primary underline underline-offset-4">
-            Já tenho agendamento — ver / cancelar
-          </a>
-        </div>
-
-        <div className="hidden">
-          {/* spacer */}
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-muted-foreground text-sm">
-          <a
-            href="https://www.google.com/maps/search/?api=1&query=Av.%20Ot%C3%A1vio%20Rangel%2C%20477%20-%20Vila%20Cecap%2C%20Guariba%20-%20SP%2C%2014845-106"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-primary transition-colors"
-          >
-            <MapPin className="w-4 h-4" />
-            Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP
-          </a>
-          <a
-            href="https://www.instagram.com/josebarbeariaa/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-primary transition-colors"
-          >
-            <Instagram className="w-4 h-4" />
-            @josebarbeariaa
-          </a>
-        </div>
-
-        <div className="mt-6">
-          <a href="/admin-login" className="text-muted-foreground text-xs hover:text-primary transition-colors">
-            🔒 Área Administrativa
-          </a>
+              <MapPin className="w-3.5 h-3.5" />
+              Av. Otávio Rangel, 477 — Guariba/SP
+            </a>
+            <a
+              href="https://www.instagram.com/josebarbeariaa/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-primary transition-colors"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              @josebarbeariaa
+            </a>
+            <a
+              href="/meus-agendamentos"
+              className="text-primary/70 hover:text-primary underline underline-offset-4 mt-1"
+            >
+              Já tenho agendamento
+            </a>
+            <a href="/admin-login" className="text-muted-foreground/60 text-[10px] hover:text-primary transition-colors mt-1">
+              Área administrativa
+            </a>
+          </div>
         </div>
       </div>
     </section>

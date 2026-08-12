@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check, Award, Gift, Star } from "lucide-react";
+import { ArrowLeft, Check, Award, Gift, Star, Clock, CalendarPlus, MessageCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
@@ -468,65 +468,92 @@ const Agendar = () => {
   };
 
   if (success) {
+    const calStart = `${selectedDate.replace(/-/g, "")}T${selectedTime.replace(":", "")}00`;
+    const endMin = timeToMinutes(selectedTime) + (selectedService?.duration_minutes || 30);
+    const calEnd = `${selectedDate.replace(/-/g, "")}T${String(Math.floor(endMin / 60)).padStart(2, "0")}${String(endMin % 60).padStart(2, "0")}00`;
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+      `${selectedService?.name} — José Barbearia`
+    )}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(ADDRESS.replace("\n", ", "))}&details=${encodeURIComponent(
+      `Agendamento #${confirmedNumber ?? ""} • Profissional: ${confirmedBarber || "José Gilmário"}`
+    )}&ctz=America/Sao_Paulo`;
+
     return (
-      <div className="min-h-screen bg-success flex items-center justify-center px-4 py-6">
-        <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-          <div className="w-20 h-20 bg-success rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
-            <Check className="w-10 h-10 text-success-foreground" />
-          </div>
-          <h2 className="text-2xl font-bold font-display text-foreground mb-2">
-            Agendamento Confirmado!
-          </h2>
-          {confirmedNumber !== null && (
-            <div className="inline-block bg-success text-success-foreground text-sm font-bold px-3 py-1 rounded-full mb-3 shadow">
-              Agendamento #{confirmedNumber}
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md animate-fade-in-up">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xl">
+            <div className="px-6 pt-8 pb-6 text-center border-b border-border/70">
+              <div className="w-14 h-14 rounded-full border border-success/50 bg-success/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-7 h-7 text-success" />
+              </div>
+              <h2 className="text-lg font-bold uppercase tracking-[0.2em] text-foreground">
+                Horário reservado
+              </h2>
+              {confirmedNumber !== null && (
+                <p className="text-xs text-muted-foreground mt-2">Agendamento #{confirmedNumber}</p>
+              )}
             </div>
-          )}
-          <p className="text-foreground font-medium mb-1">
-            {selectedService?.name} - R$ {selectedService?.price.toFixed(2)}
-          </p>
-          <p className="text-success font-bold text-lg mb-4">
-            {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} ({getDayOfWeek(selectedDate)}) às {selectedTime}
-          </p>
-          {confirmedBarber && (
-            <p className="text-foreground text-sm mb-4">
-              💈 Profissional: <strong className="text-success">{confirmedBarber}</strong>
-            </p>
-          )}
-          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-4">
-            <p className="text-foreground font-medium text-sm">
-              💈 O barbeiro <strong>{confirmedBarber || "José"}</strong> vai te enviar a confirmação via WhatsApp em breve!
-            </p>
+
+            <div className="divide-y divide-border/60">
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Serviço</span>
+                <span className="font-semibold text-foreground text-right">{selectedService?.name}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Data</span>
+                <span className="font-semibold text-foreground text-right">
+                  {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} · {getDayOfWeek(selectedDate)}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Horário</span>
+                <span className="font-bold text-primary text-lg">{selectedTime}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Profissional</span>
+                <span className="font-semibold text-foreground text-right">{confirmedBarber || "José Gilmário"}</span>
+              </div>
+              <div className="flex items-baseline justify-between px-6 py-3.5">
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Valor</span>
+                <span className="font-semibold text-foreground">R$ {selectedService?.price.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 text-center border-t border-border/70">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-primary/80">José Barbearia</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Seu horário está reservado. Estamos esperando por você.
+              </p>
+            </div>
           </div>
 
           {/* Programa de Fidelidade - aparece somente para serviço de CORTE */}
           {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
-            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6 text-left">
+            <div className="bg-card border border-primary/30 rounded-xl p-4 mt-4 text-left">
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-5 h-5 text-primary" />
-                <p className="font-bold text-foreground text-sm">Programa de Fidelidade</p>
+                <Award className="w-4 h-4 text-primary" />
+                <p className="font-semibold text-foreground text-xs uppercase tracking-widest">Fidelidade</p>
                 {loyalty.available > 0 && (
-                  <span className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="ml-auto bg-success/15 text-success border border-success/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Gift className="w-3 h-3" /> Benefício liberado
                   </span>
                 )}
               </div>
               {loyalty.available > 0 ? (
-                <p className="text-xs text-foreground mb-2">
-                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
+                <p className="text-xs text-muted-foreground mb-2">
+                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-success">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp.
                 </p>
               ) : (
-                <p className="text-xs text-foreground mb-2">
-                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong> cortes. Faltam <strong className="text-primary text-base">{loyalty.remaining}</strong> para você liberar um <strong className="text-primary">benefício exclusivo</strong>!
+                <p className="text-xs text-muted-foreground mb-2">
+                  Você já fez <strong className="text-primary">{loyalty.progress}</strong> de <strong>{loyalty.goal}</strong>. Faltam <strong className="text-primary">{loyalty.remaining}</strong> para liberar um benefício exclusivo.
                 </p>
               )}
-              <div className="w-full bg-muted rounded-full h-2 mb-1">
+              <div className="w-full bg-muted rounded-full h-1.5 mb-1">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all"
+                  className="bg-primary h-1.5 rounded-full transition-all"
                   style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
                 />
               </div>
-              <div className="flex gap-0.5 mt-1">
+              <div className="flex gap-0.5 mt-1.5">
                 {Array.from({ length: loyalty.goal }).map((_, i) => (
                   <Star
                     key={i}
@@ -539,25 +566,38 @@ const Agendar = () => {
               </p>
             </div>
           )}
-          <div className="space-y-3">
+
+          <div className="space-y-2.5 mt-5">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full py-6 text-sm font-bold uppercase tracking-wider border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <a href={calendarUrl} target="_blank" rel="noopener noreferrer">
+                <CalendarPlus className="w-4 h-4" />
+                Adicionar à agenda
+              </a>
+            </Button>
             {whatsAppRedirectUrl && (
               <Button
                 asChild
-                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-lg font-bold"
+                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-sm font-bold uppercase tracking-wider"
               >
                 <a href={whatsAppRedirectUrl} target="_blank" rel="noopener noreferrer">
-                  Abrir mensagem no WhatsApp
+                  <MessageCircle className="w-4 h-4" />
+                  Falar no WhatsApp
                 </a>
               </Button>
             )}
-            <Button onClick={() => navigate("/")} variant="outline" className="w-full py-6 text-lg font-bold">
-              Voltar ao Início
+            <Button onClick={() => navigate("/")} variant="ghost" className="w-full py-5 text-sm text-muted-foreground">
+              Voltar ao início
             </Button>
           </div>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -568,48 +608,68 @@ const Agendar = () => {
         </div>
       )}
 
-      <header className="relative z-10 bg-primary/90 backdrop-blur px-4 py-6">
+      <header className="relative z-10 bg-background/80 backdrop-blur border-b border-border/60 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <button onClick={() => selectedService ? setSelectedService(null) : navigate("/")} className="text-primary-foreground">
-            <ArrowLeft className="w-6 h-6" />
+          <button
+            onClick={() => (selectedService ? setSelectedService(null) : navigate("/"))}
+            className="text-foreground/80 hover:text-primary transition-colors p-1 -ml-1"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-xl font-bold font-display text-primary-foreground">
-              {selectedService ? `Agendar ${selectedService.name}` : "Agendar Horário"}
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary/80">José Barbearia</p>
+            <h1 className="text-base font-bold font-display text-foreground truncate">
+              {selectedService ? selectedService.name : "Agendar horário"}
             </h1>
-            {selectedService && (
-              <p className="text-primary-foreground/80 text-sm">
-                {selectedService.description} • {selectedService.duration_minutes} min
-              </p>
-            )}
           </div>
+          {selectedService && (
+            <span className="ml-auto text-right shrink-0">
+              <span className="block text-primary font-bold leading-none">R$ {selectedService.price.toFixed(2)}</span>
+              <span className="block text-[11px] text-muted-foreground mt-1">{selectedService.duration_minutes} min</span>
+            </span>
+          )}
         </div>
       </header>
 
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6">
         {!selectedService ? (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4 bg-background/60 backdrop-blur-sm inline-block px-3 py-1 rounded-lg">Escolha o serviço</h2>
+          <div className="space-y-3 animate-fade-in-up">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-primary/80 mb-1">Etapa 1 de 4</p>
+            <h2 className="text-2xl font-bold font-display text-foreground mb-5">Escolha o serviço</h2>
             {services.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className="w-full relative overflow-hidden rounded-lg text-left hover:ring-2 hover:ring-primary/50 transition-all shadow-lg group h-32"
+                className="w-full relative overflow-hidden rounded-xl text-left border border-border/70 hover:border-primary/60 active:scale-[0.99] transition-all shadow-lg group h-28"
               >
-                <img src={getServiceImage(s)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
-                <div className="relative z-10 flex items-center gap-4 p-4 h-full">
-                  <span className="text-3xl">{s.icon}</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-foreground text-lg drop-shadow-lg">{s.name}</h3>
-                    <p className="text-foreground/80 text-sm drop-shadow">{s.description}</p>
-                    <p className="text-foreground/60 text-xs mt-1">⏱ {s.duration_minutes} min</p>
+                <img
+                  src={getServiceImage(s)}
+                  alt={s.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/30" />
+                <div className="relative z-10 flex items-center gap-3 p-4 h-full">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-foreground uppercase tracking-wide truncate">{s.name}</h3>
+                      {/corte\s*\+\s*barba/i.test(s.name) && (
+                        <span className="text-[9px] uppercase tracking-[0.15em] font-semibold text-primary border border-primary/50 px-1.5 py-0.5 rounded-full shrink-0">
+                          Mais pedido
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{s.description}</p>
+                    <p className="text-muted-foreground/80 text-[11px] mt-1.5 inline-flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {s.duration_minutes} min
+                    </p>
                   </div>
-                  <span className="text-primary font-bold text-lg drop-shadow-lg">R$ {s.price.toFixed(2)}</span>
+                  <span className="text-primary font-bold text-xl shrink-0">R$ {s.price.toFixed(0)}</span>
                 </div>
               </button>
             ))}
           </div>
+
         ) : (
           <div className="relative">
             {/* Carousel background for form */}
@@ -617,19 +677,19 @@ const Agendar = () => {
               <PhotoCarousel overlay="heavy" />
             </div>
 
-            <form onSubmit={handleSubmit} className="relative z-10 space-y-5 bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-border/50">
+            <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-5 bg-card/90 backdrop-blur-md rounded-2xl p-5 border border-border/60 shadow-2xl">
               <button
                 type="button"
                 onClick={() => setSelectedService(null)}
-                className="text-sm text-primary hover:underline mb-2"
+                className="order-1 text-sm text-primary hover:underline mb-2"
               >
                 ← Trocar serviço
               </button>
 
               {/* Barber selection - only show when more than 1 barber */}
               {barbers.length > 1 && (
-                <div>
-                  <Label className="flex items-center gap-2 mb-2">💈 Barbeiro</Label>
+                <div className="order-2">
+                  <Label className="mb-2 block text-sm">Profissional</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {barbers.map((b) => (
                       <button
@@ -649,8 +709,9 @@ const Agendar = () => {
                 </div>
               )}
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
+              <div className="order-5">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 4 · Seus dados</p>
+                <Label className="mb-2 block text-sm">Telefone</Label>
                 <Input
                   placeholder="(00) 00000-0000"
                   value={customerPhone}
@@ -673,7 +734,7 @@ const Agendar = () => {
               </div>
 
               {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
-                <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
+                <div className="order-6 rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
                     <h3 className="font-bold text-foreground text-sm">Programa de Fidelidade</h3>
@@ -722,8 +783,8 @@ const Agendar = () => {
                 </div>
               )}
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
+              <div className="order-7">
+                <Label className="mb-2 block text-sm">Nome completo</Label>
                 <Input
                   placeholder="Seu nome"
                   value={customerName}
@@ -732,10 +793,8 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">
-                  ✉️ Email <span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
+              <div className="order-8">
+                <Label className="mb-2 block text-sm text-muted-foreground">E-mail <span className="text-xs">(opcional)</span></Label>
                 <Input
                   type="email"
                   placeholder="seu@email.com"
@@ -744,8 +803,9 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">📅 Data</Label>
+              <div className="order-3">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 2 · Data</p>
+                <Label className="mb-2 block text-sm">Escolha o dia</Label>
                 <Input
                   type="date"
                   min={getMinDate()}
@@ -772,8 +832,9 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">🕐 Horário</Label>
+              <div className="order-4">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary/80 mb-3">Etapa 3 · Horário</p>
+                <Label className="mb-2 block text-sm">Escolha o horário</Label>
                 <Select
                   value={selectedTime}
                   onValueChange={setSelectedTime}
@@ -798,10 +859,8 @@ const Agendar = () => {
                 </Select>
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2 mb-2">
-                  💳 Forma de Pagamento <span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
+              <div className="order-9">
+                <Label className="mb-2 block text-sm text-muted-foreground">Forma de pagamento <span className="text-xs">(opcional)</span></Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a forma de pagamento" />
@@ -816,7 +875,7 @@ const Agendar = () => {
               </div>
 
               {paymentMethod === "pix" && (
-                <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
+                <div className="order-9 rounded-lg border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
                   <div className="flex items-center gap-2 text-primary font-bold">
                     <span className="text-xl">💸</span>
                     <span>Pagamento via PIX</span>
@@ -856,7 +915,7 @@ const Agendar = () => {
               )}
 
               {voucherEligible && (
-                <div className="rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
+                <div className="order-10 rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Gift className="w-5 h-5 text-green-400" />
                     <h3 className="font-bold text-sm text-foreground">
@@ -909,14 +968,14 @@ const Agendar = () => {
               )}
 
               {loyaltyEnabled && rewardCode && selectedService && selectedService.price < 30 && (
-                <p className="text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
+                <p className="order-10 text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
                   🎁 Você tem um Vale-Presente de R$ {rewardValue.toFixed(2)}, válido em serviços a partir de R$ 30,00.
                 </p>
               )}
 
-              <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
+              <div className="order-11 rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
-                <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
+                <Label className="block text-sm text-muted-foreground">Cupom de desconto</Label>
                 {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && !loyalty.hasReward ? (
                   <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
                     <span className="text-xs text-muted-foreground">
@@ -947,10 +1006,21 @@ const Agendar = () => {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-6 text-lg font-bold"
+                className="order-12 w-full py-6 text-base font-bold uppercase tracking-wider active:scale-[0.99] transition-transform"
               >
-                {submitting ? "Agendando..." : "Confirmar Agendamento"}
+                {submitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
+                    Confirmando...
+                  </span>
+                ) : (
+                  "Confirmar agendamento"
+                )}
               </Button>
+              <p className="order-12 text-[11px] text-center text-muted-foreground -mt-2">
+                Você recebe a confirmação do barbeiro pelo WhatsApp.
+              </p>
+
             </form>
           </div>
         )}

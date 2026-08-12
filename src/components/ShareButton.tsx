@@ -36,11 +36,12 @@ const ShareButton = ({ className = "" }: Props) => {
     <button
       onClick={handleShare}
       aria-label="Compartilhar o app da José Barbearia"
-      className={`inline-flex items-center gap-3 bg-primary/15 backdrop-blur border-2 border-primary text-primary px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary hover:text-primary-foreground transition-all glow-primary ${className}`}
+      className={`inline-flex items-center gap-2 border border-border/70 bg-background/40 backdrop-blur text-foreground/80 px-4 py-2.5 rounded-lg text-xs font-medium hover:border-primary/60 hover:text-primary transition-all ${className}`}
     >
-      <Share2 className="w-5 h-5" />
+      <Share2 className="w-4 h-4" />
       Compartilhar
     </button>
+
   );
 };
 
