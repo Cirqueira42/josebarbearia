@@ -1007,10 +1007,21 @@ const Agendar = () => {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-6 text-lg font-bold"
+                className="order-12 w-full py-6 text-base font-bold uppercase tracking-wider active:scale-[0.99] transition-transform"
               >
-                {submitting ? "Agendando..." : "Confirmar Agendamento"}
+                {submitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
+                    Confirmando...
+                  </span>
+                ) : (
+                  "Confirmar agendamento"
+                )}
               </Button>
+              <p className="order-12 text-[11px] text-center text-muted-foreground -mt-2">
+                Você recebe a confirmação do barbeiro pelo WhatsApp.
+              </p>
+
             </form>
           </div>
         )}
