@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check, Award, Gift, Star } from "lucide-react";
+import { ArrowLeft, Check, Award, Gift, Star, Clock, CalendarPlus, MessageCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
