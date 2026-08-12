@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useDataRefresh } from "@/lib/refreshBus";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,6 +89,8 @@ const DataCleanup = () => {
   useEffect(() => {
     load();
   }, [months, scope]);
+
+  useDataRefresh(["appointments", "cash"], load);
 
   const handleDelete = async () => {
     setWorking(true);

@@ -15,6 +15,7 @@ import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 import { parseHours, DEFAULT_HOURS, BusinessHours } from "@/lib/businessHours";
 import { updateLoyalty } from "@/lib/loyalty";
 import { ALL_OUT_CATEGORIES, bucketOf, categoryLabel } from "@/lib/finance";
+import { useDataRefresh } from "@/lib/refreshBus";
 
 type Entry = {
   id: string;
@@ -80,6 +81,8 @@ const CashFlow = () => {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  useDataRefresh(["cash", "appointments"], load);
 
   const todayEntries = useMemo(() => entries.filter((e) => e.entry_date === today), [entries, today]);
 

@@ -55,6 +55,7 @@ import { updateLoyalty, revertLoyalty } from "@/lib/loyalty";
 import { parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ProjectExport from "@/components/admin/ProjectExport";
+import { emitDataRefresh } from "@/lib/refreshBus";
 
 type Appointment = Tables<"appointments">;
 
@@ -213,6 +214,9 @@ const Admin = () => {
     if (error) {
       toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
     } else {
+      // Atualiza a lista na hora, sem esperar o realtime
+      setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+      emitDataRefresh("appointments");
       toast({ title: "Sucesso", description: `Agendamento ${statusLabels[status].label.toLowerCase()}.` });
 
       if (appointment) {
@@ -253,8 +257,11 @@ const Admin = () => {
             appointment.id,
           );
 
-          // Lança o valor no caixa do dia
+          // Lança o valor no caixa do dia (uma única vez por atendimento)
           await registerCashEntry(appointment);
+          // Atualiza faturamento, caixa e indicadores imediatamente
+          emitDataRefresh("cash");
+          emitDataRefresh("loyalty");
 
           if (issued && issued > 0) {
             toast({

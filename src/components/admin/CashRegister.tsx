@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Calendar, TrendingUp, Users } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
+import { useDataRefresh } from "@/lib/refreshBus";
 
 type Appointment = Tables<"appointments">;
 
@@ -37,6 +38,8 @@ const CashRegister = () => {
       clearInterval(interval);
     };
   }, []);
+
+  useDataRefresh(["cash", "appointments"], () => fetchData());
 
   const fetchData = async () => {
     const [appts, allAppts, svcs, exp] = await Promise.all([
