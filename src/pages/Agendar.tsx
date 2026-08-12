@@ -677,18 +677,18 @@ const Agendar = () => {
               <PhotoCarousel overlay="heavy" />
             </div>
 
-            <form onSubmit={handleSubmit} className="relative z-10 space-y-5 bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-border/50">
+            <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-5 bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-border/50">
               <button
                 type="button"
                 onClick={() => setSelectedService(null)}
-                className="text-sm text-primary hover:underline mb-2"
+                className="order-1 text-sm text-primary hover:underline mb-2"
               >
                 ← Trocar serviço
               </button>
 
               {/* Barber selection - only show when more than 1 barber */}
               {barbers.length > 1 && (
-                <div>
+                <div className="order-2">
                   <Label className="flex items-center gap-2 mb-2">💈 Barbeiro</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {barbers.map((b) => (
@@ -709,7 +709,7 @@ const Agendar = () => {
                 </div>
               )}
 
-              <div>
+              <div className="order-5">
                 <Label className="flex items-center gap-2 mb-2">📱 Telefone</Label>
                 <Input
                   placeholder="(00) 00000-0000"
@@ -733,7 +733,7 @@ const Agendar = () => {
               </div>
 
               {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && (
-                <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
+                <div className="order-6 rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
                     <h3 className="font-bold text-foreground text-sm">Programa de Fidelidade</h3>
@@ -782,7 +782,7 @@ const Agendar = () => {
                 </div>
               )}
 
-              <div>
+              <div className="order-7">
                 <Label className="flex items-center gap-2 mb-2">👤 Nome Completo</Label>
                 <Input
                   placeholder="Seu nome"
@@ -792,7 +792,7 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
+              <div className="order-8">
                 <Label className="flex items-center gap-2 mb-2">
                   ✉️ Email <span className="text-muted-foreground text-xs">(opcional)</span>
                 </Label>
@@ -804,7 +804,7 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
+              <div className="order-3">
                 <Label className="flex items-center gap-2 mb-2">📅 Data</Label>
                 <Input
                   type="date"
@@ -832,7 +832,7 @@ const Agendar = () => {
                 />
               </div>
 
-              <div>
+              <div className="order-4">
                 <Label className="flex items-center gap-2 mb-2">🕐 Horário</Label>
                 <Select
                   value={selectedTime}
@@ -858,7 +858,7 @@ const Agendar = () => {
                 </Select>
               </div>
 
-              <div>
+              <div className="order-9">
                 <Label className="flex items-center gap-2 mb-2">
                   💳 Forma de Pagamento <span className="text-muted-foreground text-xs">(opcional)</span>
                 </Label>
@@ -876,7 +876,7 @@ const Agendar = () => {
               </div>
 
               {paymentMethod === "pix" && (
-                <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
+                <div className="order-9 rounded-lg border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
                   <div className="flex items-center gap-2 text-primary font-bold">
                     <span className="text-xl">💸</span>
                     <span>Pagamento via PIX</span>
@@ -916,7 +916,7 @@ const Agendar = () => {
               )}
 
               {voucherEligible && (
-                <div className="rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
+                <div className="order-10 rounded-xl border-2 border-green-500/50 bg-gradient-to-br from-green-500/15 to-green-500/5 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <Gift className="w-5 h-5 text-green-400" />
                     <h3 className="font-bold text-sm text-foreground">
@@ -969,12 +969,12 @@ const Agendar = () => {
               )}
 
               {loyaltyEnabled && rewardCode && selectedService && selectedService.price < 30 && (
-                <p className="text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
+                <p className="order-10 text-xs text-muted-foreground rounded-lg border border-border bg-background/60 p-3">
                   🎁 Você tem um Vale-Presente de R$ {rewardValue.toFixed(2)}, válido em serviços a partir de R$ 30,00.
                 </p>
               )}
 
-              <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
+              <div className="order-11 rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
                 <Label className="text-sm flex items-center gap-2">🎟️ Cupom de desconto</Label>
                 {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && !loyalty.hasReward ? (
