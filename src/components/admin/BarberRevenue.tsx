@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Users } from "lucide-react";
 import { getBrazilMonthStartStr } from "@/lib/brazilTime";
+import { useDataRefresh } from "@/lib/refreshBus";
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -10,8 +11,7 @@ const BarberRevenue = () => {
   const [barbers, setBarbers] = useState<any[]>([]);
   const [services, setServices] = useState<{ name: string; price: number }[]>([]);
 
-  useEffect(() => {
-    const load = async () => {
+  const load = async () => {
       const [a, b, s] = await Promise.all([
         supabase.from("appointments").select("service_name, barber_name, appointment_date, status").eq("status", "completed").gte("appointment_date", getBrazilMonthStartStr()),
         (supabase as any).from("barbers").select("name, commission_percent, is_active"),
@@ -20,11 +20,15 @@ const BarberRevenue = () => {
       setAppts(a.data || []);
       setBarbers((b.data as any) || []);
       setServices(s.data || []);
-    };
+  };
+
+  useEffect(() => {
     load();
     const ch = supabase.channel("br-rt").on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, load).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  useDataRefresh(["cash", "appointments"], load);
 
   const rows = useMemo(() => {
     const map: Record<string, { count: number; total: number }> = {};

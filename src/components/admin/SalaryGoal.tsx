@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Target, TrendingUp, Calendar as CalendarIcon } from "lucide-react";
 import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
+import { useDataRefresh } from "@/lib/refreshBus";
 
 const SALARY_GOAL = 2500;
 
@@ -13,8 +14,7 @@ type Row = { entry_date: string; amount: number };
 const SalaryGoal = () => {
   const [rows, setRows] = useState<Row[]>([]);
 
-  useEffect(() => {
-    const load = async () => {
+  const load = async () => {
       // Fonte única: ENTRADAS REAIS do caixa (não recalcula preços de atendimento)
       const { data } = await (supabase as any)
         .from("cash_entries")
@@ -22,7 +22,9 @@ const SalaryGoal = () => {
         .eq("kind", "in")
         .limit(5000);
       setRows((data as Row[]) || []);
-    };
+  };
+
+  useEffect(() => {
     load();
     const ch = supabase
       .channel("salary-goal-rt")
@@ -30,6 +32,8 @@ const SalaryGoal = () => {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  useDataRefresh(["cash", "appointments"], load);
 
   const stats = useMemo(() => {
     const today = getBrazilTodayStr();
