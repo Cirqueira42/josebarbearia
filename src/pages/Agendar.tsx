@@ -608,48 +608,68 @@ const Agendar = () => {
         </div>
       )}
 
-      <header className="relative z-10 bg-primary/90 backdrop-blur px-4 py-6">
+      <header className="relative z-10 bg-background/80 backdrop-blur border-b border-border/60 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <button onClick={() => selectedService ? setSelectedService(null) : navigate("/")} className="text-primary-foreground">
-            <ArrowLeft className="w-6 h-6" />
+          <button
+            onClick={() => (selectedService ? setSelectedService(null) : navigate("/"))}
+            className="text-foreground/80 hover:text-primary transition-colors p-1 -ml-1"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-xl font-bold font-display text-primary-foreground">
-              {selectedService ? `Agendar ${selectedService.name}` : "Agendar Horário"}
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary/80">José Barbearia</p>
+            <h1 className="text-base font-bold font-display text-foreground truncate">
+              {selectedService ? selectedService.name : "Agendar horário"}
             </h1>
-            {selectedService && (
-              <p className="text-primary-foreground/80 text-sm">
-                {selectedService.description} • {selectedService.duration_minutes} min
-              </p>
-            )}
           </div>
+          {selectedService && (
+            <span className="ml-auto text-right shrink-0">
+              <span className="block text-primary font-bold leading-none">R$ {selectedService.price.toFixed(2)}</span>
+              <span className="block text-[11px] text-muted-foreground mt-1">{selectedService.duration_minutes} min</span>
+            </span>
+          )}
         </div>
       </header>
 
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6">
         {!selectedService ? (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-foreground mb-4 bg-background/60 backdrop-blur-sm inline-block px-3 py-1 rounded-lg">Escolha o serviço</h2>
+          <div className="space-y-3 animate-fade-in-up">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-primary/80 mb-1">Etapa 1 de 4</p>
+            <h2 className="text-2xl font-bold font-display text-foreground mb-5">Escolha o serviço</h2>
             {services.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className="w-full relative overflow-hidden rounded-lg text-left hover:ring-2 hover:ring-primary/50 transition-all shadow-lg group h-32"
+                className="w-full relative overflow-hidden rounded-xl text-left border border-border/70 hover:border-primary/60 active:scale-[0.99] transition-all shadow-lg group h-28"
               >
-                <img src={getServiceImage(s)} alt={s.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
-                <div className="relative z-10 flex items-center gap-4 p-4 h-full">
-                  <span className="text-3xl">{s.icon}</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-foreground text-lg drop-shadow-lg">{s.name}</h3>
-                    <p className="text-foreground/80 text-sm drop-shadow">{s.description}</p>
-                    <p className="text-foreground/60 text-xs mt-1">⏱ {s.duration_minutes} min</p>
+                <img
+                  src={getServiceImage(s)}
+                  alt={s.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/30" />
+                <div className="relative z-10 flex items-center gap-3 p-4 h-full">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-foreground uppercase tracking-wide truncate">{s.name}</h3>
+                      {/corte\s*\+\s*barba/i.test(s.name) && (
+                        <span className="text-[9px] uppercase tracking-[0.15em] font-semibold text-primary border border-primary/50 px-1.5 py-0.5 rounded-full shrink-0">
+                          Mais pedido
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{s.description}</p>
+                    <p className="text-muted-foreground/80 text-[11px] mt-1.5 inline-flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {s.duration_minutes} min
+                    </p>
                   </div>
-                  <span className="text-primary font-bold text-lg drop-shadow-lg">R$ {s.price.toFixed(2)}</span>
+                  <span className="text-primary font-bold text-xl shrink-0">R$ {s.price.toFixed(0)}</span>
                 </div>
               </button>
             ))}
           </div>
+
         ) : (
           <div className="relative">
             {/* Carousel background for form */}
