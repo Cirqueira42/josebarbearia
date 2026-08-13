@@ -56,6 +56,14 @@ import { parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ProjectExport from "@/components/admin/ProjectExport";
 import { emitDataRefresh } from "@/lib/refreshBus";
+import RevenueOverview from "@/components/admin/RevenueOverview";
+import SmartSummary from "@/components/admin/SmartSummary";
+import ClientsAnalytics from "@/components/admin/ClientsAnalytics";
+import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
+import SystemHealth from "@/components/admin/SystemHealth";
+import SystemHelp from "@/components/admin/SystemHelp";
+import { holidayName } from "@/lib/holidays";
+import { getBrazilTodayStr } from "@/lib/brazilTime";
 
 type Appointment = Tables<"appointments">;
 
