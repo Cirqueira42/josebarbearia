@@ -573,9 +573,43 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
+              </div>
             ))}
           </div>
         )}
+
+        {/* 3º em diante — demais módulos de gestão */}
+        <div className="grid gap-3 sm:gap-6 mt-4 sm:mt-6">
+          <SmartSummary />
+          <CashRegister />
+          <FinancialPanel />
+          <SalaryGoal />
+          <CashFlow />
+          <Expenses />
+          <BarberRevenue />
+          <ClientsAnalytics />
+          <CustomerHistory />
+          <ServicesAnalytics />
+          <ReportsHistory />
+          <DataCleanup />
+          <SystemHealth />
+          <Coupons />
+          <LoyaltyProgram />
+          <LoyaltyRewards />
+          <BlockedCustomers />
+          <BarberManagement />
+          <BlockedSlots />
+          <ProductsManagement />
+          <BusinessHoursSettings />
+          <GalleryManagement />
+          <BackgroundManagement />
+          <AdminSettings />
+          {/* Projeto da barbearia (penúltimo) */}
+          <ProjectExport />
+          {/* Uso do sistema (último) */}
+          <UsageMonitor />
+          <SystemHelp />
+        </div>
       </div>
     </div>
   );
