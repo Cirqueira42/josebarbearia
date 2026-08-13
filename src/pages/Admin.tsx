@@ -63,7 +63,7 @@ import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
 import SystemHealth from "@/components/admin/SystemHealth";
 import SystemHelp from "@/components/admin/SystemHelp";
 import { holidayName } from "@/lib/holidays";
-import { getBrazilTodayStr } from "@/lib/brazilTime";
+import { getBrazilTodayStr, addDaysToDateStr } from "@/lib/brazilTime";
 
 type Appointment = Tables<"appointments">;
 
