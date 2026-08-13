@@ -321,13 +321,27 @@ const Admin = () => {
     navigate("/admin-login");
   };
 
+  const todayStr = getBrazilTodayStr();
+
   const filtered = appointments.filter((a) => {
     if (filterDate && a.appointment_date !== filterDate) return false;
+    if (!filterDate) {
+      if (listTab === "today" && a.appointment_date !== todayStr) return false;
+      if (listTab === "future" && a.appointment_date <= todayStr) return false;
+      if (listTab === "history" && a.appointment_date >= todayStr) return false;
+    }
     if (filterStatus !== "all" && a.status !== filterStatus) return false;
     if (searchName && !a.customer_name.toLowerCase().includes(searchName.toLowerCase()))
       return false;
     return true;
   });
+
+  const dateGroupLabel = (d: string) => {
+    const label = new Date(d + "T12:00:00").toLocaleDateString("pt-BR");
+    const prefix = d === todayStr ? "HOJE — " : d === addDaysToDateStr(todayStr, -1) ? "ONTEM — " : "";
+    const hol = holidayName(d);
+    return `${prefix}${label} (${getDayOfWeek(d)})${hol ? ` · ⚠️ FERIADO — ${hol}` : ""}`;
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
