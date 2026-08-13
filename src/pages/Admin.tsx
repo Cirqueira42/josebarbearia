@@ -508,8 +508,12 @@ const Admin = () => {
           <p className="text-center text-muted-foreground py-12">Nenhum agendamento encontrado.</p>
         ) : (
           <div className="grid gap-4">
-            {filtered.map((a) => (
-              <div key={a.id} className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 sm:p-6">
+            {filtered.map((a, idx) => (
+              <div key={a.id}>
+                {(idx === 0 || filtered[idx - 1].appointment_date !== a.appointment_date) && (
+                  <p className="text-[11px] font-bold text-primary mb-1.5 mt-1">{dateGroupLabel(a.appointment_date)}</p>
+                )}
+                <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
