@@ -435,21 +435,8 @@ const Admin = () => {
         </div>
 
 
-        {/* Monitor de uso do plano grátis */}
-        <UsageMonitor />
-
-        {/* Projeto completo (cópia/backup) */}
-        <ProjectExport />
-
-
-        {/* Fundo da tela principal */}
-        <BackgroundManagement />
-
-        {/* Limpeza + Galeria */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
-          <DataCleanup />
-          <GalleryManagement />
-        </div>
+        {/* 1º FATURAMENTO DO BARBEIRO */}
+        <RevenueOverview />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
