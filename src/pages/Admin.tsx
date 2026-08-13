@@ -321,6 +321,7 @@ const Admin = () => {
     navigate("/admin-login");
   };
 
+  const [listTab, setListTab] = useState<"today" | "future" | "history" | "all">("today");
   const todayStr = getBrazilTodayStr();
 
   const filtered = appointments.filter((a) => {
