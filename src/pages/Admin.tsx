@@ -486,25 +486,19 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Admin sections */}
-        <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
-          <FinancialPanel />
-          <CashFlow />
-          <CashRegister />
-          <Expenses />
-          <SalaryGoal />
-          <BarberRevenue />
-          <CustomerHistory />
-          <Coupons />
-          <BlockedCustomers />
-          <LoyaltyProgram />
-          <LoyaltyRewards />
-          <ReportsHistory />
-          <BarberManagement />
-          <BlockedSlots />
-          <ProductsManagement />
-          <BusinessHoursSettings />
-          <AdminSettings />
+        {/* 2º AGENDAMENTOS — abas por período */}
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 mb-3">
+          {([["today", "Hoje"], ["future", "Futuros"], ["history", "Histórico"], ["all", "Todos"]] as const).map(([k, l]) => (
+            <Button
+              key={k}
+              size="sm"
+              variant={listTab === k && !filterDate ? "default" : "ghost"}
+              onClick={() => { setListTab(k); setFilterDate(""); }}
+              className="flex-1 h-8 text-[11px] px-1"
+            >
+              {l}
+            </Button>
+          ))}
         </div>
 
         {/* Appointments list */}
