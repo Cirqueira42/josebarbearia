@@ -56,6 +56,14 @@ import { parseHours, DEFAULT_HOURS } from "@/lib/businessHours";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ProjectExport from "@/components/admin/ProjectExport";
 import { emitDataRefresh } from "@/lib/refreshBus";
+import RevenueOverview from "@/components/admin/RevenueOverview";
+import SmartSummary from "@/components/admin/SmartSummary";
+import ClientsAnalytics from "@/components/admin/ClientsAnalytics";
+import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
+import SystemHealth from "@/components/admin/SystemHealth";
+import SystemHelp from "@/components/admin/SystemHelp";
+import { holidayName } from "@/lib/holidays";
+import { getBrazilTodayStr, addDaysToDateStr } from "@/lib/brazilTime";
 
 type Appointment = Tables<"appointments">;
 
@@ -313,13 +321,28 @@ const Admin = () => {
     navigate("/admin-login");
   };
 
+  const [listTab, setListTab] = useState<"today" | "future" | "history" | "all">("today");
+  const todayStr = getBrazilTodayStr();
+
   const filtered = appointments.filter((a) => {
     if (filterDate && a.appointment_date !== filterDate) return false;
+    if (!filterDate) {
+      if (listTab === "today" && a.appointment_date !== todayStr) return false;
+      if (listTab === "future" && a.appointment_date <= todayStr) return false;
+      if (listTab === "history" && a.appointment_date >= todayStr) return false;
+    }
     if (filterStatus !== "all" && a.status !== filterStatus) return false;
     if (searchName && !a.customer_name.toLowerCase().includes(searchName.toLowerCase()))
       return false;
     return true;
   });
+
+  const dateGroupLabel = (d: string) => {
+    const label = new Date(d + "T12:00:00").toLocaleDateString("pt-BR");
+    const prefix = d === todayStr ? "HOJE — " : d === addDaysToDateStr(todayStr, -1) ? "ONTEM — " : "";
+    const hol = holidayName(d);
+    return `${prefix}${label} (${getDayOfWeek(d)})${hol ? ` · ⚠️ FERIADO — ${hol}` : ""}`;
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -412,21 +435,8 @@ const Admin = () => {
         </div>
 
 
-        {/* Monitor de uso do plano grátis */}
-        <UsageMonitor />
-
-        {/* Projeto completo (cópia/backup) */}
-        <ProjectExport />
-
-
-        {/* Fundo da tela principal */}
-        <BackgroundManagement />
-
-        {/* Limpeza + Galeria */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
-          <DataCleanup />
-          <GalleryManagement />
-        </div>
+        {/* 1º FATURAMENTO DO BARBEIRO */}
+        <RevenueOverview />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
@@ -476,25 +486,19 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Admin sections */}
-        <div className="grid gap-3 sm:gap-6 mb-4 sm:mb-6">
-          <FinancialPanel />
-          <CashFlow />
-          <CashRegister />
-          <Expenses />
-          <SalaryGoal />
-          <BarberRevenue />
-          <CustomerHistory />
-          <Coupons />
-          <BlockedCustomers />
-          <LoyaltyProgram />
-          <LoyaltyRewards />
-          <ReportsHistory />
-          <BarberManagement />
-          <BlockedSlots />
-          <ProductsManagement />
-          <BusinessHoursSettings />
-          <AdminSettings />
+        {/* 2º AGENDAMENTOS — abas por período */}
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 mb-3">
+          {([["today", "Hoje"], ["future", "Futuros"], ["history", "Histórico"], ["all", "Todos"]] as const).map(([k, l]) => (
+            <Button
+              key={k}
+              size="sm"
+              variant={listTab === k && !filterDate ? "default" : "ghost"}
+              onClick={() => { setListTab(k); setFilterDate(""); }}
+              className="flex-1 h-8 text-[11px] px-1"
+            >
+              {l}
+            </Button>
+          ))}
         </div>
 
         {/* Appointments list */}
@@ -504,8 +508,12 @@ const Admin = () => {
           <p className="text-center text-muted-foreground py-12">Nenhum agendamento encontrado.</p>
         ) : (
           <div className="grid gap-4">
-            {filtered.map((a) => (
-              <div key={a.id} className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 sm:p-6">
+            {filtered.map((a, idx) => (
+              <div key={a.id}>
+                {(idx === 0 || filtered[idx - 1].appointment_date !== a.appointment_date) && (
+                  <p className="text-[11px] font-bold text-primary mb-1.5 mt-1">{dateGroupLabel(a.appointment_date)}</p>
+                )}
+                <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -563,9 +571,43 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
+              </div>
             ))}
           </div>
         )}
+
+        {/* 3º em diante — demais módulos de gestão */}
+        <div className="grid gap-3 sm:gap-6 mt-4 sm:mt-6">
+          <SmartSummary />
+          <CashRegister />
+          <FinancialPanel />
+          <SalaryGoal />
+          <CashFlow />
+          <Expenses />
+          <BarberRevenue />
+          <ClientsAnalytics />
+          <CustomerHistory />
+          <ServicesAnalytics />
+          <ReportsHistory />
+          <DataCleanup />
+          <SystemHealth />
+          <Coupons />
+          <LoyaltyProgram />
+          <LoyaltyRewards />
+          <BlockedCustomers />
+          <BarberManagement />
+          <BlockedSlots />
+          <ProductsManagement />
+          <BusinessHoursSettings />
+          <GalleryManagement />
+          <BackgroundManagement />
+          <AdminSettings />
+          {/* Projeto da barbearia (penúltimo) */}
+          <ProjectExport />
+          {/* Uso do sistema (último) */}
+          <UsageMonitor />
+          <SystemHelp />
+        </div>
       </div>
     </div>
   );
