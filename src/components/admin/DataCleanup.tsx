@@ -138,8 +138,9 @@ const DataCleanup = () => {
     } else {
       toast({
         title: "Limpeza concluída ✅",
-        description: `${counts.eligible} agendamento(s) removido(s).`,
+        description: `${counts.eligible} agendamento(s) removido(s). ${consolidated} mês(es) consolidado(s) e preservados no histórico.`,
       });
+
       load();
     }
     setWorking(false);
