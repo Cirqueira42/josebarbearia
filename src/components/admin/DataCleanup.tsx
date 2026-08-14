@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Trash2, Archive, Database } from "lucide-react";
 import { subtractMonthsFromTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
+import { consolidateRange } from "@/lib/businessData";
+
 
 const DataCleanup = () => {
   const [months, setMonths] = useState("6");
