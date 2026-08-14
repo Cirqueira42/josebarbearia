@@ -96,7 +96,34 @@ const DataCleanup = () => {
     setWorking(true);
     const cutoff = cutoffDate();
 
+    // PASSO 1 (obrigatório): consolidar e preservar o histórico antes de apagar detalhes.
+    let consolidated = 0;
+    try {
+      const { data: oldest } = await supabase
+        .from("appointments")
+        .select("appointment_date")
+        .lt("appointment_date", cutoff)
+        .order("appointment_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (oldest?.appointment_date) {
+        const done = await consolidateRange(oldest.appointment_date, cutoff);
+        consolidated = done.length;
+      }
+    } catch (e: any) {
+      toast({
+        title: "Limpeza cancelada",
+        description: "Não foi possível preservar o histórico consolidado. Nada foi removido.",
+        variant: "destructive",
+      });
+      setWorking(false);
+      return;
+    }
+
+    // PASSO 2: remover apenas os registros detalhados antigos.
     let query = supabase.from("appointments").delete().lt("appointment_date", cutoff);
+
+
 
     if (scope === "completed") query = query.eq("status", "completed");
     else if (scope === "cancelled") query = query.eq("status", "cancelled");
