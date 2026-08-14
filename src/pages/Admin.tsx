@@ -58,6 +58,10 @@ import ProjectExport from "@/components/admin/ProjectExport";
 import { emitDataRefresh } from "@/lib/refreshBus";
 import RevenueOverview from "@/components/admin/RevenueOverview";
 import SmartSummary from "@/components/admin/SmartSummary";
+import CurrentStatus from "@/components/admin/CurrentStatus";
+import ProductSales from "@/components/admin/ProductSales";
+import AnnualReports from "@/components/admin/AnnualReports";
+
 import ClientsAnalytics from "@/components/admin/ClientsAnalytics";
 import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
 import SystemHealth from "@/components/admin/SystemHealth";
