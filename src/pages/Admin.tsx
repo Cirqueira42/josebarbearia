@@ -442,6 +442,12 @@ const Admin = () => {
         {/* 1º FATURAMENTO DO BARBEIRO */}
         <RevenueOverview />
 
+        {/* Resumo objetivo do período (situação atual) */}
+        <div className="mb-4 sm:mb-6">
+          <CurrentStatus />
+        </div>
+
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="relative flex-1 min-w-0">
@@ -593,7 +599,9 @@ const Admin = () => {
           <CustomerHistory />
           <ServicesAnalytics />
           <ReportsHistory />
+          <AnnualReports />
           <DataCleanup />
+
           <SystemHealth />
           <Coupons />
           <LoyaltyProgram />
