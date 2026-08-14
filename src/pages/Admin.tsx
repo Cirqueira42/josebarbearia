@@ -58,6 +58,10 @@ import ProjectExport from "@/components/admin/ProjectExport";
 import { emitDataRefresh } from "@/lib/refreshBus";
 import RevenueOverview from "@/components/admin/RevenueOverview";
 import SmartSummary from "@/components/admin/SmartSummary";
+import CurrentStatus from "@/components/admin/CurrentStatus";
+import ProductSales from "@/components/admin/ProductSales";
+import AnnualReports from "@/components/admin/AnnualReports";
+
 import ClientsAnalytics from "@/components/admin/ClientsAnalytics";
 import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
 import SystemHealth from "@/components/admin/SystemHealth";
@@ -438,6 +442,12 @@ const Admin = () => {
         {/* 1º FATURAMENTO DO BARBEIRO */}
         <RevenueOverview />
 
+        {/* Resumo objetivo do período (situação atual) */}
+        <div className="mb-4 sm:mb-6">
+          <CurrentStatus />
+        </div>
+
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="relative flex-1 min-w-0">
@@ -589,7 +599,9 @@ const Admin = () => {
           <CustomerHistory />
           <ServicesAnalytics />
           <ReportsHistory />
+          <AnnualReports />
           <DataCleanup />
+
           <SystemHealth />
           <Coupons />
           <LoyaltyProgram />
@@ -598,6 +610,8 @@ const Admin = () => {
           <BarberManagement />
           <BlockedSlots />
           <ProductsManagement />
+          <ProductSales />
+
           <BusinessHoursSettings />
           <GalleryManagement />
           <BackgroundManagement />

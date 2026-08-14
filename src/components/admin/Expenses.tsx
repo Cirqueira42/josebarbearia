@@ -63,7 +63,7 @@ const Expenses = () => {
   const monthTotal = list.filter(e => e.expense_date >= getBrazilMonthStartStr()).reduce((a, b) => a + Number(b.amount), 0);
 
   return (
-    <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4">
+    <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4 w-full min-w-0 overflow-hidden">
       <div className="flex items-center gap-2 mb-3">
         <Receipt className="w-5 h-5 text-destructive" />
         <h2 className="text-base sm:text-lg font-bold">Despesas / Saídas</h2>

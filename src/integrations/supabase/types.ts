@@ -464,6 +464,120 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_summaries: {
+        Row: {
+          appointments_count: number
+          goal: number
+          gross_total: number
+          id: string
+          manual_count: number
+          month: number
+          out_total: number
+          products_qty: number
+          products_total: number
+          services_total: number
+          ticket_avg: number
+          top_product: string | null
+          top_service: string | null
+          unique_clients: number
+          updated_at: string
+          visits: number
+          year: number
+        }
+        Insert: {
+          appointments_count?: number
+          goal?: number
+          gross_total?: number
+          id?: string
+          manual_count?: number
+          month: number
+          out_total?: number
+          products_qty?: number
+          products_total?: number
+          services_total?: number
+          ticket_avg?: number
+          top_product?: string | null
+          top_service?: string | null
+          unique_clients?: number
+          updated_at?: string
+          visits?: number
+          year: number
+        }
+        Update: {
+          appointments_count?: number
+          goal?: number
+          gross_total?: number
+          id?: string
+          manual_count?: number
+          month?: number
+          out_total?: number
+          products_qty?: number
+          products_total?: number
+          services_total?: number
+          ticket_avg?: number
+          top_product?: string | null
+          top_service?: string | null
+          unique_clients?: number
+          updated_at?: string
+          visits?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      product_sales: {
+        Row: {
+          brand: string | null
+          cash_entry_id: string | null
+          created_at: string
+          id: string
+          product_id: string | null
+          product_name: string
+          qty: number
+          sale_date: string
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          brand?: string | null
+          cash_entry_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          qty?: number
+          sale_date?: string
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          brand?: string | null
+          cash_entry_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          qty?: number
+          sale_date?: string
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_sales_cash_entry_id_fkey"
+            columns: ["cash_entry_id"]
+            isOneToOne: false
+            referencedRelation: "cash_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string
@@ -474,8 +588,10 @@ export type Database = {
           id: string
           image_path: string | null
           in_stock: boolean
+          min_stock: number
           name: string
           price: number
+          stock_qty: number
           updated_at: string
         }
         Insert: {
@@ -487,8 +603,10 @@ export type Database = {
           id?: string
           image_path?: string | null
           in_stock?: boolean
+          min_stock?: number
           name: string
           price?: number
+          stock_qty?: number
           updated_at?: string
         }
         Update: {
@@ -500,8 +618,10 @@ export type Database = {
           id?: string
           image_path?: string | null
           in_stock?: boolean
+          min_stock?: number
           name?: string
           price?: number
+          stock_qty?: number
           updated_at?: string
         }
         Relationships: []
