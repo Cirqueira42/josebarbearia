@@ -56,10 +56,16 @@
     @apply border-border;
   }
 
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
   }
+
 
   h1, h2, h3, h4 {
     font-family: 'Playfair Display', serif;
