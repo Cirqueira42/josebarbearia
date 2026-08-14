@@ -610,6 +610,8 @@ const Admin = () => {
           <BarberManagement />
           <BlockedSlots />
           <ProductsManagement />
+          <ProductSales />
+
           <BusinessHoursSettings />
           <GalleryManagement />
           <BackgroundManagement />
