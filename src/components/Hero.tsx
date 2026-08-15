@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
+import { Calendar, MapPin, Instagram, Download, Share, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ShareButton from "@/components/ShareButton";
 
