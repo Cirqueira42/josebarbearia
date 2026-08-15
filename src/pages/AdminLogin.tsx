@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,9 +99,9 @@ const AdminLogin = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
           <p className="text-center text-xs text-muted-foreground mt-4">
-            <a href="/" className="hover:text-primary transition-colors">
+            <Link to="/" className="hover:text-primary transition-colors">
               ← Voltar ao site
-            </a>
+            </Link>
           </p>
         </form>
       </div>
