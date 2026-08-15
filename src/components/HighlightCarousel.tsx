@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Calendar, Volume2, VolumeX } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const VIDEO_SRC = "/videos/destaque.mp4";
 
@@ -32,13 +33,13 @@ const HighlightCarousel = () => {
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
               Estilo, precisão e tradição em cada corte
             </p>
-            <a
-              href="/agendar"
+            <Link
+              to="/agendar"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 sm:px-7 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:brightness-110 transition-all glow-primary"
             >
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               Agendar Agora
-            </a>
+            </Link>
           </div>
         </div>
 
