@@ -121,11 +121,16 @@ const Products = () => {
                   out ? "opacity-60" : "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
                 }`}
               >
-                {product.highlight && !out && (
+                {product.id === topProductId ? (
+                  <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                    <Trophy className="w-3 h-3" />
+                    Mais vendido
+                  </span>
+                ) : product.highlight && !out ? (
                   <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
                     {product.highlight}
                   </span>
-                )}
+                ) : null}
                 {out && (
                   <span className="absolute top-3 left-3 z-10 bg-destructive text-destructive-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
                     Esgotado
