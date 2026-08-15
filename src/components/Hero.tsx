@@ -57,12 +57,20 @@ const Hero = () => {
           “Barba, cabelo e bigode é coisa séria.”
         </p>
 
-        <a
-          href="/agendar"
+        <Link
+          to="/agendar"
           className="mt-9 w-full max-w-xs inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground px-8 py-5 rounded-xl text-base font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all glow-primary"
         >
           <Calendar className="w-5 h-5" />
           Agendar meu horário
+        </Link>
+
+        <a
+          href="#produtos"
+          className="mt-5 inline-flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary transition-colors"
+        >
+          Conheça nossos produtos e novidades
+          <ChevronDown className="w-4 h-4 animate-bounce" />
         </a>
 
         <p className="mt-6 text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
