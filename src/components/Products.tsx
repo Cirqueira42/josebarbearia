@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MessageCircle, Sparkles, Package } from "lucide-react";
+import { MessageCircle, Sparkles, Package, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
@@ -12,6 +12,7 @@ type Product = {
   image_path: string | null;
   in_stock: boolean;
   highlight: string | null;
+  stock_qty: number | null;
 };
 
 const PHONE = "5516997369740";
@@ -26,6 +27,7 @@ const buildWhatsappLink = (p: Product) => {
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [topProductId, setTopProductId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +37,10 @@ const Products = () => {
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (data) setProducts(data as Product[]);
+
+      const { data: top } = await (supabase as any).rpc("get_top_product");
+      const first = Array.isArray(top) ? top[0] : null;
+      setTopProductId(first?.product_id ?? null);
     };
     load();
 
@@ -45,7 +51,12 @@ const Products = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  if (products.length === 0) return null;
+  // A página pública apenas LÊ os dados: mostra somente produtos disponíveis com estoque
+  const available = products.filter((p) => p.in_stock && Number(p.stock_qty ?? 0) > 0);
+  const topProduct = available.find((p) => p.id === topProductId) || null;
+
+  if (available.length === 0) return null;
+
 
   return (
     <section id="produtos" className="section-padding bg-secondary/30">
