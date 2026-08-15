@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Instagram, Download, Share } from "lucide-react";
+import { Calendar, MapPin, Instagram, Download, Share, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import ShareButton from "@/components/ShareButton";
 
@@ -56,12 +57,20 @@ const Hero = () => {
           “Barba, cabelo e bigode é coisa séria.”
         </p>
 
-        <a
-          href="/agendar"
+        <Link
+          to="/agendar"
           className="mt-9 w-full max-w-xs inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground px-8 py-5 rounded-xl text-base font-bold uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all glow-primary"
         >
           <Calendar className="w-5 h-5" />
           Agendar meu horário
+        </Link>
+
+        <a
+          href="#produtos"
+          className="mt-5 inline-flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary transition-colors"
+        >
+          Conheça nossos produtos e novidades
+          <ChevronDown className="w-4 h-4 animate-bounce" />
         </a>
 
         <p className="mt-6 text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
@@ -105,15 +114,15 @@ const Hero = () => {
               <Instagram className="w-3.5 h-3.5" />
               @josebarbeariaa
             </a>
-            <a
-              href="/meus-agendamentos"
+            <Link
+              to="/meus-agendamentos"
               className="text-primary/70 hover:text-primary underline underline-offset-4 mt-1"
             >
               Já tenho agendamento
-            </a>
-            <a href="/admin-login" className="text-muted-foreground/60 text-[10px] hover:text-primary transition-colors mt-1">
+            </Link>
+            <Link to="/admin-login" className="text-muted-foreground/60 text-[10px] hover:text-primary transition-colors mt-1">
               Área administrativa
-            </a>
+            </Link>
           </div>
         </div>
       </div>

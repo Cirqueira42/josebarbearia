@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MessageCircle, Sparkles, Package } from "lucide-react";
+import { MessageCircle, Sparkles, Package, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
@@ -12,6 +12,7 @@ type Product = {
   image_path: string | null;
   in_stock: boolean;
   highlight: string | null;
+  stock_qty: number | null;
 };
 
 const PHONE = "5516997369740";
@@ -26,6 +27,7 @@ const buildWhatsappLink = (p: Product) => {
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [topProductId, setTopProductId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +37,10 @@ const Products = () => {
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (data) setProducts(data as Product[]);
+
+      const { data: top } = await (supabase as any).rpc("get_top_product");
+      const first = Array.isArray(top) ? top[0] : null;
+      setTopProductId(first?.product_id ?? null);
     };
     load();
 
@@ -45,7 +51,12 @@ const Products = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  if (products.length === 0) return null;
+  // A página pública apenas LÊ os dados: mostra somente produtos disponíveis com estoque
+  const available = products.filter((p) => p.in_stock && Number(p.stock_qty ?? 0) > 0);
+  const topProduct = available.find((p) => p.id === topProductId) || null;
+
+  if (available.length === 0) return null;
+
 
   return (
     <section id="produtos" className="section-padding bg-secondary/30">
@@ -59,12 +70,46 @@ const Products = () => {
         <h2 className="text-3xl md:text-4xl font-bold font-display text-gradient text-center mb-3">
           Produtos da Barbearia
         </h2>
-        <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
+        <p className="text-muted-foreground text-center mb-6 max-w-xl mx-auto">
           Pomadas, shampoo e óleo para barba selecionados. Peça direto pelo WhatsApp e retire na loja.
         </p>
 
+        <p className="text-center text-sm text-primary/90 font-semibold mb-8">
+          Produtos disponíveis na barbearia: {available.length}
+        </p>
+
+        {topProduct ? (
+          <div className="mb-10 rounded-2xl border border-primary/30 bg-card/70 backdrop-blur p-4 sm:p-5 flex items-center gap-4 shadow-lg shadow-primary/5">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-background flex items-center justify-center shrink-0">
+              {topProduct.image_path ? (
+                <img
+                  src={supabase.storage.from("products").getPublicUrl(topProduct.image_path).data.publicUrl}
+                  alt={`${topProduct.brand} ${topProduct.name}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <Package className="w-8 h-8 text-muted-foreground" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                <Trophy className="w-3 h-3" />
+                Mais vendido
+              </span>
+              <h3 className="mt-1.5 font-bold text-foreground leading-tight truncate">{topProduct.name}</h3>
+              <p className="text-[11px] uppercase tracking-widest text-primary/80">{topProduct.brand}</p>
+              <p className="text-primary font-bold text-xl font-display mt-1">{formatPrice(topProduct.price)}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-xs text-muted-foreground mb-8">
+            Acompanhe nossos produtos disponíveis.
+          </p>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => {
+          {available.map((product) => {
             const imgUrl = product.image_path
               ? supabase.storage.from("products").getPublicUrl(product.image_path).data.publicUrl
               : null;
@@ -76,11 +121,16 @@ const Products = () => {
                   out ? "opacity-60" : "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
                 }`}
               >
-                {product.highlight && !out && (
+                {product.id === topProductId ? (
+                  <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                    <Trophy className="w-3 h-3" />
+                    Mais vendido
+                  </span>
+                ) : product.highlight && !out ? (
                   <span className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
                     {product.highlight}
                   </span>
-                )}
+                ) : null}
                 {out && (
                   <span className="absolute top-3 left-3 z-10 bg-destructive text-destructive-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
                     Esgotado
@@ -108,6 +158,11 @@ const Products = () => {
                   {product.description && (
                     <p className="text-xs text-muted-foreground mt-1 mb-3 flex-1">{product.description}</p>
                   )}
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Disponível: {Number(product.stock_qty ?? 0)} unidade{Number(product.stock_qty ?? 0) === 1 ? "" : "s"}
+                  </p>
+
+
 
                   <div className="flex items-end justify-between mb-3 mt-auto">
                     <div>
