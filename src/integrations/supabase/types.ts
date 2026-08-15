@@ -768,6 +768,14 @@ export type Database = {
           total_services: number
         }[]
       }
+      get_top_product: {
+        Args: never
+        Returns: {
+          product_id: string
+          product_name: string
+          total_qty: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
