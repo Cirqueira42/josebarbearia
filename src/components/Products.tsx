@@ -158,6 +158,11 @@ const Products = () => {
                   {product.description && (
                     <p className="text-xs text-muted-foreground mt-1 mb-3 flex-1">{product.description}</p>
                   )}
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Disponível: {Number(product.stock_qty ?? 0)} unidade{Number(product.stock_qty ?? 0) === 1 ? "" : "s"}
+                  </p>
+
+
 
                   <div className="flex items-end justify-between mb-3 mt-auto">
                     <div>
