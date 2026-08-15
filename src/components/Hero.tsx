@@ -114,15 +114,15 @@ const Hero = () => {
               <Instagram className="w-3.5 h-3.5" />
               @josebarbeariaa
             </a>
-            <a
-              href="/meus-agendamentos"
+            <Link
+              to="/meus-agendamentos"
               className="text-primary/70 hover:text-primary underline underline-offset-4 mt-1"
             >
               Já tenho agendamento
-            </a>
-            <a href="/admin-login" className="text-muted-foreground/60 text-[10px] hover:text-primary transition-colors mt-1">
+            </Link>
+            <Link to="/admin-login" className="text-muted-foreground/60 text-[10px] hover:text-primary transition-colors mt-1">
               Área administrativa
-            </a>
+            </Link>
           </div>
         </div>
       </div>
