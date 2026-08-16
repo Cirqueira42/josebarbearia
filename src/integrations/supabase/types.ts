@@ -776,6 +776,10 @@ export type Database = {
           total_qty: number
         }[]
       }
+      handle_loyalty_change: {
+        Args: { _appointment_id: string; _delta: number }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
