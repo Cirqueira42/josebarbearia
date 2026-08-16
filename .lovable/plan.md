@@ -1,32 +1,32 @@
-# Corrigir loop de atualização — verificar 1x por dia
+# Ajustar contagem de atendimentos e responsividade móvel
 
-## Problema
-O app fica recarregando sozinho em loop com "Nova versão disponível! Atualizando...", impedindo o agendamento. Causa: o verificador atual compara o HTML inteiro a cada 1 minuto, e qualquer diferença (até dinâmica) dispara recarregamento.
+## Objetivo
+Preservar os dados e fluxos existentes, corrigindo somente a contagem dos atendimentos manuais, a visualização no celular, o botão flutuante da página pública e a indicação de conteúdo abaixo.
 
-## Solução
-Reescrever o verificador para rodar **no máximo 1 vez por dia** e ser confiável:
+## Alterações
+1. **Contagem do caixa do dia**
+   - Usar a classificação já existente: entrada na categoria `atendimento` com `appointment_id` é atendimento do APP; sem `appointment_id` é atendimento manual.
+   - Exibir no Caixa do Dia: “Cliente hoje pelo APP”, “Cliente adicionado manualmente” e “Atendimento total do dia”.
+   - Fazer o total ser sempre APP + manual, sem contar vendas de produtos e sem modificar registros antigos.
+   - Atualizar os indicadores automaticamente após adicionar, editar, excluir ou finalizar um atendimento.
 
-1. **Trocar a estratégia de detecção:** em vez de comparar o HTML inteiro (instável), buscar o `index.html` e extrair apenas o caminho do bundle JS principal (ex.: `/assets/index-AbC123.js`). Esse hash só muda quando há build novo de verdade — elimina falsos positivos.
+2. **Contagem e fidelidade separadas**
+   - Manter cada agendamento concluído como um atendimento real independente nos relatórios e no faturamento.
+   - Manter a fidelidade em no máximo 1 ponto por telefone por dia, somente para atendimento concluído elegível de R$ 30 ou mais.
+   - Corrigir apenas eventuais lacunas na validação, sem transformar pontos de fidelidade em contagem de clientes e sem alterar o histórico existente.
 
-2. **Verificar só 1x por dia:**
-   - Guardar no `localStorage` a data da última verificação (`app:last-check-date`, formato `YYYY-MM-DD` no fuso de São Paulo).
-   - Só checar se a data de hoje for diferente da última verificação.
-   - Remover o `setInterval` de 1 minuto, o trigger de `visibilitychange` e o de `online` (ou mantê-los, mas todos respeitando o "1x por dia").
+3. **Responsividade completa no celular**
+   - Revisar página pública, agendamento, painel admin e todos os módulos inferiores.
+   - Corrigir grids, linhas de ações, filtros, formulários, listas, gráficos e resumos que possam ultrapassar a largura; quando necessário, empilhar no celular sem remover informação.
+   - Preservar o controle manual já existente no início do painel (diminuir, aumentar e Salvar), incluindo persistência ao sair e entrar novamente.
+   - Impedir overflow horizontal involuntário sem esconder controles importantes.
 
-3. **Primeira execução:** apenas armazena o bundle atual, sem recarregar (evita reload no primeiro acesso).
+4. **Página pública**
+   - Remover somente a renderização do botão flutuante do WhatsApp na tela principal, mantendo as demais integrações e contatos.
+   - Manter “AGENDAR MEU HORÁRIO” e reforçar a indicação automática, discreta e animada para rolar e conhecer o restante da página.
 
-4. **Quando detectar atualização real:** mostra o toast "Nova versão disponível! Atualizando..." e recarrega uma única vez.
-
-5. **Manter** a limpeza de service workers antigos e caches que já existe (segura, roda 1x ao abrir).
-
-## Resultado
-- Loop infinito eliminado — o agendamento volta a funcionar.
-- Clientes recebem atualizações automaticamente, mas no máximo 1 vez por dia, sem incomodar durante o uso.
-
-## Detalhes técnicos
-- Editar `src/hooks/useAppUpdater.ts`:
-  - Substituir `hashString(htmlInteiro)` por extração via regex do `src` do `<script type="module">` principal
-  - Adicionar chave `app:last-check-date` no localStorage (data no fuso `America/Sao_Paulo`, usando o helper existente em `src/lib/brazilTime.ts` se aplicável)
-  - Remover `CHECK_INTERVAL_MS`, `setInterval`, listeners de `visibilitychange` e `online`
-  - Manter `unregister()` dos service workers antigos
-- Nenhuma mudança em `App.tsx`, backend, banco ou edge functions
+## Validação
+- Testar as contagens com atendimentos do APP, lançamentos manuais e vendas de produtos.
+- Confirmar que APP + manual = total e que produtos não entram na conta.
+- Testar fidelidade com vários horários no mesmo telefone e no mesmo dia.
+- Revisar as rotas públicas e administrativas em celulares pequenos e médios, verificando visualmente ausência de conteúdo cortado ou rolagem horizontal.
