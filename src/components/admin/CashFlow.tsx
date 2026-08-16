@@ -15,9 +15,8 @@ import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 import { parseHours, DEFAULT_HOURS, BusinessHours } from "@/lib/businessHours";
 import { updateLoyalty } from "@/lib/loyalty";
 import { ALL_OUT_CATEGORIES, bucketOf, categoryLabel } from "@/lib/finance";
-import { useDataRefresh } from "@/lib/refreshBus";
+import { emitDataRefresh, useDataRefresh } from "@/lib/refreshBus";
 import { totalsOf, RawEntry } from "@/lib/businessData";
-import { emitDataRefresh } from "@/lib/refreshBus";
 
 type Entry = {
   id: string;

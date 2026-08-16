@@ -29,6 +29,7 @@ const CashRegister = () => {
     const channel = supabase
       .channel("cash-register-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "cash_entries" }, () => fetchData())
       .subscribe();
 
     // Check closing time every minute

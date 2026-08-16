@@ -66,7 +66,7 @@ const Hero = () => {
         </Link>
 
         <a
-          href="#produtos"
+          href="#portfolio"
           className="mt-5 inline-flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary transition-colors"
         >
           Role para baixo e conheça mais

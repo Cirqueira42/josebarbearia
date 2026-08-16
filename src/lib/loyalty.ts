@@ -45,9 +45,8 @@ export const updateLoyalty = async (
     return 0;
   }
 
-  // O handle_loyalty_change já chama o issue_loyalty_rewards internamente.
-  // Retornamos 1 apenas para sinalizar sucesso, embora o retorno real dependa da RPC.
-  return 1;
+  // A função retorna quantos benefícios novos foram realmente liberados.
+  return Number(data || 0);
 };
 
 /**
