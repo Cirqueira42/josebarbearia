@@ -252,7 +252,7 @@ const Admin = () => {
         if (status === "cancelled") {
           // Se estava concluído e estamos cancelando, reverter a estrela (se aplicável)
           if (previousStatus === "completed" && /corte/i.test(appointment.service_name)) {
-            await revertLoyalty(appointment.customer_phone);
+            await revertLoyalty(appointment.customer_phone, appointment.service_name, appointment.id);
           }
 
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
@@ -318,7 +318,7 @@ const Admin = () => {
     } else {
       // Se o agendamento concluído contava estrela, reverter
       if (target && target.status === "completed" && /corte/i.test(target.service_name)) {
-        await revertLoyalty(target.customer_phone);
+        await revertLoyalty(target.customer_phone, target.service_name, target.id);
       }
       toast({ title: "Excluído", description: "Agendamento removido." });
     }
