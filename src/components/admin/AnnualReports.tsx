@@ -143,7 +143,7 @@ const AnnualReports = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 mb-3">
         <div className="bg-primary/10 border border-primary/30 rounded p-2 text-center min-w-0">
           <p className="text-[10px] text-muted-foreground">Bruto {year}</p>
           <p className="text-xs sm:text-sm font-bold text-primary break-all">{fmtBR(yearTotal)}</p>
@@ -187,7 +187,7 @@ const AnnualReports = () => {
       <div className="space-y-1 mb-3">
         {withData.length === 0 && <p className="text-[11px] text-muted-foreground">Sem dados neste ano.</p>}
         {withData.slice().sort((a, b) => b.gross_total - a.gross_total).map((r, i) => (
-          <div key={r.month} className="flex items-center justify-between gap-2 text-[11px] bg-background/40 rounded px-2 py-1">
+          <div key={r.month} className="flex flex-wrap items-center justify-between gap-2 text-[11px] bg-background/40 rounded px-2 py-1">
             <span className="truncate">{i + 1}. {MONTHS_PT[r.month - 1]}</span>
             <span className="shrink-0 text-muted-foreground">{sumCount(r)} atend.</span>
             <span className={`shrink-0 ${r.gross_total >= avg ? "text-green-500" : "text-muted-foreground"}`}>

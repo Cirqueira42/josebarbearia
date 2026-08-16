@@ -134,7 +134,7 @@ const RevenueOverview = () => {
           </div>
 
           {/* bruto x distribuído x disponível */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 mb-3">
             <div className="bg-background/60 rounded p-2 text-center min-w-0">
               <p className="text-[10px] text-muted-foreground">Bruto do mês</p>
               <p className="text-xs sm:text-sm font-bold text-primary break-words">{fmtBR(d.g.month)}</p>
@@ -150,7 +150,7 @@ const RevenueOverview = () => {
           </div>
 
           {/* ticket médio */}
-          <div className="grid grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
             {([["Dia", d.ticket.day], ["Semana", d.ticket.week], ["Mês", d.ticket.month], ["Ano", d.ticket.year]] as const).map(([l, v]) => (
               <div key={l} className="bg-background/40 rounded p-1.5 text-center min-w-0">
                 <p className="text-[9px] text-muted-foreground">Ticket {l}</p>
@@ -214,10 +214,10 @@ const RevenueOverview = () => {
 
           <div className="space-y-1 mb-2">
             {d.months.map((m) => (
-              <div key={m.i} className="flex items-center justify-between gap-2 text-[11px] bg-background/40 rounded px-2 py-1">
-                <span className="w-20 shrink-0">{m.label}</span>
+              <div key={m.i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] min-[390px]:grid-cols-[5rem_minmax(0,1fr)_6rem] items-center gap-2 text-[11px] bg-background/40 rounded px-2 py-1">
+                <span>{m.label}</span>
                 <span className="font-bold text-primary flex-1 text-right">{fmtBR(m.gross)}</span>
-                <span className="text-muted-foreground w-24 text-right">{m.clients} cli · {m.visits} atend.</span>
+                <span className="text-muted-foreground text-right col-span-2 min-[390px]:col-span-1">{m.clients} cli · {m.visits} atend.</span>
               </div>
             ))}
           </div>

@@ -13,85 +13,67 @@ const getServicePrice = async (serviceName: string): Promise<number> => {
   return Number((data as any)?.price ?? 0);
 };
 
-// Conta um atendimento na fidelidade. Qualquer serviço a partir de R$ 30 e no máximo 1 por dia.
-// Somente atendimentos realmente concluídos chamam esta função.
+/**
+ * Conta um atendimento na fidelidade. 
+ * Regras: Preço >= R$ 30 e no máximo 1 por dia por cliente.
+ * A lógica de "1 por dia" e atomicidade agora é tratada no banco (RPC).
+ */
 export const updateLoyalty = async (
   customerPhone: string,
   customerName: string,
   serviceName: string,
   appointmentDate: string,
-  currentId: string,
+  appointmentId: string,
   servicePrice?: number,
 ) => {
   const phone = (customerPhone || "").replace(/\D/g, "");
   if (!phone) return;
 
   const price = typeof servicePrice === "number" ? servicePrice : await getServicePrice(serviceName);
+  
+  // Se o serviço não atingir o valor mínimo, não faz nada
   if (price < MIN_VALUE) return;
 
-  // Máximo 1 estrela por dia por cliente
-  const { data: sameDay } = await supabase
-    .from("appointments")
-    .select("id")
-    .eq("customer_phone", phone)
-    .eq("appointment_date", appointmentDate)
-    .eq("status", "completed")
-    .neq("id", currentId);
+  // Chama a RPC para processar o incremento de forma atômica e validando o limite diário
+  const { data, error } = await (supabase as any).rpc("handle_loyalty_change", {
+    _appointment_id: appointmentId,
+    _delta: 1
+  });
 
-  if ((sameDay || []).length > 0) return;
-
-  const { data: existing } = await supabase
-    .from("loyalty")
-    .select("*")
-    .eq("customer_phone", phone)
-    .maybeSingle();
-
-  if (existing) {
-    const newTotal = ((existing as any).total_services || 0) + 1;
-    await supabase
-      .from("loyalty")
-      .update({
-        total_services: newTotal,
-        free_services_earned: Math.floor(newTotal / GOAL),
-        customer_name: customerName,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("customer_phone", phone);
-  } else {
-    await supabase.from("loyalty").insert({
-      customer_phone: phone,
-      customer_name: customerName,
-      total_services: 1,
-      free_services_earned: 0,
-      free_services_redeemed: 0,
-    });
+  if (error) {
+    console.error("Error updating loyalty:", error);
+    return 0;
   }
 
-  // Gera o código exclusivo se o cliente bateu a meta
-  const { data: issued } = await (supabase as any).rpc("issue_loyalty_rewards", {
-    _phone: phone,
-    _name: customerName,
-  });
-  return (issued as number) || 0;
+  // A função retorna quantos benefícios novos foram realmente liberados.
+  return Number(data || 0);
 };
 
-// Cancelamento/exclusão de um atendimento concluído remove a estrela.
-export const revertLoyalty = async (customerPhone: string) => {
+/**
+ * Reverte um atendimento na fidelidade.
+ * Deve ser chamado quando um agendamento concluído é cancelado ou excluído.
+ */
+export const revertLoyalty = async (
+  customerPhone: string,
+  serviceName: string,
+  appointmentId: string,
+  servicePrice?: number,
+) => {
   const phone = (customerPhone || "").replace(/\D/g, "");
   if (!phone) return;
-  const { data: existing } = await supabase
-    .from("loyalty")
-    .select("*")
-    .eq("customer_phone", phone)
-    .maybeSingle();
-  if (!existing) return;
-  const newTotal = Math.max(((existing as any).total_services || 0) - 1, 0);
-  await supabase
-    .from("loyalty")
-    .update({
-      total_services: newTotal,
-      free_services_earned: Math.floor(newTotal / GOAL),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("customer_phone", phone);
+
+  const price = typeof servicePrice === "number" ? servicePrice : await getServicePrice(serviceName);
+  
+  // Se o serviço original não contou para a fidelidade, não precisamos reverter nada
+  if (price < MIN_VALUE) return;
+
+  // Chama a RPC para processar o decremento validando se era o único do dia
+  const { error } = await (supabase as any).rpc("handle_loyalty_change", {
+    _appointment_id: appointmentId,
+    _delta: -1
+  });
+
+  if (error) {
+    console.error("Error reverting loyalty:", error);
+  }
 };

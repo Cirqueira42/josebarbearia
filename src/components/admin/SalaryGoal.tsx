@@ -94,7 +94,7 @@ const SalaryGoal = () => {
       </div>
 
       {/* Day / Month / Year cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-2 sm:mb-4">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 sm:gap-3 mb-2 sm:mb-4">
         <div className="bg-background border border-border rounded-lg p-1.5 sm:p-3 text-center min-w-0">
           <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mx-auto mb-0.5 sm:mb-1" />
           <p className="text-[10px] sm:text-xs text-muted-foreground">Diário</p>

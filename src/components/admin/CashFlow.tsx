@@ -15,7 +15,8 @@ import { getBrazilTodayStr, getBrazilMonthStartStr } from "@/lib/brazilTime";
 import { parseHours, DEFAULT_HOURS, BusinessHours } from "@/lib/businessHours";
 import { updateLoyalty } from "@/lib/loyalty";
 import { ALL_OUT_CATEGORIES, bucketOf, categoryLabel } from "@/lib/finance";
-import { useDataRefresh } from "@/lib/refreshBus";
+import { emitDataRefresh, useDataRefresh } from "@/lib/refreshBus";
+import { totalsOf, RawEntry } from "@/lib/businessData";
 
 type Entry = {
   id: string;
@@ -85,6 +86,10 @@ const CashFlow = () => {
   useDataRefresh(["cash", "appointments"], load);
 
   const todayEntries = useMemo(() => entries.filter((e) => e.entry_date === today), [entries, today]);
+  const attendanceTotals = useMemo(
+    () => totalsOf(todayEntries as unknown as RawEntry[]),
+    [todayEntries],
+  );
 
   const totals = useMemo(() => {
     const sum = (list: Entry[], k: "in" | "out") =>
@@ -130,6 +135,7 @@ const CashFlow = () => {
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     setDescription(""); setAmount("");
     toast({ title: kind === "in" ? "Entrada lançada" : "Saída lançada" });
+    emitDataRefresh("cash");
     load();
   };
 
@@ -146,12 +152,14 @@ const CashFlow = () => {
       .eq("id", e.id);
     setEditingId(null);
     toast({ title: "Lançamento atualizado" });
+    emitDataRefresh("cash");
     load();
   };
 
   const remove = async (id: string) => {
     await (supabase as any).from("cash_entries").delete().eq("id", id);
     toast({ title: "Lançamento removido" });
+    emitDataRefresh("cash");
     load();
   };
 
@@ -254,8 +262,24 @@ const CashFlow = () => {
         </div>
       </div>
 
+      {/* Atendimentos reais: agendamentos do APP + serviços lançados manualmente. Produtos não entram. */}
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 mb-2">
+        <div className="bg-background/60 rounded p-2 text-center min-w-0">
+          <p className="text-[10px] text-muted-foreground leading-tight">Cliente hoje pelo APP</p>
+          <p className="text-base font-bold">{attendanceTotals.scheduledCount}</p>
+        </div>
+        <div className="bg-background/60 rounded p-2 text-center min-w-0">
+          <p className="text-[10px] text-muted-foreground leading-tight">Cliente adicionado manualmente</p>
+          <p className="text-base font-bold">{attendanceTotals.manualCount}</p>
+        </div>
+        <div className="bg-primary/10 border border-primary/30 rounded p-2 text-center min-w-0">
+          <p className="text-[10px] text-muted-foreground leading-tight">Atendimento total do dia</p>
+          <p className="text-base font-bold text-primary">{attendanceTotals.attendances}</p>
+        </div>
+      </div>
+
       {/* Saídas de hoje separadas por destino */}
-      <div className="grid grid-cols-4 gap-1.5 mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
         <div className="bg-background/60 rounded p-1.5 text-center min-w-0">
           <p className="text-[9px] text-muted-foreground leading-tight">🔧 Despesas</p>
           <p className="text-[11px] font-bold text-destructive break-all">{fmt(totals.dayDespesa)}</p>
@@ -294,7 +318,7 @@ const CashFlow = () => {
       {/* Novo lançamento */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
         <Label className="text-[11px] text-muted-foreground">Lançar manualmente</Label>
-        <div className="grid grid-cols-2 gap-2 mt-1.5">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2 mt-1.5">
           <Select value={kind} onValueChange={(v: "in" | "out") => { setKind(v); setCategory(v === "in" ? "atendimento" : "material"); }}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -315,7 +339,7 @@ const CashFlow = () => {
               ))}
             </SelectContent>
           </Select>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 text-sm col-span-2" />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 text-sm min-[360px]:col-span-2" />
         </div>
         <Button onClick={add} size="sm" className="w-full mt-2 h-9">
           <Plus className="w-4 h-4 mr-1" /> Adicionar lançamento
@@ -328,14 +352,14 @@ const CashFlow = () => {
         {entries.map((e) => (
           <div key={e.id} className="bg-background/40 rounded px-2 py-1.5 text-xs">
             {editingId === e.id ? (
-              <div className="flex items-center gap-1">
+              <div className="grid grid-cols-[minmax(0,1fr)_5rem_auto_auto] gap-1 items-center">
                 <Input value={editDescription} onChange={(ev) => setEditDescription(ev.target.value)} className="h-7 text-xs flex-1" />
                 <Input value={editAmount} inputMode="decimal" onChange={(ev) => setEditAmount(ev.target.value)} className="h-7 text-xs w-20" />
                 <Button size="icon" className="h-7 w-7" onClick={() => saveEdit(e)}><Check className="w-3 h-3" /></Button>
                 <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="w-3 h-3" /></Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium truncate">{e.description}</p>
                   <p className="text-muted-foreground text-[10px]">
@@ -343,7 +367,7 @@ const CashFlow = () => {
                     {Number(e.investment_amount) > 0 ? ` · ${fmt(Number(e.investment_amount))} p/ material` : ""}
                   </p>
                 </div>
-                <span className={`font-bold shrink-0 ${e.kind === "in" ? "text-green-500" : "text-destructive"}`}>
+                <span className={`font-bold ml-auto shrink-0 ${e.kind === "in" ? "text-green-500" : "text-destructive"}`}>
                   {e.kind === "in" ? "+" : "-"} {fmt(Number(e.amount))}
                 </span>
                 <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { setEditingId(e.id); setEditAmount(String(e.amount)); setEditDescription(e.description); }}>
@@ -373,7 +397,7 @@ const CashFlow = () => {
           <p className="text-[11px] text-muted-foreground mb-1">Últimos fechamentos</p>
           <div className="space-y-1 max-h-40 overflow-auto">
             {closures.map((c) => (
-              <div key={c.id} className="flex items-center justify-between gap-2 text-[11px] bg-background/40 rounded px-2 py-1.5">
+              <div key={c.id} className="grid grid-cols-2 min-[390px]:grid-cols-5 gap-1.5 items-center text-[11px] bg-background/40 rounded px-2 py-1.5">
                 <span className="font-medium">{new Date(c.closure_date + "T12:00:00").toLocaleDateString("pt-BR")}</span>
                 <span className="text-green-500">+{fmt(Number(c.total_in))}</span>
                 <span className="text-destructive">-{fmt(Number(c.total_out))}</span>

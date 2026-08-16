@@ -6,6 +6,7 @@ import { getBrazilTodayStr, getBrazilWeekStartStr, getBrazilMonthStartStr } from
 import { useDataRefresh } from "@/lib/refreshBus";
 
 type Appointment = Tables<"appointments">;
+type CashEntry = { entry_date: string; kind: string; category: string; appointment_id: string | null };
 
 const getSaoPauloNow = () => {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
@@ -20,6 +21,7 @@ const CashRegister = () => {
   const [services, setServices] = useState<{ name: string; price: number }[]>([]);
   const [expensesMonth, setExpensesMonth] = useState(0);
   const [isClosed, setIsClosed] = useState(false);
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -27,6 +29,7 @@ const CashRegister = () => {
     const channel = supabase
       .channel("cash-register-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "cash_entries" }, () => fetchData())
       .subscribe();
 
     // Check closing time every minute
@@ -42,16 +45,18 @@ const CashRegister = () => {
   useDataRefresh(["cash", "appointments"], () => fetchData());
 
   const fetchData = async () => {
-    const [appts, allAppts, svcs, exp] = await Promise.all([
+    const [appts, allAppts, svcs, exp, cash] = await Promise.all([
       supabase.from("appointments").select("*").eq("status", "completed"),
       supabase.from("appointments").select("customer_phone, appointment_date"),
       supabase.from("services").select("name, price"),
       (supabase as any).from("expenses").select("amount, expense_date").gte("expense_date", getBrazilMonthStartStr()),
+      (supabase as any).from("cash_entries").select("entry_date, kind, category, appointment_id").gte("entry_date", getBrazilMonthStartStr()),
     ]);
     if (appts.data) setAppointments(appts.data);
     if (allAppts.data) setAllAppointments(allAppts.data as any);
     if (svcs.data) setServices(svcs.data);
     if (exp.data) setExpensesMonth((exp.data as any[]).reduce((a, b) => a + Number(b.amount), 0));
+    if (cash.data) setCashEntries((cash.data as CashEntry[]) || []);
   };
 
   const checkClosing = () => {
@@ -105,13 +110,20 @@ const CashRegister = () => {
       if (a.appointment_date === todayStr) todayPhones.add(a.customer_phone);
     }
 
+    const todayServices = cashEntries.filter((e) => e.entry_date === todayStr && e.kind === "in" && e.category === "atendimento");
+    const appToday = todayServices.filter((e) => !!e.appointment_id).length;
+    const manualToday = todayServices.filter((e) => !e.appointment_id).length;
+
     return {
       daily, dailyCount, weekly, weeklyCount, monthly, monthlyCount,
       clientsToday: todayPhones.size,
       clientsMonth: monthPhones.size,
       clientsTotal: allPhones.size,
+      appToday,
+      manualToday,
+      attendanceToday: appToday + manualToday,
     };
-  }, [appointments, allAppointments, services]);
+  }, [appointments, allAppointments, services, cashEntries]);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
@@ -131,7 +143,7 @@ const CashRegister = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 sm:gap-3">
         {/* Daily */}
         <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <Calendar className="w-4 h-4 text-primary mx-auto" />
@@ -157,21 +169,21 @@ const CashRegister = () => {
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="mt-3 grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 sm:gap-3">
         <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <Users className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes hoje</p>
-          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsToday}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Cliente hoje pelo APP</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.appToday}</p>
         </div>
         <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <Users className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-[10px] sm:text-xs text-muted-foreground">Clientes mês</p>
-          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsMonth}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Cliente adicionado manualmente</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.manualToday}</p>
         </div>
         <div className="bg-background border border-border rounded-lg p-2 sm:p-3 text-center space-y-1 min-w-0">
           <Users className="w-4 h-4 text-primary mx-auto" />
-          <p className="text-[10px] sm:text-xs text-muted-foreground">Total no app</p>
-          <p className="text-sm sm:text-lg font-bold text-foreground leading-tight">{stats.clientsTotal}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Atendimento total do dia</p>
+          <p className="text-sm sm:text-lg font-bold text-primary leading-tight">{stats.attendanceToday}</p>
         </div>
       </div>
 

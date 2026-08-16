@@ -144,7 +144,11 @@ const Admin = () => {
     setZoomSaved(true);
     toast({ title: "Tela salva", description: `Zoom do painel: ${Math.round(zoom * 100)}%` });
   };
-  const zoomStyle = { zoom } as React.CSSProperties;
+  const zoomStyle = {
+    zoom,
+    width: `${100 / zoom}%`,
+    maxWidth: `${100 / zoom}%`,
+  } as React.CSSProperties;
 
   const viewWidthClass =
     viewMode === "mobile" ? "max-w-[420px]" : viewMode === "tablet" ? "max-w-3xl" : "max-w-7xl";
@@ -247,8 +251,8 @@ const Admin = () => {
 
         if (status === "cancelled") {
           // Se estava concluído e estamos cancelando, reverter a estrela (se aplicável)
-          if (previousStatus === "completed" && /corte/i.test(appointment.service_name)) {
-            await revertLoyalty(appointment.customer_phone);
+          if (previousStatus === "completed") {
+            await revertLoyalty(appointment.customer_phone, appointment.service_name, appointment.id);
           }
 
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
@@ -313,8 +317,8 @@ const Admin = () => {
       toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
     } else {
       // Se o agendamento concluído contava estrela, reverter
-      if (target && target.status === "completed" && /corte/i.test(target.service_name)) {
-        await revertLoyalty(target.customer_phone);
+      if (target && target.status === "completed") {
+        await revertLoyalty(target.customer_phone, target.service_name, target.id);
       }
       toast({ title: "Excluído", description: "Agendamento removido." });
     }
@@ -349,7 +353,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-x-clip">
       <AdminNotification />
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
@@ -388,7 +392,7 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all`} style={zoomStyle}>
+      <div className={`relative z-10 ${viewWidthClass} mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-6 transition-all min-w-0`} style={zoomStyle}>
         {/* Ajuste de tela (zoom) — apenas painel admin */}
         <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 sticky top-2 z-20">
           <Button size="sm" variant="outline" className="h-8 w-9 p-0 shrink-0" onClick={() => stepZoom(-0.05)} aria-label="Diminuir tela">
@@ -459,7 +463,7 @@ const Admin = () => {
               className="pl-9 w-full"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-[minmax(0,1fr)_8rem] gap-2 min-w-0">
             <div className="flex items-center gap-2 flex-1 sm:flex-none min-w-0">
               <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
               <Input
@@ -470,7 +474,7 @@ const Admin = () => {
               />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-32 sm:w-40 shrink-0">
+              <SelectTrigger className="w-full sm:w-40 min-w-0">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -497,7 +501,7 @@ const Admin = () => {
         </div>
 
         {/* 2º AGENDAMENTOS — abas por período */}
-        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 flex items-center gap-1 mb-3">
+        <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-1.5 grid grid-cols-2 min-[390px]:grid-cols-4 gap-1 mb-3">
           {([["today", "Hoje"], ["future", "Futuros"], ["history", "Histórico"], ["all", "Todos"]] as const).map(([k, l]) => (
             <Button
               key={k}
