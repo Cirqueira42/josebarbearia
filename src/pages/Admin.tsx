@@ -251,7 +251,7 @@ const Admin = () => {
 
         if (status === "cancelled") {
           // Se estava concluído e estamos cancelando, reverter a estrela (se aplicável)
-          if (previousStatus === "completed" && /corte/i.test(appointment.service_name)) {
+          if (previousStatus === "completed") {
             await revertLoyalty(appointment.customer_phone, appointment.service_name, appointment.id);
           }
 
@@ -317,7 +317,7 @@ const Admin = () => {
       toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
     } else {
       // Se o agendamento concluído contava estrela, reverter
-      if (target && target.status === "completed" && /corte/i.test(target.service_name)) {
+      if (target && target.status === "completed") {
         await revertLoyalty(target.customer_phone, target.service_name, target.id);
       }
       toast({ title: "Excluído", description: "Agendamento removido." });
