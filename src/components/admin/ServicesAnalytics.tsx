@@ -88,13 +88,13 @@ const ServicesAnalytics = () => {
 
   return (
     <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 sm:p-4">
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex flex-col min-[390px]:flex-row min-[390px]:items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <Scissors className="w-5 h-5 text-primary shrink-0" />
           <h2 className="text-base sm:text-lg font-bold truncate">Serviços, Dias e Agenda</h2>
         </div>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
-          <SelectTrigger className="h-7 w-32 text-[11px] shrink-0"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 w-full min-[390px]:w-32 text-[11px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             {(["today", "yesterday", "week", "lastweek", "month", "lastmonth", "year", "lastyear", "all"] as PeriodKey[]).map((p) => (
               <SelectItem key={p} value={p} className="text-xs">{PERIOD_LABELS[p]}</SelectItem>
@@ -107,7 +107,7 @@ const ServicesAnalytics = () => {
         <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 mb-3">
             {([["Hoje", d.topDay], ["Semana", d.topWeek], ["Mês", d.topMonth]] as const).map(([l, s]) => (
               <div key={l} className="bg-background/60 rounded p-2 min-w-0">
                 <p className="text-[10px] text-muted-foreground">Mais feito · {l}</p>
@@ -172,7 +172,7 @@ const ServicesAnalytics = () => {
 
           <div className="bg-background/60 rounded p-2">
             <p className="text-xs font-bold mb-1">Aproveitamento da agenda — {PERIOD_LABELS[period]}</p>
-            <div className="grid grid-cols-4 gap-1 text-center text-[10px]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
               <div><p className="font-bold text-green-500 text-sm">{d.completed}</p><p className="text-muted-foreground">✓ Concluídos</p></div>
               <div><p className="font-bold text-red-500 text-sm">{d.cancelled}</p><p className="text-muted-foreground">✕ Cancelados</p></div>
               <div><p className="font-bold text-yellow-500 text-sm">{d.pending}</p><p className="text-muted-foreground">⚠ Em aberto</p></div>

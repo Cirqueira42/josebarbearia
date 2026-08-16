@@ -114,7 +114,7 @@ const CurrentStatus = () => {
         <p className="text-xs text-muted-foreground py-4 text-center">Carregando…</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 mb-2">
             <div className="bg-background/60 rounded p-2 text-center min-w-0">
               <Scissors className="w-4 h-4 text-primary mx-auto" />
               <p className="text-[10px] text-muted-foreground">Serviços</p>

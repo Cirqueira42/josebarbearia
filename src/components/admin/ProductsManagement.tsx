@@ -123,8 +123,8 @@ const ProductsManagement = () => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-card border border-border rounded-xl p-3 sm:p-5 space-y-4 min-w-0 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Package className="w-5 h-5 text-primary" />
           <h3 className="font-bold text-foreground">Produtos da Barbearia</h3>
@@ -173,7 +173,7 @@ const ProductsManagement = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-3">
+                <div className="flex flex-wrap min-[360px]:flex-nowrap gap-3">
                   <div className="w-16 h-16 rounded-md overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center">
                     {url ? (
                       <img src={url} alt={p.name} className="w-full h-full object-cover" />
@@ -192,7 +192,7 @@ const ProductsManagement = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-row min-[360px]:flex-col gap-1 w-full min-[360px]:w-auto justify-end">
                     <input
                       type="file"
                       accept="image/*"

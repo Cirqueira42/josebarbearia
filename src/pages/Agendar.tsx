@@ -494,25 +494,25 @@ const Agendar = () => {
             </div>
 
             <div className="divide-y divide-border/60">
-              <div className="flex items-baseline justify-between px-6 py-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 sm:px-6 py-3.5">
                 <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Serviço</span>
                 <span className="font-semibold text-foreground text-right">{selectedService?.name}</span>
               </div>
-              <div className="flex items-baseline justify-between px-6 py-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 sm:px-6 py-3.5">
                 <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Data</span>
                 <span className="font-semibold text-foreground text-right">
                   {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} · {getDayOfWeek(selectedDate)}
                 </span>
               </div>
-              <div className="flex items-baseline justify-between px-6 py-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 sm:px-6 py-3.5">
                 <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Horário</span>
                 <span className="font-bold text-primary text-lg">{selectedTime}</span>
               </div>
-              <div className="flex items-baseline justify-between px-6 py-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 sm:px-6 py-3.5">
                 <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Profissional</span>
                 <span className="font-semibold text-foreground text-right">{confirmedBarber || "José Gilmário"}</span>
               </div>
-              <div className="flex items-baseline justify-between px-6 py-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 sm:px-6 py-3.5">
                 <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Valor</span>
                 <span className="font-semibold text-foreground">R$ {selectedService?.price.toFixed(2)}</span>
               </div>
@@ -553,7 +553,7 @@ const Agendar = () => {
                   style={{ width: `${(loyalty.progress / loyalty.goal) * 100}%` }}
                 />
               </div>
-              <div className="flex gap-0.5 mt-1.5">
+               <div className="grid grid-cols-10 gap-0.5 mt-1.5">
                 {Array.from({ length: loyalty.goal }).map((_, i) => (
                   <Star
                     key={i}
@@ -677,7 +677,7 @@ const Agendar = () => {
               <PhotoCarousel overlay="heavy" />
             </div>
 
-            <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-5 bg-card/90 backdrop-blur-md rounded-2xl p-5 border border-border/60 shadow-2xl">
+            <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-5 bg-card/90 backdrop-blur-md rounded-2xl p-3 min-[360px]:p-5 border border-border/60 shadow-2xl min-w-0 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setSelectedService(null)}

@@ -56,9 +56,17 @@
     @apply border-border;
   }
 
-  html, body {
+  html, body, #root {
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+
+  input, select, textarea, button {
+    min-width: 0;
   }
 
   body {

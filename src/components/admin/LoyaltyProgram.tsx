@@ -239,8 +239,8 @@ const LoyaltyProgram = () => {
                     />
                   </div>
                   {/* Stars + ajuste manual */}
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex gap-0.5">
+                   <div className="flex flex-wrap items-center gap-2 mt-1">
+                     <div className="grid grid-cols-5 min-[360px]:grid-cols-10 gap-0.5">
                       {Array.from({ length: GOAL }).map((_, i) => (
                         <Star
                           key={i}

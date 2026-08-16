@@ -256,7 +256,7 @@ const FinancialPanel = () => {
           </SelectContent>
         </Select>
         {period === "custom" && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 text-sm" />
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 text-sm" />
           </div>
@@ -341,7 +341,7 @@ const FinancialPanel = () => {
           {goals.map((g) => <GoalCard key={g.key} g={g} />)}
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 mt-2 text-center">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-1.5 mt-2 text-center">
           <div className="bg-background/60 rounded p-1.5 min-w-0">
             <p className="text-[9px] text-muted-foreground">Total destinado</p>
             <p className="text-[11px] font-bold text-primary break-all">{fmt(alloc.totalAllocated)}</p>
@@ -367,7 +367,7 @@ const FinancialPanel = () => {
           <Wallet className="w-4 h-4 text-blue-400" />
           <p className="text-sm font-bold">Minha Retirada</p>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 mb-1.5 text-center">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-1.5 mb-1.5 text-center">
           <div className="bg-background/60 rounded p-1.5 min-w-0">
             <p className="text-[9px] text-muted-foreground">Destinado</p>
             <p className="text-[11px] font-bold text-blue-400 break-all">
@@ -402,9 +402,9 @@ const FinancialPanel = () => {
       {/* Novo lançamento */}
       <div className="rounded-lg border border-border bg-background/40 p-2.5 mb-3">
         <Label className="text-[11px] text-muted-foreground">Registrar saída / retirada</Label>
-        <div className="grid grid-cols-2 gap-2 mt-1.5">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2 mt-1.5">
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-9 text-sm col-span-2"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-sm min-[360px]:col-span-2"><SelectValue /></SelectTrigger>
             <SelectContent>
               {SHOP_EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               {MATERIAL_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
@@ -414,7 +414,7 @@ const FinancialPanel = () => {
           </Select>
           <Input placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm" />
           <Input placeholder="Valor R$" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-9 text-sm" />
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 text-sm col-span-2" />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 text-sm min-[360px]:col-span-2" />
         </div>
         <Button onClick={add} size="sm" className="w-full mt-2 h-9"><Plus className="w-4 h-4 mr-1" />Adicionar</Button>
       </div>

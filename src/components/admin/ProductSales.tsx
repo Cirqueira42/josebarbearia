@@ -162,8 +162,8 @@ const ProductSales = () => {
           <p className="text-xs text-muted-foreground text-center py-3">Nenhum produto cadastrado.</p>
         )}
         {products.map((p) => (
-          <div key={p.id} className="bg-background/40 rounded p-2 flex flex-wrap items-center gap-2">
-            <div className="min-w-0 flex-1">
+          <div key={p.id} className="bg-background/40 rounded p-2 grid grid-cols-2 min-[390px]:flex min-[390px]:flex-wrap items-center gap-2">
+            <div className="min-w-0 col-span-2 min-[390px]:flex-1">
               <p className="text-xs font-medium truncate">{p.brand} · {p.name}</p>
               <p className="text-[10px] text-muted-foreground">
                 {fmt(p.price)} · estoque {p.stock_qty} (mín. {p.min_stock})
