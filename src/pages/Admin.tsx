@@ -61,6 +61,7 @@ import SmartSummary from "@/components/admin/SmartSummary";
 import CurrentStatus from "@/components/admin/CurrentStatus";
 import ProductSales from "@/components/admin/ProductSales";
 import AnnualReports from "@/components/admin/AnnualReports";
+import CustomizableBoard from "@/components/admin/CustomizableBoard";
 
 import ClientsAnalytics from "@/components/admin/ClientsAnalytics";
 import ServicesAnalytics from "@/components/admin/ServicesAnalytics";
