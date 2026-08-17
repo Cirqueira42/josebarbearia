@@ -354,7 +354,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-clip">
+    <div className="admin-scope min-h-screen bg-background relative overflow-x-clip">
       <AdminNotification />
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
