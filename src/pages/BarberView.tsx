@@ -111,7 +111,7 @@ const BarberView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="admin-scope min-h-screen bg-background relative overflow-hidden">
       <div className="fixed inset-0 z-0">
         <PhotoCarousel overlay="heavy" />
       </div>
