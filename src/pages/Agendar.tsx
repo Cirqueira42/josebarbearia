@@ -600,7 +600,7 @@ const Agendar = () => {
 
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="admin-scope min-h-screen bg-background relative">
       {/* Carousel background on service selection */}
       {!selectedService && (
         <div className="absolute inset-0 overflow-hidden">

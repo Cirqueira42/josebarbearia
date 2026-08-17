@@ -48,7 +48,7 @@ const MeusAgendamentos = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="admin-scope min-h-screen bg-background relative">
       <div className="fixed inset-0 z-0"><PhotoCarousel overlay="heavy" /></div>
       <div className="relative z-10 max-w-md mx-auto p-4 space-y-4">
         <div className="flex items-center gap-2 mb-2">
