@@ -244,7 +244,7 @@ const CashFlow = () => {
       </div>
 
       {/* Resumo do dia */}
-      <div className="grid grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-1 min-[340px]:grid-cols-3 gap-2 mb-2">
         <div className="bg-background/60 rounded p-2 text-center min-w-0">
           <ArrowDownCircle className="w-4 h-4 text-green-500 mx-auto" />
           <p className="text-[10px] text-muted-foreground">Entradas</p>

@@ -106,3 +106,31 @@ a[href*="lovable.dev"][target="_blank"] {
   opacity: 0.35;
   z-index: 20 !important;
 }
+
+/* ===== Leitura no celular: nada cortado, nada saindo da tela ===== */
+@media (max-width: 640px) {
+  .admin-scope * {
+    min-width: 0;
+  }
+  /* números e valores financeiros longos quebram em vez de estourar o card */
+  .admin-scope p,
+  .admin-scope span,
+  .admin-scope h1,
+  .admin-scope h2,
+  .admin-scope h3,
+  .admin-scope li,
+  .admin-scope td,
+  .admin-scope th {
+    overflow-wrap: anywhere;
+  }
+  /* tabelas e listas largas rolam dentro do próprio card */
+  .admin-scope table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  /* cards sem espaços exagerados */
+  .admin-scope .p-6 {
+    padding: 0.75rem;
+  }
+}

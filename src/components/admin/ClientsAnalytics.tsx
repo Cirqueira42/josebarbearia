@@ -157,7 +157,7 @@ const ClientsAnalytics = () => {
           {/* taxa de retorno */}
           <div className="bg-background/60 rounded p-2.5 mb-3">
             <p className="text-xs font-bold mb-1">Taxa de retorno (mês)</p>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-1 min-[340px]:grid-cols-3 gap-2 text-center">
               <div><p className="text-sm font-bold">{data.novos}</p><p className="text-[10px] text-muted-foreground">Novos</p></div>
               <div><p className="text-sm font-bold">{data.retornaram}</p><p className="text-[10px] text-muted-foreground">Retornaram</p></div>
               <div><p className="text-sm font-bold text-green-500">{data.taxa.toFixed(0)}%</p><p className="text-[10px] text-muted-foreground">Retorno</p></div>
