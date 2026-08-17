@@ -226,16 +226,23 @@ const CustomizableBoard = ({ boardId, items, className }: Props) => {
                 }}
                 className="min-w-0 w-full overflow-x-hidden"
                 style={{
-                  fontSize: `${cp.scale}rem`,
                   maxHeight: cp.maxH ? `${cp.maxH}px` : undefined,
                   overflowY: cp.maxH ? "auto" : undefined,
                   opacity: cp.hidden ? 0.5 : 1,
                 }}
               >
-                <div style={{ fontSize: "16px" }} className="min-w-0">
+                <div
+                  className="min-w-0 origin-top-left"
+                  style={
+                    cp.scale === 1
+                      ? undefined
+                      : { transform: `scale(${cp.scale})`, width: `${100 / cp.scale}%` }
+                  }
+                >
                   {item.node}
                 </div>
               </div>
+
             </div>
           );
         })}
