@@ -590,42 +590,43 @@ const Admin = () => {
           </div>
         )}
 
-        {/* 3º em diante — demais módulos de gestão */}
-        <div className="grid gap-3 sm:gap-6 mt-4 sm:mt-6">
-          <SmartSummary />
-          <CashRegister />
-          <FinancialPanel />
-          <SalaryGoal />
-          <CashFlow />
-          <Expenses />
-          <BarberRevenue />
-          <ClientsAnalytics />
-          <CustomerHistory />
-          <ServicesAnalytics />
-          <ReportsHistory />
-          <AnnualReports />
-          <DataCleanup />
+        {/* 3º em diante — demais módulos de gestão (organização personalizável) */}
+        <CustomizableBoard
+          boardId="admin_modulos"
+          className="mt-4 sm:mt-6"
+          items={[
+            { id: "smart_summary", title: "Resumo Inteligente", node: <SmartSummary /> },
+            { id: "cash_register", title: "Caixa do dia", node: <CashRegister /> },
+            { id: "financial", title: "Distribuição do faturamento", node: <FinancialPanel /> },
+            { id: "salary_goal", title: "Meta de salário", node: <SalaryGoal /> },
+            { id: "cash_flow", title: "Caixa", node: <CashFlow /> },
+            { id: "expenses", title: "Despesas e saídas", node: <Expenses /> },
+            { id: "barber_revenue", title: "Faturamento por barbeiro", node: <BarberRevenue /> },
+            { id: "clients", title: "Clientes e frequência", node: <ClientsAnalytics /> },
+            { id: "customer_history", title: "Histórico do cliente", node: <CustomerHistory /> },
+            { id: "services_analytics", title: "Serviços", node: <ServicesAnalytics /> },
+            { id: "reports", title: "Relatórios e histórico", node: <ReportsHistory /> },
+            { id: "annual", title: "Relatórios anuais", node: <AnnualReports /> },
+            { id: "cleanup", title: "Limpeza de dados antigos", node: <DataCleanup /> },
+            { id: "health", title: "Saúde do sistema", node: <SystemHealth /> },
+            { id: "coupons", title: "Cupons", node: <Coupons /> },
+            { id: "loyalty", title: "Programa de fidelidade", node: <LoyaltyProgram /> },
+            { id: "loyalty_rewards", title: "Recompensas de fidelidade", node: <LoyaltyRewards /> },
+            { id: "blocked_customers", title: "Clientes bloqueados", node: <BlockedCustomers /> },
+            { id: "barbers", title: "Barbeiros", node: <BarberManagement /> },
+            { id: "blocked_slots", title: "Horários bloqueados", node: <BlockedSlots /> },
+            { id: "products", title: "Produtos e estoque", node: <ProductsManagement /> },
+            { id: "product_sales", title: "Vendas de produtos", node: <ProductSales /> },
+            { id: "business_hours", title: "Horário de funcionamento", node: <BusinessHoursSettings /> },
+            { id: "gallery", title: "Portfólio", node: <GalleryManagement /> },
+            { id: "background", title: "Fundo do app", node: <BackgroundManagement /> },
+            { id: "settings", title: "Configurações", node: <AdminSettings /> },
+            { id: "export", title: "Projeto da barbearia", node: <ProjectExport /> },
+            { id: "usage", title: "Uso do sistema", node: <UsageMonitor /> },
+            { id: "help", title: "Ajuda", node: <SystemHelp /> },
+          ]}
+        />
 
-          <SystemHealth />
-          <Coupons />
-          <LoyaltyProgram />
-          <LoyaltyRewards />
-          <BlockedCustomers />
-          <BarberManagement />
-          <BlockedSlots />
-          <ProductsManagement />
-          <ProductSales />
-
-          <BusinessHoursSettings />
-          <GalleryManagement />
-          <BackgroundManagement />
-          <AdminSettings />
-          {/* Projeto da barbearia (penúltimo) */}
-          <ProjectExport />
-          {/* Uso do sistema (último) */}
-          <UsageMonitor />
-          <SystemHelp />
-        </div>
       </div>
     </div>
   );
