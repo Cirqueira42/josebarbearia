@@ -345,6 +345,14 @@ const Admin = () => {
 
   const deleteAppointment = async (id: string) => {
     const target = appointments.find((a) => a.id === id);
+
+    // Devolve o cupom reservado antes de apagar o agendamento (nunca perde o benefício)
+    if (target && target.status !== "completed") {
+      try {
+        await (supabase as any).rpc("release_loyalty_reward", { _appointment_id: id });
+      } catch {}
+    }
+
     const { error } = await supabase.from("appointments").delete().eq("id", id);
     if (error) {
       toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
