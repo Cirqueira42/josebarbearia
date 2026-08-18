@@ -274,14 +274,27 @@ const Admin = () => {
         }
 
         if (status === "completed") {
-          // Fidelidade: somente corte, máx 1 por dia, e gera o código exclusivo na meta
-          const issued = await updateLoyalty(
-            appointment.customer_phone,
-            appointment.customer_name,
-            appointment.service_name,
-            appointment.appointment_date,
-            appointment.id,
-          );
+          // Fidelidade: somente serviços elegíveis, máx 1 por dia — nunca conta duas vezes o mesmo atendimento
+          const issued =
+            previousStatus === "completed"
+              ? 0
+              : await updateLoyalty(
+                  appointment.customer_phone,
+                  appointment.customer_name,
+                  appointment.service_name,
+                  appointment.appointment_date,
+                  appointment.id,
+                );
+
+          // Se este atendimento usou um cupom, agora ele é definitivamente consumido
+          let usedReward: { code: string; discount_amount: number } | null = null;
+          if (previousStatus !== "completed") {
+            try {
+              const { data: cs } = await (supabase as any).rpc("consume_loyalty_reward", { _appointment_id: appointment.id });
+              const c = Array.isArray(cs) ? cs[0] : cs;
+              if (c?.consumed) usedReward = { code: c.code, discount_amount: Number(c.discount_amount) || 0 };
+            } catch {}
+          }
 
           // Lança o valor no caixa do dia (uma única vez por atendimento)
           await registerCashEntry(appointment);
@@ -289,14 +302,24 @@ const Admin = () => {
           emitDataRefresh("cash");
           emitDataRefresh("loyalty");
 
+          if (usedReward) {
+            toast({
+              title: "🎟️ Cupom utilizado",
+              description: `${appointment.customer_name} usou o cupom ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}).`,
+            });
+          }
+
           if (issued && issued > 0) {
             toast({
               title: "🎉 Meta de fidelidade batida!",
-              description: `${appointment.customer_name} liberou um código exclusivo. Envie pelo painel em "Códigos de Fidelidade".`,
+              description: `${appointment.customer_name} ganhou um cupom de R$ 7,00 para o próximo agendamento.`,
             });
             sendTelegram(
-              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou 10 atendimentos e um código exclusivo foi gerado no painel.`
+              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou 10 atendimentos e ganhou um cupom de R$ 7,00 para o próximo agendamento.`
             );
+            // Mensagem simples de parabéns para o cliente
+            const congrats = `🎉 *Parabéns, ${appointment.customer_name}! Você completou 10 atendimentos!*\n\n🎁 *Você ganhou R$ 7,00 de desconto!*\n\n📅 Seu cupom já está disponível e poderá ser usado no seu *próximo agendamento*.\n\nNa próxima vez que você agendar, é só escolher se quer usar o desconto ou guardar para outra ocasião.\n\nObrigado pela preferência! 💈`;
+            window.setTimeout(() => openWhatsApp(`55${phone}`, congrats), 1200);
           }
 
 
