@@ -102,8 +102,8 @@ const LoyaltyRewards = () => {
                   <p className="text-sm font-semibold truncate">{r.customer_name || "Cliente"}</p>
                   <p className="text-[10px] text-muted-foreground">📞 {r.customer_phone} · {r.milestone} atendimentos</p>
                 </div>
-                <Badge className={`text-[10px] shrink-0 ${r.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-muted text-muted-foreground"}`}>
-                  {r.status === "active" ? "Ativo" : "Utilizado"}
+                <Badge className={`text-[10px] shrink-0 ${r.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/30" : r.status === "reserved" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-muted text-muted-foreground"}`}>
+                  {r.status === "active" ? "Disponível" : r.status === "reserved" ? "Reservado" : "Utilizado"}
                 </Badge>
               </div>
 
