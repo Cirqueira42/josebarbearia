@@ -36,8 +36,7 @@ const TABLES = [
 const ROW_LIMIT = 1000;
 
 // Data/hora da versão publicada — muda a cada atualização do sistema.
-const BUILD_TIME: string =
-  ((globalThis as any).__APP_BUILD_TIME__ as string) || new Date().toISOString();
+const BUILD_TIME: string = __APP_BUILD_TIME__ || new Date().toISOString();
 const BUILD_LABEL = new Date(BUILD_TIME).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 // Cache do código-fonte (só muda quando o app é atualizado/recarregado).
