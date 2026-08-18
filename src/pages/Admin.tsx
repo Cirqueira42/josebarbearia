@@ -256,6 +256,15 @@ const Admin = () => {
             await revertLoyalty(appointment.customer_phone, appointment.service_name, appointment.id);
           }
 
+          // Cupom reservado para este agendamento volta a ficar disponível
+          try {
+            const { data: released } = await (supabase as any).rpc("release_loyalty_reward", { _appointment_id: appointment.id });
+            if (released === true) {
+              toast({ title: "🎁 Cupom devolvido", description: `O benefício de ${appointment.customer_name} voltou a ficar disponível.` });
+            }
+          } catch {}
+
+
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
           openWhatsApp(`55${phone}`, text);
 
