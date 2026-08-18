@@ -763,7 +763,8 @@ const Agendar = () => {
 
                   {loyalty.available > 0 ? (
                     <p className="text-sm text-foreground">
-                      🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
+                      🎁 Você possui <strong className="text-green-400">{loyalty.available} cupom{loyalty.available > 1 ? "ns" : ""} de R$ {rewardValue.toFixed(2)} de desconto</strong> disponível! Escolha abaixo se quer usar agora ou guardar para depois.
+                      <br />🔄 Novo ciclo em andamento: <strong className="text-primary">{loyalty.progress}/{loyalty.goal}</strong> atendimentos concluídos.
                     </p>
                   ) : (
                     <p className="text-sm text-foreground">
