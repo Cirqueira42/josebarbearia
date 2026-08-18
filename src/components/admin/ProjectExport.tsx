@@ -35,6 +35,11 @@ const TABLES = [
 // Limite de registros por tabela — evita travar o celular com arquivos gigantes.
 const ROW_LIMIT = 1000;
 
+// Data/hora da versão publicada — muda a cada atualização do sistema.
+const BUILD_TIME: string =
+  typeof __APP_BUILD_TIME__ === "string" ? __APP_BUILD_TIME__ : new Date().toISOString();
+const BUILD_LABEL = new Date(BUILD_TIME).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
 // Cache do código-fonte (só muda quando o app é atualizado/recarregado).
 let codeCache: string | null = null;
 let codePromise: Promise<string> | null = null;
