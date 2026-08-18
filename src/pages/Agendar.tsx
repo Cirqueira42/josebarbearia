@@ -365,18 +365,14 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
-    // Valida o código exclusivo de fidelidade (uso único) antes de gravar
+    // Confere se o benefício ainda está disponível (não consome nada aqui)
     if (couponApplied?.loyalty) {
-      const { data: rd } = await (supabase as any).rpc("redeem_loyalty_code", {
-        _code: couponApplied.code,
-        _phone: cleanPhone,
-      });
-      const res = (rd as any[])?.[0];
-      if (!res?.valid) {
-        toast({ title: "Código inválido", description: res?.message || "Esse código não está disponível.", variant: "destructive" });
+      const { data: rwCheck } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
+      const activeReward = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
+      if (!activeReward?.code || String(activeReward.code).toUpperCase() !== couponApplied.code.toUpperCase()) {
+        toast({ title: "Benefício indisponível", description: "Esse código não está mais disponível para este telefone.", variant: "destructive" });
         return;
       }
-      toast({ title: "Código aplicado ✅", description: "Seu benefício será aplicado no atendimento." });
     }
 
     setSubmitting(true);
@@ -415,26 +411,39 @@ const Agendar = () => {
           _date: selectedDate,
         });
       } catch {}
-      
-      const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
-      const finalPrice = couponApplied
-        ? couponApplied.fixed
-          ? Math.max(selectedService.price - couponApplied.fixed, 0)
-          : selectedService.price * (1 - couponApplied.discount / 100)
-        : selectedService.price;
-      const priceLabel = couponApplied
-        ? couponApplied.fixed
-          ? `R$ ${finalPrice.toFixed(2)} (Vale-Presente ${couponApplied.code} -R$ ${couponApplied.fixed.toFixed(2)})`
-          : `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
-        : `R$ ${selectedService.price.toFixed(2)}`;
 
-      // Incrementa uso do cupom
-      if (couponApplied) {
+      // Reserva o benefício de fidelidade para ESTE agendamento (só vira "usado" quando o atendimento for concluído)
+      let loyaltyReserved = false;
+      if (couponApplied?.loyalty && inserted?.appointment_id) {
+        const { data: rs } = await (supabase as any).rpc("reserve_loyalty_reward", {
+          _phone: cleanPhone,
+          _code: couponApplied.code,
+          _appointment_id: inserted.appointment_id,
+        });
+        loyaltyReserved = (Array.isArray(rs) ? rs[0] : rs)?.valid === true;
+      }
+
+      const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
+      const loyaltyDiscount = loyaltyReserved ? (couponApplied?.fixed ?? rewardValue) : 0;
+      const finalPrice = loyaltyDiscount
+        ? Math.max(selectedService.price - loyaltyDiscount, 0)
+        : couponApplied && !couponApplied.loyalty
+          ? selectedService.price * (1 - couponApplied.discount / 100)
+          : selectedService.price;
+      const priceLabel = loyaltyDiscount
+        ? `R$ ${finalPrice.toFixed(2)} (Fidelidade -R$ ${loyaltyDiscount.toFixed(2)})`
+        : couponApplied && !couponApplied.loyalty
+          ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+          : `R$ ${selectedService.price.toFixed(2)}`;
+
+      // Incrementa uso do cupom (apenas cupons promocionais da tabela de cupons)
+      if (couponApplied && !couponApplied.loyalty) {
         try {
           const { data: c } = await (supabase as any).from("coupons").select("id, uses_count").eq("code", couponApplied.code).maybeSingle();
           if (c) await (supabase as any).from("coupons").update({ uses_count: (c.uses_count || 0) + 1 }).eq("id", c.id);
         } catch {}
       }
+
 
       // Use the real sequential number returned by the database
       const appointmentNum = inserted?.appointment_number ?? 0;
@@ -454,7 +463,12 @@ const Agendar = () => {
 
       // Build WhatsApp confirmation message for Telegram (wa.me funciona melhor em links externos)
       const clientPhone = customerPhone.replace(/\D/g, "");
-      const confirmText = `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* ${priceLabel}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
+      const loyaltyBlock = loyaltyDiscount
+        ? `\n\n🎁 *Benefício Fidelidade aplicado!*\n*Valor original:* R$ ${selectedService.price.toFixed(2)}\n*Desconto:* R$ ${loyaltyDiscount.toFixed(2)}\n*Valor final:* R$ ${finalPrice.toFixed(2)}`
+        : "";
+      const confirmText = loyaltyDiscount
+        ? `Olá, ${customerName}! 🎉 O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}${loyaltyBlock}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`
+        : `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor:* ${priceLabel}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
       const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
 
       // Send Telegram notification
@@ -540,7 +554,8 @@ const Agendar = () => {
               </div>
               {loyalty.available > 0 ? (
                 <p className="text-xs text-muted-foreground mb-2">
-                  🎉 Parabéns! Você completou a meta e liberou um <strong className="text-success">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp.
+                  🎁 Você tem <strong className="text-success">{loyalty.available} cupom{loyalty.available > 1 ? "ns" : ""} de R$ {rewardValue.toFixed(2)}</strong> disponível para usar neste agendamento.
+                  <br />🔄 Novo ciclo: <strong className="text-primary">{loyalty.progress}/{loyalty.goal}</strong> atendimentos concluídos.
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground mb-2">
@@ -748,7 +763,8 @@ const Agendar = () => {
 
                   {loyalty.available > 0 ? (
                     <p className="text-sm text-foreground">
-                      🎉 Parabéns! Você completou a meta e liberou um <strong className="text-green-400">benefício exclusivo</strong>. O barbeiro vai te enviar o seu código pelo WhatsApp para usar no próximo atendimento.
+                      🎁 Você possui <strong className="text-green-400">{loyalty.available} cupom{loyalty.available > 1 ? "ns" : ""} de R$ {rewardValue.toFixed(2)} de desconto</strong> disponível! Escolha abaixo se quer usar agora ou guardar para depois.
+                      <br />🔄 Novo ciclo em andamento: <strong className="text-primary">{loyalty.progress}/{loyalty.goal}</strong> atendimentos concluídos.
                     </p>
                   ) : (
                     <p className="text-sm text-foreground">
@@ -923,8 +939,8 @@ const Agendar = () => {
                     </h3>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Parabéns! Você completou {loyalty?.goal ?? 10}/{loyalty?.goal ?? 10} atendimentos.
-                    Escolha o que fazer com o seu vale antes de confirmar (só é possível usar 1 por vez).
+                    Você conquistou este benefício ao completar 10 atendimentos. Deseja utilizar o desconto
+                    neste agendamento? Se guardar, ele continua disponível para outra ocasião (1 por vez).
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button

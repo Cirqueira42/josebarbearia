@@ -35,6 +35,10 @@ const TABLES = [
 // Limite de registros por tabela — evita travar o celular com arquivos gigantes.
 const ROW_LIMIT = 1000;
 
+// Data/hora da versão publicada — muda a cada atualização do sistema.
+const BUILD_TIME: string = __APP_BUILD_TIME__ || new Date().toISOString();
+const BUILD_LABEL = new Date(BUILD_TIME).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
 // Cache do código-fonte (só muda quando o app é atualizado/recarregado).
 let codeCache: string | null = null;
 let codePromise: Promise<string> | null = null;
@@ -108,7 +112,8 @@ const ProjectExport = () => {
 
     return (
       `# PROJETO DA BARBEARIA — José Barbearia\n` +
-      `Cópia completa do sistema gerada em ${now} (horário de Brasília).\n\n` +
+      `Cópia completa do sistema gerada em ${now} (horário de Brasília).\n` +
+      `Versão do aplicativo em uso: ${BUILD_LABEL}\n\n` +
       `Este arquivo contém TODO o código-fonte do aplicativo, as funções do servidor e os dados do banco.\n` +
       `Basta colar este conteúdo em qualquer IA (ou entregar a outro desenvolvedor) para reconstruir o sistema.\n\n` +
       `Backend: Lovable Cloud (Supabase). Frontend: React + Vite + TypeScript + Tailwind.\n\n` +
@@ -214,9 +219,12 @@ const ProjectExport = () => {
           </span>
         )}
       </div>
-      <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+      <p className="text-xs sm:text-sm text-muted-foreground mb-1">
         Cópia completa e sempre atualizada do sistema: código, telas, funções e dados do banco.
         O projeto já fica preparado ao abrir o painel — ao clicar, sai na hora.
+      </p>
+      <p className="text-[11px] text-muted-foreground/80 mb-4">
+        Versão atual do sistema: <strong className="text-primary">{BUILD_LABEL}</strong>
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
         <Button onClick={handleCopy} disabled={busy} className="flex-1">
