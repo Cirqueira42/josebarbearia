@@ -219,9 +219,12 @@ const ProjectExport = () => {
           </span>
         )}
       </div>
-      <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+      <p className="text-xs sm:text-sm text-muted-foreground mb-1">
         Cópia completa e sempre atualizada do sistema: código, telas, funções e dados do banco.
         O projeto já fica preparado ao abrir o painel — ao clicar, sai na hora.
+      </p>
+      <p className="text-[11px] text-muted-foreground/80 mb-4">
+        Versão atual do sistema: <strong className="text-primary">{BUILD_LABEL}</strong>
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
         <Button onClick={handleCopy} disabled={busy} className="flex-1">
