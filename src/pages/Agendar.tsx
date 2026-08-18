@@ -411,26 +411,39 @@ const Agendar = () => {
           _date: selectedDate,
         });
       } catch {}
-      
-      const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
-      const finalPrice = couponApplied
-        ? couponApplied.fixed
-          ? Math.max(selectedService.price - couponApplied.fixed, 0)
-          : selectedService.price * (1 - couponApplied.discount / 100)
-        : selectedService.price;
-      const priceLabel = couponApplied
-        ? couponApplied.fixed
-          ? `R$ ${finalPrice.toFixed(2)} (Vale-Presente ${couponApplied.code} -R$ ${couponApplied.fixed.toFixed(2)})`
-          : `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
-        : `R$ ${selectedService.price.toFixed(2)}`;
 
-      // Incrementa uso do cupom
-      if (couponApplied) {
+      // Reserva o benefício de fidelidade para ESTE agendamento (só vira "usado" quando o atendimento for concluído)
+      let loyaltyReserved = false;
+      if (couponApplied?.loyalty && inserted?.appointment_id) {
+        const { data: rs } = await (supabase as any).rpc("reserve_loyalty_reward", {
+          _phone: cleanPhone,
+          _code: couponApplied.code,
+          _appointment_id: inserted.appointment_id,
+        });
+        loyaltyReserved = (Array.isArray(rs) ? rs[0] : rs)?.valid === true;
+      }
+
+      const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
+      const loyaltyDiscount = loyaltyReserved ? (couponApplied?.fixed ?? rewardValue) : 0;
+      const finalPrice = loyaltyDiscount
+        ? Math.max(selectedService.price - loyaltyDiscount, 0)
+        : couponApplied && !couponApplied.loyalty
+          ? selectedService.price * (1 - couponApplied.discount / 100)
+          : selectedService.price;
+      const priceLabel = loyaltyDiscount
+        ? `R$ ${finalPrice.toFixed(2)} (Fidelidade -R$ ${loyaltyDiscount.toFixed(2)})`
+        : couponApplied && !couponApplied.loyalty
+          ? `R$ ${finalPrice.toFixed(2)} (cupom ${couponApplied.code} -${couponApplied.discount}%)`
+          : `R$ ${selectedService.price.toFixed(2)}`;
+
+      // Incrementa uso do cupom (apenas cupons promocionais da tabela de cupons)
+      if (couponApplied && !couponApplied.loyalty) {
         try {
           const { data: c } = await (supabase as any).from("coupons").select("id, uses_count").eq("code", couponApplied.code).maybeSingle();
           if (c) await (supabase as any).from("coupons").update({ uses_count: (c.uses_count || 0) + 1 }).eq("id", c.id);
         } catch {}
       }
+
 
       // Use the real sequential number returned by the database
       const appointmentNum = inserted?.appointment_number ?? 0;
