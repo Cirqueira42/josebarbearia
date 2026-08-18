@@ -939,8 +939,8 @@ const Agendar = () => {
                     </h3>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Parabéns! Você completou {loyalty?.goal ?? 10}/{loyalty?.goal ?? 10} atendimentos.
-                    Escolha o que fazer com o seu vale antes de confirmar (só é possível usar 1 por vez).
+                    Você conquistou este benefício ao completar 10 atendimentos. Deseja utilizar o desconto
+                    neste agendamento? Se guardar, ele continua disponível para outra ocasião (1 por vez).
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
