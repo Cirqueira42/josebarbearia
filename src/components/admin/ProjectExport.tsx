@@ -108,7 +108,8 @@ const ProjectExport = () => {
 
     return (
       `# PROJETO DA BARBEARIA — José Barbearia\n` +
-      `Cópia completa do sistema gerada em ${now} (horário de Brasília).\n\n` +
+      `Cópia completa do sistema gerada em ${now} (horário de Brasília).\n` +
+      `Versão do aplicativo em uso: ${BUILD_LABEL}\n\n` +
       `Este arquivo contém TODO o código-fonte do aplicativo, as funções do servidor e os dados do banco.\n` +
       `Basta colar este conteúdo em qualquer IA (ou entregar a outro desenvolvedor) para reconstruir o sistema.\n\n` +
       `Backend: Lovable Cloud (Supabase). Frontend: React + Vite + TypeScript + Tailwind.\n\n` +
