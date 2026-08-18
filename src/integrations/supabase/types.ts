@@ -431,6 +431,7 @@ export type Database = {
           discount_amount: number
           id: string
           milestone: number
+          reserved_appointment_id: string | null
           status: string
           updated_at: string
           used_appointment_id: string | null
@@ -444,6 +445,7 @@ export type Database = {
           discount_amount?: number
           id?: string
           milestone?: number
+          reserved_appointment_id?: string | null
           status?: string
           updated_at?: string
           used_appointment_id?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           discount_amount?: number
           id?: string
           milestone?: number
+          reserved_appointment_id?: string | null
           status?: string
           updated_at?: string
           used_appointment_id?: string | null
@@ -723,6 +726,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_loyalty_reward: {
+        Args: { _appointment_id: string }
+        Returns: {
+          code: string
+          consumed: boolean
+          discount_amount: number
+        }[]
+      }
       create_appointment: {
         Args: {
           _appointment_date: string
@@ -746,6 +757,14 @@ export type Database = {
         Returns: {
           code: string
           discount_amount: number
+        }[]
+      }
+      get_appointment_reward: {
+        Args: { _appointment_id: string }
+        Returns: {
+          code: string
+          discount_amount: number
+          status: string
         }[]
       }
       get_booked_slots: {
@@ -801,6 +820,17 @@ export type Database = {
       }
       redeem_loyalty_code: {
         Args: { _code: string; _phone: string }
+        Returns: {
+          message: string
+          valid: boolean
+        }[]
+      }
+      release_loyalty_reward: {
+        Args: { _appointment_id: string }
+        Returns: boolean
+      }
+      reserve_loyalty_reward: {
+        Args: { _appointment_id: string; _code: string; _phone: string }
         Returns: {
           message: string
           valid: boolean
