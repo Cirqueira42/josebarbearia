@@ -4,6 +4,10 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
+  define: {
+    // Marca a data/hora exata da versão publicada (usada no backup "Projeto da Barbearia")
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   server: {
     host: "::",
     port: 8080,
