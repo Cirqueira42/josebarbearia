@@ -386,13 +386,14 @@ const Agendar = () => {
 
     // Confere se o benefício ainda está disponível (não consome nada aqui)
     if (couponApplied?.loyalty) {
-      const { data: rwCheck } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
-      const activeReward = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
-      if (!activeReward?.code || String(activeReward.code).toUpperCase() !== couponApplied.code.toUpperCase()) {
+      const { data: rwCheck } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: couponApplied.code });
+      const found = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
+      if (!found?.code || found.status !== "active") {
         toast({ title: "Benefício indisponível", description: "Esse código não está mais disponível para este telefone.", variant: "destructive" });
         return;
       }
     }
+
 
     setSubmitting(true);
     const { data: createdRows, error } = await (supabase as any).rpc("create_appointment", {
