@@ -253,6 +253,14 @@ const LoyaltyProgram = () => {
 
                 </div>
 
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  Cupons conquistados: <strong className="text-foreground">{st.earned}</strong> · ativos:{" "}
+                  <strong className="text-green-400">{st.active}</strong> · utilizados:{" "}
+                  <strong className="text-foreground">{st.used}</strong>
+                </p>
+
+
+
                 {/* Progress bar */}
                 <div className="mb-2">
                   <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
