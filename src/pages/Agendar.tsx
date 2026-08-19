@@ -546,11 +546,15 @@ const Agendar = () => {
       const whatsConfirmLink = `https://wa.me/55${clientPhone}?text=${encodeURIComponent(confirmText)}`;
 
       // Send Telegram notification
+      const couponTelegram = loyaltyDiscount
+        ? `\n\n🎟️ <b>CUPOM DE FIDELIDADE UTILIZADO</b>\nCódigo: <b>${reservedCode ?? "-"}</b>\nDesconto: -R$ ${loyaltyDiscount.toFixed(2)}\nValor final: R$ ${finalPrice.toFixed(2)}\n⚠️ O cupom fica reservado e só será bloqueado definitivamente quando o atendimento for concluído.`
+        : "";
       window.setTimeout(() => {
         sendTelegram(
-          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
+          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}${couponTelegram}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
         );
       }, 0);
+
     }
     setSubmitting(false);
   };
