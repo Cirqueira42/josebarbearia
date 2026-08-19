@@ -328,11 +328,12 @@ const Admin = () => {
             sendTelegram(
               `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (R$ 7,00 cada).`
             );
-            // Mensagem de parabéns para o cliente (após o cupom já estar salvo no banco)
-            const congrats =
-              activeCount === 1
-                ? `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou *10 atendimentos* na *José Barbearia* e conquistou *1 cupom de R$ 7,00 de desconto*! 💰\n\nVocê pode usar no próximo serviço elegível. É só agendar e aproveitar seu benefício.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`
-                : `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou seus ciclos de fidelidade e possui agora *${activeCount} cupons disponíveis*, no valor de *R$ 7,00 cada*! 💰\n\nOs cupons já estão *ATIVOS e DISPONÍVEIS* para utilização conforme as regras do programa.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+            // Mensagem especial de conquista — enviada SOMENTE quando uma nova meta é batida
+            const extra =
+              activeCount > 1
+                ? `\n\nVocê possui agora *${activeCount} cupons ativos* de R$ 7,00 para usar.`
+                : "";
+            const congrats = `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou *10 atendimentos* e acaba de conquistar *1 cupom de R$ 7,00 de desconto*! 🎁💰\n\nSeu benefício já está *ATIVO* e poderá ser utilizado em um próximo agendamento elegível.${extra}\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 💈🙏`;
             window.setTimeout(() => openWhatsApp(`55${phone}`, congrats), 1200);
           }
 
