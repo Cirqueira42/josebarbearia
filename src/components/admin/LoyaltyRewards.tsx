@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,9 @@ const BOOKING_URL = "https://josebarbearia.lovable.app/agendar";
 const LoyaltyRewards = () => {
   const [list, setList] = useState<Reward[]>([]);
   const [search, setSearch] = useState("");
+  const [rewardValue, setRewardValue] = useState("7");
+  const [savingValue, setSavingValue] = useState(false);
+  const savedRef = useRef<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -35,14 +38,55 @@ const LoyaltyRewards = () => {
     setList((data as Reward[]) || []);
   };
 
+  const loadValue = async () => {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_reward_value").maybeSingle();
+    if (data?.value != null) setRewardValue(String(data.value));
+    savedRef.current = data?.value != null ? String(data.value) : "7";
+  };
+
   useEffect(() => {
     load();
+    loadValue();
     const ch = supabase
       .channel("loyalty-rewards-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "loyalty_rewards" }, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  // Salva automaticamente o valor do cupom (aplica também nos cupons ainda não utilizados)
+  const saveValue = async (raw: string) => {
+    const v = Number(String(raw).replace(",", "."));
+    if (!Number.isFinite(v) || v < 0) return;
+    setSavingValue(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "loyalty_reward_value", value: v as any, updated_at: new Date().toISOString() });
+    if (!error) {
+      await (supabase as any)
+        .from("loyalty_rewards")
+        .update({ discount_amount: v })
+        .in("status", ["active", "reserved"]);
+      savedRef.current = raw;
+      toast({ title: "Valor salvo ✅", description: `Cupons de fidelidade agora valem R$ ${v.toFixed(2)}.` });
+      load();
+    } else {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+    }
+    setSavingValue(false);
+  };
+
+  useEffect(() => {
+    if (savedRef.current === null || savedRef.current === rewardValue) return;
+    const t = setTimeout(() => {
+      const v = Number(String(rewardValue).replace(",", "."));
+      if (rewardValue !== "" && Number.isFinite(v)) saveValue(rewardValue);
+    }, 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rewardValue]);
+
+
 
   const filtered = useMemo(
     () =>
@@ -81,10 +125,28 @@ const LoyaltyRewards = () => {
         <Badge variant="outline" className="ml-auto text-[10px]">{activeCount} ativo(s)</Badge>
       </div>
 
+      <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+        <label className="text-[11px] font-semibold text-foreground block mb-1">
+          Valor do cupom de fidelidade (R$)
+        </label>
+        <div className="flex items-center gap-2">
+          <Input
+            inputMode="decimal"
+            value={rewardValue}
+            onChange={(e) => setRewardValue(e.target.value)}
+            className="h-9 text-sm max-w-[120px]"
+          />
+          <span className="text-[10px] text-muted-foreground">
+            {savingValue ? "Salvando..." : "Salva sozinho e já vale para os cupons disponíveis"}
+          </span>
+        </div>
+      </div>
+
       <p className="text-[11px] text-muted-foreground mb-3">
         O código é gerado sozinho quando o cliente completa 10 atendimentos concluídos. O cliente não vê o
         código nem o valor — você envia manualmente. Depois de usado, fica bloqueado para sempre.
       </p>
+
 
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
