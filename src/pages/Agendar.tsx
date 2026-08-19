@@ -307,6 +307,29 @@ const Agendar = () => {
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     const code = couponCode.trim().toUpperCase();
+    const cleanPhone = customerPhone.replace(/\D/g, "");
+
+    // 1) Código exclusivo de fidelidade do próprio cliente (qualquer cupom dele, não só o primeiro)
+    if (cleanPhone.length >= 10) {
+      const { data: rb } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: code });
+      const found = Array.isArray(rb) ? rb[0] : rb;
+      if (found?.code) {
+        if (found.status !== "active") {
+          toast({ title: "Cupom já utilizado", description: "Esse código não está mais disponível.", variant: "destructive" });
+          setCouponApplied(null);
+          return;
+        }
+        const value = Number(found.discount_amount) || 7;
+        setRewardCode(found.code);
+        setRewardValue(value);
+        setVoucherChoice("use");
+        setCouponApplied({ code: found.code, discount: 0, loyalty: true, fixed: value });
+        toast({ title: "Cupom de fidelidade aplicado 🎁", description: `Desconto de R$ ${value.toFixed(2)}.` });
+        return;
+      }
+    }
+
+    // 2) Cupom promocional normal
     const { data } = await (supabase as any).rpc("validate_coupon", { _code: code });
     const r = (data as any[])?.[0];
     if (r?.valid) {
@@ -314,17 +337,11 @@ const Agendar = () => {
       toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
       return;
     }
-    // Pode ser o código exclusivo de fidelidade do próprio cliente
-    if (rewardCode && code === rewardCode.toUpperCase()) {
-      setVoucherChoice("use");
-      setCouponApplied({ code, discount: 0, loyalty: true, fixed: rewardValue });
-      toast({ title: "Cupom de fidelidade aplicado 🎁", description: `Desconto de R$ ${rewardValue.toFixed(2)}.` });
-      return;
-    }
 
     toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
     setCouponApplied(null);
   };
+
 
 
   // Fidelidade só vale para serviços participantes (Corte / Corte+Barba / valor >= R$ 30)
