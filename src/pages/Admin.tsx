@@ -296,11 +296,17 @@ const Admin = () => {
 
           // Cupom reservado para este agendamento volta a ficar disponível
           try {
+            const reward = apptRewards[appointment.id];
             const { data: released } = await (supabase as any).rpc("release_loyalty_reward", { _appointment_id: appointment.id });
             if (released === true) {
-              toast({ title: "🎁 Cupom devolvido", description: `O benefício de ${appointment.customer_name} voltou a ficar disponível.` });
+              toast({ title: "🎁 Cupom devolvido", description: `O código ${reward?.code ?? ""} de ${appointment.customer_name} voltou a ficar disponível para um novo agendamento.` });
+              sendTelegram(
+                `🎁 <b>CUPOM DEVOLVIDO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${reward?.code ?? "-"}</b>\n\nO atendimento com desconto foi cancelado, então o código voltou a ficar <b>disponível</b> e poderá ser usado no reagendamento.`
+              );
             }
+            fetchApptRewards();
           } catch {}
+
 
 
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
