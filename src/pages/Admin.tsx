@@ -348,10 +348,15 @@ const Admin = () => {
 
           if (usedReward) {
             toast({
-              title: "🎟️ Cupom utilizado",
-              description: `${appointment.customer_name} usou o cupom ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}).`,
+              title: "🔒 Cupom bloqueado (utilizado)",
+              description: `${appointment.customer_name} usou o código ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}). Ele não poderá ser usado novamente.`,
             });
+            sendTelegram(
+              `🔒 <b>CUPOM UTILIZADO E BLOQUEADO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${usedReward.code}</b>\n💰 Desconto: R$ ${usedReward.discount_amount.toFixed(2)}\n\nO atendimento foi concluído, então este código é <b>válido apenas uma vez</b> e já está bloqueado.`
+            );
+            fetchApptRewards();
           }
+
 
           if (issued && issued > 0) {
             // Quantidade real de cupons ativos no banco (fonte da verdade)
