@@ -384,15 +384,37 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
-    // Confere se o benefício ainda está disponível (não consome nada aqui)
-    if (couponApplied?.loyalty) {
-      const { data: rwCheck } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: couponApplied.code });
-      const found = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
-      if (!found?.code || found.status !== "active") {
+    // Resolve o cupom de fidelidade REAL (código + valor gravado no cupom) antes de criar o agendamento
+    let loyaltyCoupon: { code: string; value: number } | null = null;
+    if (loyaltyEnabled && selectedService.price >= 30) {
+      const candidates = [
+        couponApplied?.loyalty ? couponApplied.code : null,
+        !couponApplied && couponCode.trim() ? couponCode.trim().toUpperCase() : null,
+        voucherChoice === "use" ? rewardCode : null,
+      ].filter(Boolean) as string[];
+
+      for (const c of Array.from(new Set(candidates))) {
+        const { data: rwCheck } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: c });
+        const found = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
+        if (found?.code && found.status === "active") {
+          loyaltyCoupon = { code: found.code, value: Number(found.discount_amount) || rewardValue };
+          break;
+        }
+      }
+
+      // Fallback: cliente escolheu usar o benefício mas o código informado não está mais ativo
+      if (!loyaltyCoupon && (couponApplied?.loyalty || voucherChoice === "use")) {
+        const { data: act } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
+        const a = Array.isArray(act) ? act[0] : act;
+        if (a?.code) loyaltyCoupon = { code: a.code, value: Number(a.discount_amount) || rewardValue };
+      }
+
+      if (!loyaltyCoupon && couponApplied?.loyalty) {
         toast({ title: "Benefício indisponível", description: "Esse código não está mais disponível para este telefone.", variant: "destructive" });
         return;
       }
     }
+
 
 
     setSubmitting(true);
@@ -434,19 +456,39 @@ const Agendar = () => {
 
       // Reserva o benefício de fidelidade para ESTE agendamento (só vira "usado" quando o atendimento for concluído)
       let loyaltyReserved = false;
-      if (couponApplied?.loyalty && inserted?.appointment_id) {
-        const { data: rs, error: rsErr } = await (supabase as any).rpc("reserve_loyalty_reward", {
-          _phone: cleanPhone,
-          _code: couponApplied.code,
-          _appointment_id: inserted.appointment_id,
-        });
-        const rsRow = Array.isArray(rs) ? rs[0] : rs;
-        loyaltyReserved = rsRow?.valid === true;
+      let reservedCode = loyaltyCoupon?.code || null;
+      let reservedValue = loyaltyCoupon?.value ?? 0;
+      if (loyaltyCoupon && inserted?.appointment_id) {
+        const tryReserve = async (code: string) => {
+          const { data: rs, error: rsErr } = await (supabase as any).rpc("reserve_loyalty_reward", {
+            _phone: cleanPhone,
+            _code: code,
+            _appointment_id: inserted.appointment_id,
+          });
+          const rsRow = Array.isArray(rs) ? rs[0] : rs;
+          if (rsErr) console.error("Erro ao reservar cupom:", rsErr);
+          return { ok: rsRow?.valid === true, message: rsRow?.message as string | undefined };
+        };
+
+        let res = await tryReserve(loyaltyCoupon.code);
+        if (!res.ok) {
+          // tenta outro cupom ativo do cliente
+          const { data: act } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
+          const a = Array.isArray(act) ? act[0] : act;
+          if (a?.code && a.code !== loyaltyCoupon.code) {
+            const res2 = await tryReserve(a.code);
+            if (res2.ok) {
+              res = res2;
+              reservedCode = a.code;
+              reservedValue = Number(a.discount_amount) || reservedValue;
+            }
+          }
+        }
+        loyaltyReserved = res.ok;
         if (!loyaltyReserved) {
-          console.error("Falha ao reservar cupom de fidelidade:", rsErr || rsRow);
           toast({
             title: "Cupom não aplicado",
-            description: rsRow?.message || "Não foi possível aplicar o desconto neste agendamento.",
+            description: res.message || "Não foi possível aplicar o desconto neste agendamento.",
             variant: "destructive",
           });
         }
@@ -454,7 +496,8 @@ const Agendar = () => {
 
 
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
-      const loyaltyDiscount = loyaltyReserved ? (couponApplied?.fixed ?? rewardValue) : 0;
+      const loyaltyDiscount = loyaltyReserved ? reservedValue : 0;
+
       const finalPrice = loyaltyDiscount
         ? Math.max(selectedService.price - loyaltyDiscount, 0)
         : couponApplied && !couponApplied.loyalty
@@ -494,8 +537,9 @@ const Agendar = () => {
       // Build WhatsApp confirmation message for Telegram (wa.me funciona melhor em links externos)
       const clientPhone = customerPhone.replace(/\D/g, "");
       const loyaltyBlock = loyaltyDiscount
-        ? `\n*Desconto fidelidade:* -R$ ${loyaltyDiscount.toFixed(2)}\n*Valor final a pagar:* R$ ${finalPrice.toFixed(2)}`
+        ? `\n*Valor original:* R$ ${selectedService.price.toFixed(2)}\n*Desconto de fidelidade:* -R$ ${loyaltyDiscount.toFixed(2)}${reservedCode ? `\n*Cupom:* ${reservedCode}` : ""}\n*Valor final a pagar:* R$ ${finalPrice.toFixed(2)}`
         : "";
+
       const confirmText = loyaltyDiscount
         ? `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}${loyaltyBlock}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`
         : `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor a pagar:* ${priceLabel}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
