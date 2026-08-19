@@ -537,8 +537,9 @@ const Agendar = () => {
       // Build WhatsApp confirmation message for Telegram (wa.me funciona melhor em links externos)
       const clientPhone = customerPhone.replace(/\D/g, "");
       const loyaltyBlock = loyaltyDiscount
-        ? `\n*Desconto fidelidade:* -R$ ${loyaltyDiscount.toFixed(2)}\n*Valor final a pagar:* R$ ${finalPrice.toFixed(2)}`
+        ? `\n*Valor original:* R$ ${selectedService.price.toFixed(2)}\n*Desconto de fidelidade:* -R$ ${loyaltyDiscount.toFixed(2)}${reservedCode ? `\n*Cupom:* ${reservedCode}` : ""}\n*Valor final a pagar:* R$ ${finalPrice.toFixed(2)}`
         : "";
+
       const confirmText = loyaltyDiscount
         ? `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}${loyaltyBlock}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`
         : `Olá, ${customerName}! ✅ O seu agendamento com a *José Barbearia* foi confirmado!\n\n*Serviço:* ${selectedService.name.toUpperCase()}\n*Quando:* ${fullDate} às ${selectedTime}\n*Profissional:* ${barberNameMsg.toUpperCase()}\n*Valor a pagar:* ${priceLabel}\n\n📍*Endereço:* Av. Otávio Rangel, 477 - Vila Cecap, Guariba - SP\n📍*Google Maps:* ${GOOGLE_MAPS_LINK}\n\nTe esperamos! 💈`;
