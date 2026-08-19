@@ -1,0 +1,2 @@
+ALTER TABLE public.loyalty_rewards DROP CONSTRAINT IF EXISTS loyalty_rewards_status_check;
+ALTER TABLE public.loyalty_rewards ADD CONSTRAINT loyalty_rewards_status_check CHECK (status IN ('active','reserved','used','expired'));
