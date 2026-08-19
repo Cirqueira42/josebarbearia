@@ -134,8 +134,9 @@ const LoyaltyRewards = () => {
             className="h-9 text-sm max-w-[120px]"
           />
           <span className="text-[10px] text-muted-foreground">
-            {savingValue ? "Salvando..." : "Salva sozinho e já vale para os cupons disponíveis"}
+            {savingValue ? "Salvando..." : "Salva sozinho · vale para os PRÓXIMOS cupons (os já conquistados mantêm o valor)"}
           </span>
+
         </div>
       </div>
 
