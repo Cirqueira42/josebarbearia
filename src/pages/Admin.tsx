@@ -116,6 +116,8 @@ const sendTelegram = async (message: string) => {
 
 const Admin = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [apptRewards, setApptRewards] = useState<Record<string, { code: string; value: number; status: string }>>({});
+
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
