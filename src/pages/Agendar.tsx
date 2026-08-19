@@ -1007,15 +1007,20 @@ const Agendar = () => {
               <div className="order-11 rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
                 <Label className="block text-sm text-muted-foreground">Cupom de desconto</Label>
-                {loyaltyEnabled && loyalty && loyalty.available < 1 && !rewardCode ? (
+                {loyaltyEnabled && loyalty && loyalty.available < 1 && !rewardCode && !couponApplied ? (
                   <div className="rounded bg-muted/40 border border-border px-3 py-2 space-y-1">
-                    <p className="text-xs text-muted-foreground">🔒 Nenhum cupom disponível no momento.</p>
+                    <p className="text-xs text-muted-foreground">🔒 Nenhum cupom de fidelidade disponível no momento.</p>
                     <p className="text-xs text-muted-foreground">
                       Você já completou <strong className="text-primary">{loyalty.progress}</strong> de{" "}
                       <strong>{loyalty.goal}</strong> atendimentos. Faltam{" "}
                       <strong className="text-primary">{loyalty.remaining}</strong> para liberar seu próximo cupom de R$ {rewardValue.toFixed(2)}.
                     </p>
+                    <div className="flex gap-2 pt-1">
+                      <Input placeholder="DIGITE O CÓDIGO" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="uppercase h-9" />
+                      <Button type="button" size="sm" variant="outline" className="h-9" onClick={applyCoupon}>Aplicar</Button>
+                    </div>
                   </div>
+
                 ) : loyaltyEnabled && loyalty && loyalty.available > 0 && !couponApplied ? (
                   <div className="rounded bg-green-500/10 border border-green-500/30 px-3 py-2 space-y-2">
                     <p className="text-xs text-green-500 font-semibold">
