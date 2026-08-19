@@ -40,6 +40,7 @@ const LoyaltyRewards = () => {
   const loadValue = async () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_reward_value").maybeSingle();
     if (data?.value != null) setRewardValue(String(data.value));
+    savedRef.current = data?.value != null ? String(data.value) : "7";
   };
 
   useEffect(() => {
@@ -65,6 +66,7 @@ const LoyaltyRewards = () => {
         .from("loyalty_rewards")
         .update({ discount_amount: v })
         .in("status", ["active", "reserved"]);
+      savedRef.current = raw;
       toast({ title: "Valor salvo ✅", description: `Cupons de fidelidade agora valem R$ ${v.toFixed(2)}.` });
       load();
     } else {
@@ -74,6 +76,7 @@ const LoyaltyRewards = () => {
   };
 
   useEffect(() => {
+    if (savedRef.current === null || savedRef.current === rewardValue) return;
     const t = setTimeout(() => {
       const v = Number(String(rewardValue).replace(",", "."));
       if (rewardValue !== "" && Number.isFinite(v)) saveValue(rewardValue);
@@ -81,6 +84,7 @@ const LoyaltyRewards = () => {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rewardValue]);
+
 
 
   const filtered = useMemo(
