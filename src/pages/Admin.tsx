@@ -310,17 +310,32 @@ const Admin = () => {
           }
 
           if (issued && issued > 0) {
+            // Quantidade real de cupons ativos no banco (fonte da verdade)
+            let activeCount = issued;
+            try {
+              const { count } = await (supabase as any)
+                .from("loyalty_rewards")
+                .select("id", { count: "exact", head: true })
+                .eq("customer_phone", phone)
+                .eq("status", "active");
+              if (typeof count === "number" && count > 0) activeCount = count;
+            } catch {}
+
             toast({
               title: "🎉 Meta de fidelidade batida!",
-              description: `${appointment.customer_name} ganhou um cupom de R$ 7,00 para o próximo agendamento.`,
+              description: `${appointment.customer_name} agora tem ${activeCount} cupom(ns) ativo(s) de R$ 7,00.`,
             });
             sendTelegram(
-              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou 10 atendimentos e ganhou um cupom de R$ 7,00 para o próximo agendamento.`
+              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (R$ 7,00 cada).`
             );
-            // Mensagem simples de parabéns para o cliente
-            const congrats = `🎉 *Parabéns, ${appointment.customer_name}! Você completou 10 atendimentos!*\n\n🎁 *Você ganhou R$ 7,00 de desconto!*\n\n📅 Seu cupom já está disponível e poderá ser usado no seu *próximo agendamento*.\n\nNa próxima vez que você agendar, é só escolher se quer usar o desconto ou guardar para outra ocasião.\n\nObrigado pela preferência! 💈`;
+            // Mensagem de parabéns para o cliente (após o cupom já estar salvo no banco)
+            const congrats =
+              activeCount === 1
+                ? `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou *10 atendimentos* na *José Barbearia* e conquistou *1 cupom de R$ 7,00 de desconto*! 💰\n\nVocê pode usar no próximo serviço elegível. É só agendar e aproveitar seu benefício.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`
+                : `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou seus ciclos de fidelidade e possui agora *${activeCount} cupons disponíveis*, no valor de *R$ 7,00 cada*! 💰\n\nOs cupons já estão *ATIVOS e DISPONÍVEIS* para utilização conforme as regras do programa.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
             window.setTimeout(() => openWhatsApp(`55${phone}`, congrats), 1200);
           }
+
 
 
 

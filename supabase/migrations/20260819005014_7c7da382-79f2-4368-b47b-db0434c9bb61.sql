@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.trg_issue_loyalty_rewards() FROM PUBLIC, anon, authenticated;

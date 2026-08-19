@@ -21,8 +21,11 @@ type LoyaltyRecord = {
 
 const GOAL = 10;
 
+type RewardStat = { earned: number; active: number; used: number };
+
 const LoyaltyProgram = () => {
   const [records, setRecords] = useState<LoyaltyRecord[]>([]);
+  const [rewardStats, setRewardStats] = useState<Record<string, RewardStat>>({});
   const [search, setSearch] = useState("");
   const [enabled, setEnabled] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,6 +38,7 @@ const LoyaltyProgram = () => {
     const channel = supabase
       .channel("loyalty-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "loyalty" }, () => fetchLoyalty())
+      .on("postgres_changes", { event: "*", schema: "public", table: "loyalty_rewards" }, () => fetchLoyalty())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
@@ -43,6 +47,7 @@ const LoyaltyProgram = () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
     setEnabled(data?.value === true);
   };
+
 
   const toggleEnabled = async (next: boolean) => {
     setEnabled(next);
@@ -100,40 +105,60 @@ const LoyaltyProgram = () => {
       .select("*")
       .order("total_services", { ascending: false });
     if (data) setRecords(data as LoyaltyRecord[]);
+
+    const { data: rw } = await (supabase as any)
+      .from("loyalty_rewards")
+      .select("customer_phone, status");
+    const stats: Record<string, RewardStat> = {};
+    ((rw as any[]) || []).forEach((x) => {
+      const s = (stats[x.customer_phone] ||= { earned: 0, active: 0, used: 0 });
+      s.earned += 1;
+      if (x.status === "active") s.active += 1;
+      else if (x.status === "used") s.used += 1;
+    });
+    setRewardStats(stats);
   };
 
+  const statFor = (phone: string): RewardStat => rewardStats[phone] || { earned: 0, active: 0, used: 0 };
 
   const redeemFree = async (record: LoyaltyRecord) => {
-    const available = record.free_services_earned - record.free_services_redeemed;
-    if (available <= 0) return;
-
-    const { error } = await supabase
-      .from("loyalty")
-      .update({ free_services_redeemed: record.free_services_redeemed + 1 })
-      .eq("id", record.id);
-
-    if (error) {
-      toast({ title: "Erro", description: "Não foi possível resgatar.", variant: "destructive" });
-    } else {
-      toast({ title: "🎉 Desconto aplicado!", description: `${record.customer_name} usou R$ 7,00 de desconto.` });
+    const { data: rw } = await (supabase as any).rpc("get_active_reward", { _phone: record.customer_phone });
+    const reward = Array.isArray(rw) ? rw[0] : rw;
+    if (!reward?.code) {
+      toast({ title: "Sem cupom ativo", description: "Este cliente não possui cupom disponível.", variant: "destructive" });
+      return;
     }
+    const { data, error } = await (supabase as any).rpc("redeem_loyalty_code", {
+      _phone: record.customer_phone,
+      _code: reward.code,
+    });
+    const res = Array.isArray(data) ? data[0] : data;
+    if (error || !res?.valid) {
+      toast({ title: "Erro", description: res?.message || "Não foi possível resgatar.", variant: "destructive" });
+    } else {
+      toast({ title: "🎉 Cupom utilizado!", description: `${record.customer_name} usou o cupom ${reward.code} (R$ 7,00).` });
+    }
+    fetchLoyalty();
   };
 
   const notifyClient = (record: LoyaltyRecord) => {
-    const available = record.free_services_earned - record.free_services_redeemed;
+    const available = statFor(record.customer_phone).active;
     const progress = record.total_services % GOAL;
     const remaining = Math.max(GOAL - progress, 0);
     const phone = record.customer_phone.replace(/\D/g, "");
     const phoneWithDDI = phone.startsWith("55") ? phone : `55${phone}`;
 
     let text = "";
-    if (available > 0) {
-      text = `🎉 *PARABÉNS, ${record.customer_name}!* 🎉\n\nVocê completou *${GOAL} atendimentos* na *José Barbearia* e conquistou *${available} cupom${available > 1 ? "ns" : ""} de R$ 7,00 de desconto* 💰\n\nVocê pode usar no *corte* ou em *qualquer produto* do nosso catálogo.\n\nÉ só agendar e avisar ao chegar.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+    if (available === 1) {
+      text = `🎉 *PARABÉNS, ${record.customer_name}!* 🎉\n\nVocê completou *${GOAL} atendimentos* na *José Barbearia* e conquistou *1 cupom de R$ 7,00 de desconto* 💰\n\nVocê pode usar no próximo serviço elegível. É só agendar e aproveitar seu benefício.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+    } else if (available > 1) {
+      text = `🎉 *PARABÉNS, ${record.customer_name}!* 🎉\n\nVocê completou seus ciclos de fidelidade e possui agora *${available} cupons disponíveis*, no valor de *R$ 7,00 cada* 💰\n\nOs cupons já estão *ATIVOS e DISPONÍVEIS* para utilização conforme as regras do programa.\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
     } else {
-      text = `Olá, ${record.customer_name}! 💈\n\n⭐ *José Barbearia — Programa de Fidelidade*\n\nVocê já fez *${record.total_services} corte${record.total_services !== 1 ? "s" : ""}* com a gente!\n\nFaltam apenas *${remaining} atendimento${remaining !== 1 ? "s" : ""}* pra você ganhar *R$ 7,00 de desconto* no corte ou em qualquer produto do catálogo 🎉\n\nAgende já: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
+      text = `Olá, ${record.customer_name}! 💈\n\n⭐ *José Barbearia — Programa de Fidelidade*\n\nVocê já fez *${record.total_services} atendimento${record.total_services !== 1 ? "s" : ""}* com a gente!\n\nFaltam apenas *${remaining} atendimento${remaining !== 1 ? "s" : ""}* pra você liberar *R$ 7,00 de desconto* 🎉\n\nAgende já: ${BOOKING_URL}\n\nObrigado pela preferência! 🙏`;
     }
     openWhatsApp(phoneWithDDI, text);
   };
+
 
   const filtered = records.filter((r) =>
     r.customer_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -179,8 +204,10 @@ const LoyaltyProgram = () => {
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {filtered.map((r) => {
             const progress = r.total_services % GOAL;
-            const available = r.free_services_earned - r.free_services_redeemed;
+            const st = statFor(r.customer_phone);
+            const available = st.active;
             const progressPercent = (progress / GOAL) * 100;
+
 
             return (
               <div key={r.id} className={`bg-background border rounded-lg p-3 ${available > 0 ? "border-green-500/60 shadow-[0_0_0_1px_rgba(34,197,94,0.25)]" : "border-border"}`}>
@@ -225,6 +252,14 @@ const LoyaltyProgram = () => {
                   </div>
 
                 </div>
+
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  Cupons conquistados: <strong className="text-foreground">{st.earned}</strong> · ativos:{" "}
+                  <strong className="text-green-400">{st.active}</strong> · utilizados:{" "}
+                  <strong className="text-foreground">{st.used}</strong>
+                </p>
+
+
 
                 {/* Progress bar */}
                 <div className="mb-2">
