@@ -159,6 +159,7 @@ const Admin = () => {
 
   useEffect(() => {
     fetchAppointments();
+    fetchApptRewards();
 
     const channel = supabase
       .channel("appointments-realtime")
@@ -169,8 +170,29 @@ const Admin = () => {
       )
       .subscribe();
 
+    // Avisa no painel assim que um cliente usa (reserva) um código de desconto
+    const rewardsChannel = supabase
+      .channel("loyalty-rewards-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "loyalty_rewards" },
+        (payload: any) => {
+          const row = payload.new;
+          const old = payload.old;
+          if (row?.status === "reserved" && old?.status !== "reserved") {
+            toast({
+              title: "🎟️ Código de desconto utilizado",
+              description: `${row.customer_name || row.customer_phone} aplicou o código ${row.code} (R$ ${Number(row.discount_amount || 0).toFixed(2)}) em um agendamento.`,
+            });
+          }
+          fetchApptRewards();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(rewardsChannel);
     };
   }, []);
 
@@ -184,6 +206,20 @@ const Admin = () => {
     if (!error && data) setAppointments(data);
     setLoading(false);
   };
+
+  const fetchApptRewards = async () => {
+    const { data } = await (supabase as any)
+      .from("loyalty_rewards")
+      .select("code, discount_amount, status, reserved_appointment_id, used_appointment_id")
+      .or("reserved_appointment_id.not.is.null,used_appointment_id.not.is.null");
+    const map: Record<string, { code: string; value: number; status: string }> = {};
+    (data || []).forEach((r: any) => {
+      const id = r.used_appointment_id || r.reserved_appointment_id;
+      if (id) map[id] = { code: r.code, value: Number(r.discount_amount) || 0, status: r.status };
+    });
+    setApptRewards(map);
+  };
+
 
   // Lança o valor do atendimento concluído no caixa do dia, separando o
   // valor de investimento em material conforme a regra configurada.
