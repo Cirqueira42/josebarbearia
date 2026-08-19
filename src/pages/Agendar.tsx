@@ -456,19 +456,39 @@ const Agendar = () => {
 
       // Reserva o benefício de fidelidade para ESTE agendamento (só vira "usado" quando o atendimento for concluído)
       let loyaltyReserved = false;
-      if (couponApplied?.loyalty && inserted?.appointment_id) {
-        const { data: rs, error: rsErr } = await (supabase as any).rpc("reserve_loyalty_reward", {
-          _phone: cleanPhone,
-          _code: couponApplied.code,
-          _appointment_id: inserted.appointment_id,
-        });
-        const rsRow = Array.isArray(rs) ? rs[0] : rs;
-        loyaltyReserved = rsRow?.valid === true;
+      let reservedCode = loyaltyCoupon?.code || null;
+      let reservedValue = loyaltyCoupon?.value ?? 0;
+      if (loyaltyCoupon && inserted?.appointment_id) {
+        const tryReserve = async (code: string) => {
+          const { data: rs, error: rsErr } = await (supabase as any).rpc("reserve_loyalty_reward", {
+            _phone: cleanPhone,
+            _code: code,
+            _appointment_id: inserted.appointment_id,
+          });
+          const rsRow = Array.isArray(rs) ? rs[0] : rs;
+          if (rsErr) console.error("Erro ao reservar cupom:", rsErr);
+          return { ok: rsRow?.valid === true, message: rsRow?.message as string | undefined };
+        };
+
+        let res = await tryReserve(loyaltyCoupon.code);
+        if (!res.ok) {
+          // tenta outro cupom ativo do cliente
+          const { data: act } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
+          const a = Array.isArray(act) ? act[0] : act;
+          if (a?.code && a.code !== loyaltyCoupon.code) {
+            const res2 = await tryReserve(a.code);
+            if (res2.ok) {
+              res = res2;
+              reservedCode = a.code;
+              reservedValue = Number(a.discount_amount) || reservedValue;
+            }
+          }
+        }
+        loyaltyReserved = res.ok;
         if (!loyaltyReserved) {
-          console.error("Falha ao reservar cupom de fidelidade:", rsErr || rsRow);
           toast({
             title: "Cupom não aplicado",
-            description: rsRow?.message || "Não foi possível aplicar o desconto neste agendamento.",
+            description: res.message || "Não foi possível aplicar o desconto neste agendamento.",
             variant: "destructive",
           });
         }
@@ -476,7 +496,8 @@ const Agendar = () => {
 
 
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
-      const loyaltyDiscount = loyaltyReserved ? (couponApplied?.fixed ?? rewardValue) : 0;
+      const loyaltyDiscount = loyaltyReserved ? reservedValue : 0;
+
       const finalPrice = loyaltyDiscount
         ? Math.max(selectedService.price - loyaltyDiscount, 0)
         : couponApplied && !couponApplied.loyalty
