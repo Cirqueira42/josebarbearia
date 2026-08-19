@@ -314,12 +314,14 @@ const Agendar = () => {
       toast({ title: `Cupom aplicado: ${r.discount_percent}% OFF` });
       return;
     }
-    // Pode ser um código exclusivo de fidelidade — validado na confirmação
-    if (loyalty?.hasReward) {
-      setCouponApplied({ code, discount: 0, loyalty: true });
-      toast({ title: "Código registrado", description: "Ele será validado ao confirmar o agendamento." });
+    // Pode ser o código exclusivo de fidelidade do próprio cliente
+    if (rewardCode && code === rewardCode.toUpperCase()) {
+      setVoucherChoice("use");
+      setCouponApplied({ code, discount: 0, loyalty: true, fixed: rewardValue });
+      toast({ title: "Cupom de fidelidade aplicado 🎁", description: `Desconto de R$ ${rewardValue.toFixed(2)}.` });
       return;
     }
+
     toast({ title: "Cupom inválido", description: r?.message || "Verifique o código", variant: "destructive" });
     setCouponApplied(null);
   };
