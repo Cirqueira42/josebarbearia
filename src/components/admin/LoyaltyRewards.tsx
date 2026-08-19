@@ -120,10 +120,28 @@ const LoyaltyRewards = () => {
         <Badge variant="outline" className="ml-auto text-[10px]">{activeCount} ativo(s)</Badge>
       </div>
 
+      <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+        <label className="text-[11px] font-semibold text-foreground block mb-1">
+          Valor do cupom de fidelidade (R$)
+        </label>
+        <div className="flex items-center gap-2">
+          <Input
+            inputMode="decimal"
+            value={rewardValue}
+            onChange={(e) => setRewardValue(e.target.value)}
+            className="h-9 text-sm max-w-[120px]"
+          />
+          <span className="text-[10px] text-muted-foreground">
+            {savingValue ? "Salvando..." : "Salva sozinho e já vale para os cupons disponíveis"}
+          </span>
+        </div>
+      </div>
+
       <p className="text-[11px] text-muted-foreground mb-3">
         O código é gerado sozinho quando o cliente completa 10 atendimentos concluídos. O cliente não vê o
         código nem o valor — você envia manualmente. Depois de usado, fica bloqueado para sempre.
       </p>
+
 
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
