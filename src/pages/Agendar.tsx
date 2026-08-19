@@ -384,15 +384,37 @@ const Agendar = () => {
 
     const barber = selectedBarber || barbers[0];
 
-    // Confere se o benefício ainda está disponível (não consome nada aqui)
-    if (couponApplied?.loyalty) {
-      const { data: rwCheck } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: couponApplied.code });
-      const found = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
-      if (!found?.code || found.status !== "active") {
+    // Resolve o cupom de fidelidade REAL (código + valor gravado no cupom) antes de criar o agendamento
+    let loyaltyCoupon: { code: string; value: number } | null = null;
+    if (loyaltyEnabled && selectedService.price >= 30) {
+      const candidates = [
+        couponApplied?.loyalty ? couponApplied.code : null,
+        !couponApplied && couponCode.trim() ? couponCode.trim().toUpperCase() : null,
+        voucherChoice === "use" ? rewardCode : null,
+      ].filter(Boolean) as string[];
+
+      for (const c of Array.from(new Set(candidates))) {
+        const { data: rwCheck } = await (supabase as any).rpc("get_reward_by_code", { _phone: cleanPhone, _code: c });
+        const found = Array.isArray(rwCheck) ? rwCheck[0] : rwCheck;
+        if (found?.code && found.status === "active") {
+          loyaltyCoupon = { code: found.code, value: Number(found.discount_amount) || rewardValue };
+          break;
+        }
+      }
+
+      // Fallback: cliente escolheu usar o benefício mas o código informado não está mais ativo
+      if (!loyaltyCoupon && (couponApplied?.loyalty || voucherChoice === "use")) {
+        const { data: act } = await (supabase as any).rpc("get_active_reward", { _phone: cleanPhone });
+        const a = Array.isArray(act) ? act[0] : act;
+        if (a?.code) loyaltyCoupon = { code: a.code, value: Number(a.discount_amount) || rewardValue };
+      }
+
+      if (!loyaltyCoupon && couponApplied?.loyalty) {
         toast({ title: "Benefício indisponível", description: "Esse código não está mais disponível para este telefone.", variant: "destructive" });
         return;
       }
     }
+
 
 
     setSubmitting(true);
