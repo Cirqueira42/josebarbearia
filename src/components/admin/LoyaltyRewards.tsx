@@ -54,7 +54,7 @@ const LoyaltyRewards = () => {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // Salva automaticamente o valor do cupom (aplica também nos cupons ainda não utilizados)
+  // Salva automaticamente o valor do cupom (vale apenas para os PRÓXIMOS cupons gerados)
   const saveValue = async (raw: string) => {
     const v = Number(String(raw).replace(",", "."));
     if (!Number.isFinite(v) || v < 0) return;
@@ -63,18 +63,15 @@ const LoyaltyRewards = () => {
       .from("app_settings")
       .upsert({ key: "loyalty_reward_value", value: v as any, updated_at: new Date().toISOString() });
     if (!error) {
-      await (supabase as any)
-        .from("loyalty_rewards")
-        .update({ discount_amount: v })
-        .in("status", ["active", "reserved"]);
       savedRef.current = raw;
-      toast({ title: "Valor salvo ✅", description: `Cupons de fidelidade agora valem R$ ${v.toFixed(2)}.` });
+      toast({ title: "Valor salvo ✅", description: `Novos cupons de fidelidade valerão R$ ${v.toFixed(2)}. Cupons já conquistados mantêm o valor original.` });
       load();
     } else {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     }
     setSavingValue(false);
   };
+
 
   useEffect(() => {
     if (savedRef.current === null || savedRef.current === rewardValue) return;
