@@ -435,13 +435,23 @@ const Agendar = () => {
       // Reserva o benefício de fidelidade para ESTE agendamento (só vira "usado" quando o atendimento for concluído)
       let loyaltyReserved = false;
       if (couponApplied?.loyalty && inserted?.appointment_id) {
-        const { data: rs } = await (supabase as any).rpc("reserve_loyalty_reward", {
+        const { data: rs, error: rsErr } = await (supabase as any).rpc("reserve_loyalty_reward", {
           _phone: cleanPhone,
           _code: couponApplied.code,
           _appointment_id: inserted.appointment_id,
         });
-        loyaltyReserved = (Array.isArray(rs) ? rs[0] : rs)?.valid === true;
+        const rsRow = Array.isArray(rs) ? rs[0] : rs;
+        loyaltyReserved = rsRow?.valid === true;
+        if (!loyaltyReserved) {
+          console.error("Falha ao reservar cupom de fidelidade:", rsErr || rsRow);
+          toast({
+            title: "Cupom não aplicado",
+            description: rsRow?.message || "Não foi possível aplicar o desconto neste agendamento.",
+            variant: "destructive",
+          });
+        }
       }
+
 
       const payLabel = paymentMethod ? `\n💳 Pagamento: ${paymentMethod}` : "";
       const loyaltyDiscount = loyaltyReserved ? (couponApplied?.fixed ?? rewardValue) : 0;
