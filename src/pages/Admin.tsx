@@ -116,6 +116,8 @@ const sendTelegram = async (message: string) => {
 
 const Admin = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [apptRewards, setApptRewards] = useState<Record<string, { code: string; value: number; status: string }>>({});
+
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -159,6 +161,7 @@ const Admin = () => {
 
   useEffect(() => {
     fetchAppointments();
+    fetchApptRewards();
 
     const channel = supabase
       .channel("appointments-realtime")
@@ -169,8 +172,29 @@ const Admin = () => {
       )
       .subscribe();
 
+    // Avisa no painel assim que um cliente usa (reserva) um código de desconto
+    const rewardsChannel = supabase
+      .channel("loyalty-rewards-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "loyalty_rewards" },
+        (payload: any) => {
+          const row = payload.new;
+          const old = payload.old;
+          if (row?.status === "reserved" && old?.status !== "reserved") {
+            toast({
+              title: "🎟️ Código de desconto utilizado",
+              description: `${row.customer_name || row.customer_phone} aplicou o código ${row.code} (R$ ${Number(row.discount_amount || 0).toFixed(2)}) em um agendamento.`,
+            });
+          }
+          fetchApptRewards();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(rewardsChannel);
     };
   }, []);
 
@@ -184,6 +208,20 @@ const Admin = () => {
     if (!error && data) setAppointments(data);
     setLoading(false);
   };
+
+  const fetchApptRewards = async () => {
+    const { data } = await (supabase as any)
+      .from("loyalty_rewards")
+      .select("code, discount_amount, status, reserved_appointment_id, used_appointment_id")
+      .or("reserved_appointment_id.not.is.null,used_appointment_id.not.is.null");
+    const map: Record<string, { code: string; value: number; status: string }> = {};
+    (data || []).forEach((r: any) => {
+      const id = r.used_appointment_id || r.reserved_appointment_id;
+      if (id) map[id] = { code: r.code, value: Number(r.discount_amount) || 0, status: r.status };
+    });
+    setApptRewards(map);
+  };
+
 
   // Lança o valor do atendimento concluído no caixa do dia, separando o
   // valor de investimento em material conforme a regra configurada.
@@ -258,11 +296,17 @@ const Admin = () => {
 
           // Cupom reservado para este agendamento volta a ficar disponível
           try {
+            const reward = apptRewards[appointment.id];
             const { data: released } = await (supabase as any).rpc("release_loyalty_reward", { _appointment_id: appointment.id });
             if (released === true) {
-              toast({ title: "🎁 Cupom devolvido", description: `O benefício de ${appointment.customer_name} voltou a ficar disponível.` });
+              toast({ title: "🎁 Cupom devolvido", description: `O código ${reward?.code ?? ""} de ${appointment.customer_name} voltou a ficar disponível para um novo agendamento.` });
+              sendTelegram(
+                `🎁 <b>CUPOM DEVOLVIDO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${reward?.code ?? "-"}</b>\n\nO atendimento com desconto foi cancelado, então o código voltou a ficar <b>disponível</b> e poderá ser usado no reagendamento.`
+              );
             }
+            fetchApptRewards();
           } catch {}
+
 
 
           const text = `Olá, ${appointment.customer_name}\n\nInfelizmente seu agendamento com a *José Barbearia* foi cancelado.\n\n*Serviço:* ${appointment.service_name.toUpperCase()}\n*Data:* ${fullDate}\n*Horário:* ${appointment.appointment_time}\n\nVocê pode reagendar pelo link:\n${BOOKING_URL}\n\n*José Barbearia* 💈`;
@@ -304,10 +348,15 @@ const Admin = () => {
 
           if (usedReward) {
             toast({
-              title: "🎟️ Cupom utilizado",
-              description: `${appointment.customer_name} usou o cupom ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}).`,
+              title: "🔒 Cupom bloqueado (utilizado)",
+              description: `${appointment.customer_name} usou o código ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}). Ele não poderá ser usado novamente.`,
             });
+            sendTelegram(
+              `🔒 <b>CUPOM UTILIZADO E BLOQUEADO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${usedReward.code}</b>\n💰 Desconto: R$ ${usedReward.discount_amount.toFixed(2)}\n\nO atendimento foi concluído, então este código é <b>válido apenas uma vez</b> e já está bloqueado.`
+            );
+            fetchApptRewards();
           }
+
 
           if (issued && issued > 0) {
             // Quantidade real de cupons ativos no banco (fonte da verdade)
@@ -604,7 +653,19 @@ const Admin = () => {
                       <Badge className={`text-xs border ${statusLabels[a.status].color}`}>
                         {statusLabels[a.status].label}
                       </Badge>
+                      {apptRewards[a.id] && (
+                        <Badge
+                          className={`text-xs border ${
+                            apptRewards[a.id].status === "used"
+                              ? "bg-muted text-muted-foreground border-border"
+                              : "bg-primary/20 text-primary border-primary/40"
+                          }`}
+                        >
+                          {apptRewards[a.id].status === "used" ? "🔒 Cupom usado" : "🎟️ Cupom aplicado"} {apptRewards[a.id].code} · R$ {apptRewards[a.id].value.toFixed(2)}
+                        </Badge>
+                      )}
                     </div>
+
                     <p className="text-sm text-muted-foreground">📞 {a.customer_phone}</p>
                     <p className="text-sm text-muted-foreground">💈 {a.service_name}</p>
                     <p className="text-sm text-primary font-medium">
