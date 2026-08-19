@@ -312,6 +312,7 @@ const Admin = () => {
           if (issued && issued > 0) {
             // Quantidade real de cupons ativos no banco (fonte da verdade)
             let activeCount = issued;
+            let couponValue = 7;
             try {
               const { count } = await (supabase as any)
                 .from("loyalty_rewards")
@@ -319,21 +320,32 @@ const Admin = () => {
                 .eq("customer_phone", phone)
                 .eq("status", "active");
               if (typeof count === "number" && count > 0) activeCount = count;
+              const { data: newest } = await (supabase as any)
+                .from("loyalty_rewards")
+                .select("discount_amount")
+                .eq("customer_phone", phone)
+                .eq("status", "active")
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (newest?.discount_amount != null) couponValue = Number(newest.discount_amount);
             } catch {}
+            const valueLabel = `R$ ${couponValue.toFixed(2).replace(".", ",")}`;
 
             toast({
               title: "🎉 Meta de fidelidade batida!",
-              description: `${appointment.customer_name} agora tem ${activeCount} cupom(ns) ativo(s) de R$ 7,00.`,
+              description: `${appointment.customer_name} agora tem ${activeCount} cupom(ns) ativo(s) de ${valueLabel}.`,
             });
             sendTelegram(
-              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (R$ 7,00 cada).`
+              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (${valueLabel} cada).`
             );
             // Mensagem especial de conquista — enviada SOMENTE quando uma nova meta é batida
             const extra =
               activeCount > 1
-                ? `\n\nVocê possui agora *${activeCount} cupons ativos* de R$ 7,00 para usar.`
+                ? `\n\nVocê possui agora *${activeCount} cupons ativos* de ${valueLabel} para usar.`
                 : "";
-            const congrats = `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou *10 atendimentos* e acaba de conquistar *1 cupom de R$ 7,00 de desconto*! 🎁💰\n\nSeu benefício já está *ATIVO* e poderá ser utilizado em um próximo agendamento elegível.${extra}\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 💈🙏`;
+            const congrats = `🎉 *PARABÉNS, ${appointment.customer_name}!*\n\nVocê completou *10 atendimentos* e acaba de conquistar *1 cupom de ${valueLabel} de desconto*! 🎁💰\n\nSeu benefício já está *ATIVO* e poderá ser utilizado em um próximo agendamento elegível.${extra}\n\n👉 Agendar: ${BOOKING_URL}\n\nObrigado pela preferência! 💈🙏`;
+
             window.setTimeout(() => openWhatsApp(`55${phone}`, congrats), 1200);
           }
 
