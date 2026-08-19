@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ const LoyaltyRewards = () => {
   const [search, setSearch] = useState("");
   const [rewardValue, setRewardValue] = useState("7");
   const [savingValue, setSavingValue] = useState(false);
+  const savedRef = useRef<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
