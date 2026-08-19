@@ -204,8 +204,10 @@ const LoyaltyProgram = () => {
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {filtered.map((r) => {
             const progress = r.total_services % GOAL;
-            const available = r.free_services_earned - r.free_services_redeemed;
+            const st = statFor(r.customer_phone);
+            const available = st.active;
             const progressPercent = (progress / GOAL) * 100;
+
 
             return (
               <div key={r.id} className={`bg-background border rounded-lg p-3 ${available > 0 ? "border-green-500/60 shadow-[0_0_0_1px_rgba(34,197,94,0.25)]" : "border-border"}`}>
