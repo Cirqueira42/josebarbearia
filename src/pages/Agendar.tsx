@@ -16,7 +16,7 @@ import { ArrowLeft, Check, Award, Gift, Star, Clock, CalendarPlus, MessageCircle
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { getBrazilTodayStr, getBrazilNowMinutes } from "@/lib/brazilTime";
-import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { buildWhatsAppLink, openWhatsApp } from "@/lib/whatsapp";
 
 import serviceCorte from "@/assets/service-corte.jpg";
 import serviceBarba from "@/assets/service-barba.jpg";
@@ -593,17 +593,32 @@ const Agendar = () => {
                 Adicionar à agenda
               </a>
             </Button>
-            {whatsAppRedirectUrl && (
-              <Button
-                asChild
-                className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-sm font-bold uppercase tracking-wider"
+            <Button
+              asChild
+              className="w-full bg-success hover:brightness-110 text-success-foreground py-6 text-sm font-bold uppercase tracking-wider"
+            >
+              <a
+                href={`https://wa.me/${BARBER_PHONE}?text=${encodeURIComponent(
+                  `Olá! Sou ${customerName || "cliente"}. Estou entrando em contato sobre meu atendimento de ${selectedService?.name || "serviço"}, agendado para ${new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} às ${selectedTime}.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openWhatsApp(
+                    BARBER_PHONE,
+                    `Olá! Sou ${customerName || "cliente"}. Estou entrando em contato sobre meu atendimento de ${selectedService?.name || "serviço"}, agendado para ${new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")} às ${selectedTime}.`
+                  );
+                }}
               >
-                <a href={whatsAppRedirectUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="w-4 h-4" />
-                  Falar no WhatsApp
-                </a>
-              </Button>
-            )}
+                <MessageCircle className="w-4 h-4" />
+                💬 Falar com a barbearia
+              </a>
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center px-2">
+              Dúvidas sobre seu agendamento? Fale diretamente com a barbearia pelo WhatsApp.
+            </p>
+
             <Button onClick={() => navigate("/")} variant="ghost" className="w-full py-5 text-sm text-muted-foreground">
               Voltar ao início
             </Button>
