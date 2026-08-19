@@ -787,6 +787,14 @@ export type Database = {
           total_services: number
         }[]
       }
+      get_reward_by_code: {
+        Args: { _code: string; _phone: string }
+        Returns: {
+          code: string
+          discount_amount: number
+          status: string
+        }[]
+      }
       get_top_product: {
         Args: never
         Returns: {
