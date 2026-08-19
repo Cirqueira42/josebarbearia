@@ -653,7 +653,19 @@ const Admin = () => {
                       <Badge className={`text-xs border ${statusLabels[a.status].color}`}>
                         {statusLabels[a.status].label}
                       </Badge>
+                      {apptRewards[a.id] && (
+                        <Badge
+                          className={`text-xs border ${
+                            apptRewards[a.id].status === "used"
+                              ? "bg-muted text-muted-foreground border-border"
+                              : "bg-primary/20 text-primary border-primary/40"
+                          }`}
+                        >
+                          {apptRewards[a.id].status === "used" ? "🔒 Cupom usado" : "🎟️ Cupom aplicado"} {apptRewards[a.id].code} · R$ {apptRewards[a.id].value.toFixed(2)}
+                        </Badge>
+                      )}
                     </div>
+
                     <p className="text-sm text-muted-foreground">📞 {a.customer_phone}</p>
                     <p className="text-sm text-muted-foreground">💈 {a.service_name}</p>
                     <p className="text-sm text-primary font-medium">
