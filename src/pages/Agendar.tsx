@@ -1007,13 +1007,41 @@ const Agendar = () => {
               <div className="order-11 rounded-lg border border-border bg-background/60 p-3 space-y-2">
 
                 <Label className="block text-sm text-muted-foreground">Cupom de desconto</Label>
-                {loyaltyEnabled && serviceEligibleForLoyalty && loyalty && !loyalty.hasReward ? (
-                  <div className="flex items-center gap-2 rounded bg-muted/40 border border-border px-3 py-2">
-                    <span className="text-xs text-muted-foreground">
-                      🔒 Bloqueado — liberado automaticamente quando você completar os {loyalty.goal} atendimentos.
-                    </span>
+                {loyaltyEnabled && loyalty && loyalty.available < 1 && !rewardCode ? (
+                  <div className="rounded bg-muted/40 border border-border px-3 py-2 space-y-1">
+                    <p className="text-xs text-muted-foreground">🔒 Nenhum cupom disponível no momento.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Você já completou <strong className="text-primary">{loyalty.progress}</strong> de{" "}
+                      <strong>{loyalty.goal}</strong> atendimentos. Faltam{" "}
+                      <strong className="text-primary">{loyalty.remaining}</strong> para liberar seu próximo cupom de R$ {rewardValue.toFixed(2)}.
+                    </p>
+                  </div>
+                ) : loyaltyEnabled && loyalty && loyalty.available > 0 && !couponApplied ? (
+                  <div className="rounded bg-green-500/10 border border-green-500/30 px-3 py-2 space-y-2">
+                    <p className="text-xs text-green-500 font-semibold">
+                      🎉 Você possui {loyalty.available} cupom{loyalty.available > 1 ? "ns" : ""} ativo{loyalty.available > 1 ? "s" : ""} de R$ {rewardValue.toFixed(2)}.
+                    </p>
+                    {rewardCode && selectedService && selectedService.price >= 30 ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full h-8 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => {
+                          setVoucherChoice("use");
+                          setCouponApplied({ code: rewardCode, discount: 0, loyalty: true, fixed: rewardValue });
+                          toast({ title: "Cupom aplicado 🎁", description: `Desconto de R$ ${rewardValue.toFixed(2)} neste atendimento.` });
+                        }}
+                      >
+                        Usar cupom de R$ {rewardValue.toFixed(2)} agora
+                      </Button>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Válido em serviços a partir de R$ 30,00. Selecione um serviço elegível para usar.
+                      </p>
+                    )}
                   </div>
                 ) : couponApplied ? (
+
                   <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded px-3 py-2">
                     <span className="text-sm text-green-500 font-bold">
                       {couponApplied.code}{couponApplied.fixed ? ` · -R$ ${couponApplied.fixed.toFixed(2)}` : couponApplied.loyalty ? " · benefício exclusivo" : ` · -${couponApplied.discount}%`}
