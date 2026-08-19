@@ -21,8 +21,11 @@ type LoyaltyRecord = {
 
 const GOAL = 10;
 
+type RewardStat = { earned: number; active: number; used: number };
+
 const LoyaltyProgram = () => {
   const [records, setRecords] = useState<LoyaltyRecord[]>([]);
+  const [rewardStats, setRewardStats] = useState<Record<string, RewardStat>>({});
   const [search, setSearch] = useState("");
   const [enabled, setEnabled] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,6 +38,7 @@ const LoyaltyProgram = () => {
     const channel = supabase
       .channel("loyalty-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "loyalty" }, () => fetchLoyalty())
+      .on("postgres_changes", { event: "*", schema: "public", table: "loyalty_rewards" }, () => fetchLoyalty())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
@@ -43,6 +47,7 @@ const LoyaltyProgram = () => {
     const { data } = await supabase.from("app_settings").select("value").eq("key", "loyalty_enabled").maybeSingle();
     setEnabled(data?.value === true);
   };
+
 
   const toggleEnabled = async (next: boolean) => {
     setEnabled(next);
