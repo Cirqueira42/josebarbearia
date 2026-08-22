@@ -207,7 +207,7 @@ const AdminSettings = () => {
                     <Camera className="w-3 h-3" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => startEdit(s)} className="text-xs">Editar</Button>
-                  <Button size="sm" variant="ghost" onClick={() => deleteService(s.id)} className="text-destructive hover:text-destructive">
+                  <Button size="sm" variant="ghost" onClick={() => deleteService(s)} className="text-destructive hover:text-destructive">
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
