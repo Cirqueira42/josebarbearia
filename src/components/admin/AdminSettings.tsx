@@ -52,14 +52,22 @@ const AdminSettings = () => {
     }
   };
 
-  const deleteService = async (id: string) => {
-    const { error } = await supabase.from("services").delete().eq("id", id);
+  const deleteService = async (s: Service) => {
+    if (!confirm(`Excluir o serviço "${s.name}"? Esta ação não pode ser desfeita.`)) return;
+    const { data, error } = await supabase.from("services").delete().eq("id", s.id).select("id");
     if (error) {
-      toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
-    } else {
-      toast({ title: "Excluído", description: "Serviço removido." });
-      fetchServices();
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
     }
+    if (!data || data.length === 0) {
+      toast({ title: "Não foi possível excluir", description: "Verifique se você está logado como administrador.", variant: "destructive" });
+      await fetchServices();
+      return;
+    }
+    if (s.image_path) await supabase.storage.from("services").remove([s.image_path]);
+    setServices((prev) => prev.filter((x) => x.id !== s.id));
+    toast({ title: "Excluído", description: "Serviço removido." });
+    fetchServices();
   };
 
   const addService = async () => {
