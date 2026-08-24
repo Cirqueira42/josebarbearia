@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { escapeTg, sendTelegramMessage } from "@/lib/telegram";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -298,11 +299,8 @@ const Agendar = () => {
     return DAYS_PT[d.getDay()];
   };
 
-  const sendTelegram = async (message: string) => {
-    try {
-      await supabase.functions.invoke("send-telegram", { body: { message } });
-    } catch {}
-  };
+  const sendTelegram = (message: string, appointmentId?: string | null) =>
+    sendTelegramMessage(message, appointmentId);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -547,11 +545,12 @@ const Agendar = () => {
 
       // Send Telegram notification
       const couponTelegram = loyaltyDiscount
-        ? `\n\n🎟️ <b>CUPOM DE FIDELIDADE UTILIZADO</b>\nCódigo: <b>${reservedCode ?? "-"}</b>\nDesconto: -R$ ${loyaltyDiscount.toFixed(2)}\nValor final: R$ ${finalPrice.toFixed(2)}\n⚠️ O cupom fica reservado e só será bloqueado definitivamente quando o atendimento for concluído.`
+        ? `\n\n🎟️ <b>CUPOM DE FIDELIDADE UTILIZADO</b>\nCódigo: <b>${escapeTg(reservedCode ?? "-")}</b>\nDesconto: -R$ ${loyaltyDiscount.toFixed(2)}\nValor final: R$ ${finalPrice.toFixed(2)}\n⚠️ O cupom fica reservado e só será bloqueado definitivamente quando o atendimento for concluído.`
         : "";
       window.setTimeout(() => {
         sendTelegram(
-          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${customerName}\n📱 Telefone: ${customerPhone}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${selectedService.name}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${barberNameMsg}${payLabel}${couponTelegram}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`
+          `📅 <b>NOVO AGENDAMENTO #${appointmentNum}</b>\n\n👤 Cliente: ${escapeTg(customerName)}\n📱 Telefone: ${escapeTg(customerPhone)}\n\n📅 Data: ${fullDate}\n🕐 Horário: ${selectedTime}\n✂️ Serviço: ${escapeTg(selectedService.name)}\n💰 Valor: ${priceLabel}\n💈 Barbeiro: ${escapeTg(barberNameMsg)}${payLabel}${couponTelegram}\n\n📍 Local:\nAv. Otávio Rangel, 477 - Vila Cecap\nGuariba - SP, 14845-106\n\n🗺️ <a href="${GOOGLE_MAPS_LINK}">Ver no Mapa</a>\n\n✅ <a href="${whatsConfirmLink}">CONFIRMAR VIA WHATSAPP</a>`,
+          inserted?.appointment_id ?? null
         );
       }, 0);
 
