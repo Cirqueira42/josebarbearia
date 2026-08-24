@@ -36,6 +36,7 @@ const ALLOWED_LINK_HOSTS = [
   'maps.google.com',
   'maps.app.goo.gl',
   'g.page',
+  'share.google',
   'search.google.com',
   'goo.gl',
 ];
