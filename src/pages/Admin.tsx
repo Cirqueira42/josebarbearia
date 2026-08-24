@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { escapeTg, sendTelegramMessage } from "@/lib/telegram";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -108,11 +109,7 @@ const getDayOfWeek = (dateStr: string) => {
   return DAYS_PT[d.getDay()];
 };
 
-const sendTelegram = async (message: string) => {
-  try {
-    await supabase.functions.invoke("send-telegram", { body: { message } });
-  } catch {}
-};
+const sendTelegram = (message: string) => sendTelegramMessage(message);
 
 const Admin = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -284,7 +281,7 @@ const Admin = () => {
           openWhatsApp(`55${phone}`, text);
 
           sendTelegram(
-            `✅ <b>AGENDAMENTO CONFIRMADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}\n🔑 Código: ${bookingCode}\n\n💬 <a href="https://wa.me/55${phone}">Conversar no WhatsApp</a>`
+            `✅ <b>AGENDAMENTO CONFIRMADO</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n✂️ ${escapeTg(appointment.service_name)}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}\n🔑 Código: ${bookingCode}\n\n💬 <a href="https://wa.me/55${phone}">Conversar no WhatsApp</a>`
           );
         }
 
@@ -301,7 +298,7 @@ const Admin = () => {
             if (released === true) {
               toast({ title: "🎁 Cupom devolvido", description: `O código ${reward?.code ?? ""} de ${appointment.customer_name} voltou a ficar disponível para um novo agendamento.` });
               sendTelegram(
-                `🎁 <b>CUPOM DEVOLVIDO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${reward?.code ?? "-"}</b>\n\nO atendimento com desconto foi cancelado, então o código voltou a ficar <b>disponível</b> e poderá ser usado no reagendamento.`
+                `🎁 <b>CUPOM DEVOLVIDO</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n🎟️ Código: <b>${escapeTg(reward?.code ?? "-")}</b>\n\nO atendimento com desconto foi cancelado, então o código voltou a ficar <b>disponível</b> e poderá ser usado no reagendamento.`
               );
             }
             fetchApptRewards();
@@ -313,7 +310,7 @@ const Admin = () => {
           openWhatsApp(`55${phone}`, text);
 
           sendTelegram(
-            `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
+            `❌ <b>AGENDAMENTO CANCELADO</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n✂️ ${escapeTg(appointment.service_name)}\n📅 ${fullDate}\n🕐 ${appointment.appointment_time}`
           );
         }
 
@@ -352,7 +349,7 @@ const Admin = () => {
               description: `${appointment.customer_name} usou o código ${usedReward.code} (R$ ${usedReward.discount_amount.toFixed(2)}). Ele não poderá ser usado novamente.`,
             });
             sendTelegram(
-              `🔒 <b>CUPOM UTILIZADO E BLOQUEADO</b>\n\n👤 ${appointment.customer_name}\n🎟️ Código: <b>${usedReward.code}</b>\n💰 Desconto: R$ ${usedReward.discount_amount.toFixed(2)}\n\nO atendimento foi concluído, então este código é <b>válido apenas uma vez</b> e já está bloqueado.`
+              `🔒 <b>CUPOM UTILIZADO E BLOQUEADO</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n🎟️ Código: <b>${escapeTg(usedReward.code)}</b>\n💰 Desconto: R$ ${usedReward.discount_amount.toFixed(2)}\n\nO atendimento foi concluído, então este código é <b>válido apenas uma vez</b> e já está bloqueado.`
             );
             fetchApptRewards();
           }
@@ -386,7 +383,7 @@ const Admin = () => {
               description: `${appointment.customer_name} agora tem ${activeCount} cupom(ns) ativo(s) de ${valueLabel}.`,
             });
             sendTelegram(
-              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${appointment.customer_name}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (${valueLabel} cada).`
+              `🎁 <b>FIDELIDADE COMPLETA</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n📞 ${phone}\n\nO cliente completou mais um ciclo de 10 atendimentos.\n🎟️ Cupons ativos agora: <b>${activeCount}</b> (${valueLabel} cada).`
             );
             // Mensagem especial de conquista — enviada SOMENTE quando uma nova meta é batida
             const extra =
@@ -410,7 +407,7 @@ const Admin = () => {
 
           const googleReviewUrl = "https://share.google/hc9HWSbPBPNRGTY8y";
           sendTelegram(
-            `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${appointment.customer_name}\n✂️ ${appointment.service_name}\n📅 ${fullDate}\n\n⭐ <b>Link de avaliação já enviado ao cliente!</b>\n👉 <a href="${googleReviewLink}">AVALIAR NO GOOGLE</a>\n\n💬 <a href="https://wa.me/55${phone}?text=${encodeURIComponent(`Olá, ${appointment.customer_name}! Que tal nos avaliar no Google? É super rápido e nos ajuda muito 🙏⭐\n\n👉 ${googleReviewLink}`)}">REENVIAR LINK NO WHATSAPP</a>`
+            `✅ <b>SERVIÇO CONCLUÍDO</b>\n\n👤 ${escapeTg(appointment.customer_name)}\n✂️ ${escapeTg(appointment.service_name)}\n📅 ${fullDate}\n\n⭐ <b>Link de avaliação já enviado ao cliente!</b>\n👉 <a href="${googleReviewLink}">AVALIAR NO GOOGLE</a>\n\n💬 <a href="https://wa.me/55${phone}?text=${encodeURIComponent(`Olá, ${escapeTg(appointment.customer_name)}! Que tal nos avaliar no Google? É super rápido e nos ajuda muito 🙏⭐\n\n👉 ${googleReviewLink}`)}">REENVIAR LINK NO WHATSAPP</a>`
           );
         }
       }
