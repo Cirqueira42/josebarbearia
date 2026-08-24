@@ -13,9 +13,24 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const cronSecret = Deno.env.get('CRON_SECRET');
+
+  // Somente o agendador interno (cron) ou o service role podem executar.
+  const providedSecret = req.headers.get('x-cron-secret');
+  const bearer = (req.headers.get('Authorization') || '').replace('Bearer ', '');
+  const isCron = !!cronSecret && providedSecret === cronSecret;
+  const isServiceRole = !!supabaseKey && bearer === supabaseKey;
+
+  if (!isCron && !isServiceRole) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get current time in São Paulo timezone
