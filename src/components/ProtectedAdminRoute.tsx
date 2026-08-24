@@ -6,10 +6,12 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "authorized" | "unauthorized">("loading");
 
   useEffect(() => {
+    let active = true;
+
     const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setStatus("unauthorized");
+        if (active) setStatus("unauthorized");
         return;
       }
       const { data: roles } = await supabase
@@ -18,6 +20,8 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
         .eq("user_id", session.user.id)
         .eq("role", "admin");
 
+      if (!active) return;
+
       if (roles && roles.length > 0) {
         setStatus("authorized");
       } else {
@@ -25,7 +29,23 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
         setStatus("unauthorized");
       }
     };
+
     check();
+
+    // Revalida sempre que a sessão mudar (logout, expiração, troca de usuário)
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (!session || event === "SIGNED_OUT") {
+        setStatus("unauthorized");
+        return;
+      }
+      setTimeout(() => { check(); }, 0);
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   if (status === "loading") {
